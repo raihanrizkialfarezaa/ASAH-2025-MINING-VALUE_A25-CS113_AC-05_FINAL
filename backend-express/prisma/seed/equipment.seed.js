@@ -1,86 +1,235 @@
 import prisma from '../../src/config/database.js';
 
-export const seedTrucks = async () => {
+export const seedOperators = async (operatorUsers) => {
+  const operators = [
+    {
+      userId: operatorUsers[0].id,
+      employeeNumber: 'OPR-001',
+      licenseNumber: 'SIM-B2-12345',
+      licenseType: 'SIM_B2',
+      licenseExpiry: new Date('2025-12-31'),
+      competency: {
+        dump_truck: true,
+        heavy_equipment: true,
+        years_experience: 8,
+      },
+      status: 'ACTIVE',
+      shift: 'SHIFT_1',
+      totalHours: 2400,
+      rating: 4.8,
+      joinDate: new Date('2018-03-15'),
+    },
+    {
+      userId: operatorUsers[1].id,
+      employeeNumber: 'OPR-002',
+      licenseNumber: 'SIM-B2-12346',
+      licenseType: 'SIM_B2',
+      licenseExpiry: new Date('2025-08-15'),
+      competency: {
+        dump_truck: true,
+        years_experience: 6,
+      },
+      status: 'ACTIVE',
+      shift: 'SHIFT_1',
+      totalHours: 1850,
+      rating: 4.5,
+      joinDate: new Date('2019-06-01'),
+    },
+    {
+      userId: operatorUsers[2].id,
+      employeeNumber: 'OPR-003',
+      licenseNumber: 'SIM-B2-12347',
+      licenseType: 'SIM_B2',
+      licenseExpiry: new Date('2026-02-28'),
+      competency: {
+        dump_truck: true,
+        years_experience: 5,
+      },
+      status: 'ACTIVE',
+      shift: 'SHIFT_2',
+      totalHours: 1600,
+      rating: 4.6,
+      joinDate: new Date('2020-01-20'),
+    },
+    {
+      userId: operatorUsers[3].id,
+      employeeNumber: 'OPR-004',
+      licenseNumber: 'SIM-B2-12348',
+      licenseType: 'SIM_B2',
+      licenseExpiry: new Date('2025-10-10'),
+      competency: {
+        dump_truck: true,
+        years_experience: 7,
+      },
+      status: 'ACTIVE',
+      shift: 'SHIFT_2',
+      totalHours: 2100,
+      rating: 4.7,
+      joinDate: new Date('2018-09-10'),
+    },
+    {
+      userId: operatorUsers[4].id,
+      employeeNumber: 'OPR-005',
+      licenseNumber: 'SIM-B2-12349',
+      licenseType: 'SIM_B2',
+      licenseExpiry: new Date('2025-11-20'),
+      competency: {
+        dump_truck: true,
+        years_experience: 4,
+      },
+      status: 'ACTIVE',
+      shift: 'SHIFT_3',
+      totalHours: 1400,
+      rating: 4.4,
+      joinDate: new Date('2020-11-05'),
+    },
+    {
+      userId: operatorUsers[5].id,
+      employeeNumber: 'OPR-006',
+      licenseNumber: 'SIM-B2-12350',
+      licenseType: 'SIM_B2',
+      licenseExpiry: new Date('2026-03-15'),
+      competency: {
+        dump_truck: true,
+        years_experience: 3,
+      },
+      status: 'ACTIVE',
+      shift: 'SHIFT_3',
+      totalHours: 1200,
+      rating: 4.3,
+      joinDate: new Date('2021-04-10'),
+    },
+  ];
+
+  const created = [];
+  for (const data of operators) {
+    const operator = await prisma.operator.create({ data });
+    created.push(operator);
+  }
+
+  return created;
+};
+
+export const seedTrucks = async (operators) => {
   const trucks = [
     {
-      code: 'TRK-001',
-      name: 'Hauler 001',
-      brand: 'Komatsu',
-      model: 'HD785-7',
+      code: 'HD-001',
+      name: 'Hino FM260JD-001',
+      brand: 'Hino',
+      model: 'FM260JD',
       yearManufacture: 2020,
-      capacity: 91.0,
-      fuelCapacity: 950.0,
-      status: 'IDLE',
-      totalHours: 4580,
-      totalDistance: 123456.8,
-      currentLocation: 'Loading Point LP-001',
+      capacity: 24.0,
+      fuelCapacity: 300,
+      status: 'HAULING',
+      lastMaintenance: new Date('2025-01-08'),
+      nextMaintenance: new Date('2025-02-08'),
+      totalHours: 15000,
+      totalDistance: 245000,
+      currentOperatorId: operators[0].id,
+      currentLocation: 'Menuju DP-01',
       isActive: true,
+      purchaseDate: new Date('2020-05-10'),
+      remarks: 'Dump truck utama fleet A',
     },
     {
-      code: 'TRK-002',
-      name: 'Hauler 002',
-      brand: 'Komatsu',
-      model: 'HD785-7',
+      code: 'HD-002',
+      name: 'Hino FM260JD-002',
+      brand: 'Hino',
+      model: 'FM260JD',
+      yearManufacture: 2020,
+      capacity: 24.0,
+      fuelCapacity: 300,
+      status: 'LOADING',
+      lastMaintenance: new Date('2025-01-09'),
+      nextMaintenance: new Date('2025-02-09'),
+      totalHours: 14800,
+      totalDistance: 238000,
+      currentOperatorId: operators[1].id,
+      currentLocation: 'PIT-01',
+      isActive: true,
+      purchaseDate: new Date('2020-05-10'),
+      remarks: 'Dump truck utama fleet A',
+    },
+    {
+      code: 'HD-003',
+      name: 'Hino Ranger-001',
+      brand: 'Hino',
+      model: 'Ranger FM285JD',
       yearManufacture: 2021,
-      capacity: 91.0,
-      fuelCapacity: 950.0,
-      status: 'IDLE',
-      totalHours: 3200,
-      totalDistance: 95000.5,
-      currentLocation: 'Loading Point LP-001',
+      capacity: 30.0,
+      fuelCapacity: 350,
+      status: 'HAULING',
+      lastMaintenance: new Date('2025-01-11'),
+      nextMaintenance: new Date('2025-02-11'),
+      totalHours: 12500,
+      totalDistance: 195000,
+      currentOperatorId: operators[2].id,
+      currentLocation: 'Menuju DP-03',
       isActive: true,
+      purchaseDate: new Date('2021-02-15'),
+      remarks: 'Dump truck fleet B',
     },
     {
-      code: 'TRK-003',
-      name: 'Hauler 003',
-      brand: 'Hitachi',
-      model: 'EH3500ACII',
-      yearManufacture: 2019,
-      capacity: 181.0,
-      fuelCapacity: 2500.0,
-      status: 'IDLE',
-      totalHours: 5600,
-      totalDistance: 145000.0,
-      currentLocation: 'Dumping Point DP-001',
+      code: 'HD-004',
+      name: 'Hino Ranger-002',
+      brand: 'Hino',
+      model: 'Ranger FM285JD',
+      yearManufacture: 2021,
+      capacity: 30.0,
+      fuelCapacity: 350,
+      status: 'IN_QUEUE',
+      lastMaintenance: new Date('2025-01-13'),
+      nextMaintenance: new Date('2025-02-13'),
+      totalHours: 12200,
+      totalDistance: 192000,
+      currentOperatorId: operators[3].id,
+      currentLocation: 'PIT-01',
       isActive: true,
+      purchaseDate: new Date('2021-02-15'),
+      remarks: 'Dump truck fleet B',
     },
     {
-      code: 'TRK-004',
-      name: 'Hauler 004',
-      brand: 'Caterpillar',
-      model: '777F',
-      yearManufacture: 2020,
-      capacity: 100.0,
-      fuelCapacity: 1100.0,
+      code: 'UD-001',
+      name: 'UD Trucks Quester-001',
+      brand: 'UD Trucks',
+      model: 'Quester CWE280',
+      yearManufacture: 2022,
+      capacity: 35.0,
+      fuelCapacity: 400,
+      status: 'IDLE',
+      lastMaintenance: new Date('2025-01-05'),
+      nextMaintenance: new Date('2025-02-05'),
+      totalHours: 9500,
+      totalDistance: 148000,
+      currentOperatorId: operators[4].id,
+      currentLocation: 'Pool',
+      isActive: true,
+      purchaseDate: new Date('2022-08-20'),
+      remarks: 'Dump truck heavy capacity',
+    },
+    {
+      code: 'HD-005',
+      name: 'Hino FM260JD-003',
+      brand: 'Hino',
+      model: 'FM260JD',
+      yearManufacture: 2023,
+      capacity: 24.0,
+      fuelCapacity: 300,
       status: 'MAINTENANCE',
-      totalHours: 4100,
-      totalDistance: 110000.0,
+      lastMaintenance: new Date('2025-01-14'),
+      nextMaintenance: new Date('2025-03-14'),
+      totalHours: 6500,
+      totalDistance: 98000,
       currentLocation: 'Workshop',
       isActive: true,
-    },
-    {
-      code: 'TRK-005',
-      name: 'Hauler 005',
-      brand: 'Komatsu',
-      model: 'HD785-7',
-      yearManufacture: 2021,
-      capacity: 91.0,
-      fuelCapacity: 950.0,
-      status: 'IDLE',
-      totalHours: 2800,
-      totalDistance: 78000.0,
-      currentLocation: 'Loading Point LP-002',
-      isActive: true,
+      purchaseDate: new Date('2023-03-10'),
+      remarks: 'Sedang maintenance major',
     },
   ];
 
   const created = [];
   for (const data of trucks) {
-    const truck = await prisma.truck.upsert({
-      where: { code: data.code },
-      update: {},
-      create: data,
-    });
+    const truck = await prisma.truck.create({ data });
     created.push(truck);
   }
 
@@ -91,70 +240,115 @@ export const seedExcavators = async () => {
   const excavators = [
     {
       code: 'EXC-001',
-      name: 'Excavator Alpha',
+      name: 'Komatsu PC2000-1',
       brand: 'Komatsu',
-      model: 'PC400',
+      model: 'PC2000-8',
       yearManufacture: 2019,
-      bucketCapacity: 2.3,
+      bucketCapacity: 10.0,
       status: 'ACTIVE',
-      totalHours: 6800,
-      currentLocation: 'Loading Point LP-001',
+      lastMaintenance: new Date('2025-01-10'),
+      nextMaintenance: new Date('2025-02-10'),
+      totalHours: 12500,
+      currentLocation: 'PIT-01',
       isActive: true,
+      purchaseDate: new Date('2019-06-15'),
+      remarks: 'Excavator utama untuk loading pit',
     },
     {
       code: 'EXC-002',
-      name: 'Excavator Beta',
-      brand: 'Hitachi',
-      model: 'ZX470',
+      name: 'Caterpillar 390F',
+      brand: 'Caterpillar',
+      model: '390F',
       yearManufacture: 2020,
-      bucketCapacity: 2.5,
+      bucketCapacity: 8.5,
       status: 'ACTIVE',
-      totalHours: 5200,
-      currentLocation: 'Loading Point LP-002',
+      lastMaintenance: new Date('2025-01-12'),
+      nextMaintenance: new Date('2025-02-12'),
+      totalHours: 10200,
+      currentLocation: 'PIT-01',
       isActive: true,
+      purchaseDate: new Date('2020-03-20'),
+      remarks: 'Excavator cadangan untuk loading pit',
+    },
+    {
+      code: 'EXC-003',
+      name: 'Hitachi ZX870-5G',
+      brand: 'Hitachi',
+      model: 'ZX870-5G',
+      yearManufacture: 2021,
+      bucketCapacity: 9.2,
+      status: 'MAINTENANCE',
+      lastMaintenance: new Date('2025-01-14'),
+      nextMaintenance: new Date('2025-02-14'),
+      totalHours: 8500,
+      currentLocation: 'Workshop',
+      isActive: true,
+      purchaseDate: new Date('2021-01-10'),
+      remarks: 'Sedang maintenance rutin',
     },
   ];
 
   const created = [];
   for (const data of excavators) {
-    const excavator = await prisma.excavator.upsert({
-      where: { code: data.code },
-      update: {},
-      create: data,
-    });
+    const excavator = await prisma.excavator.create({ data });
     created.push(excavator);
   }
 
   return created;
 };
 
-export const seedOperators = async (operatorUserIds) => {
-  const operators = [];
-
-  for (let i = 0; i < operatorUserIds.length; i++) {
-    operators.push({
-      userId: operatorUserIds[i],
-      employeeNumber: `EMP-OP-${String(i + 1).padStart(3, '0')}`,
-      licenseNumber: `LIC-${String(i + 1).padStart(6, '0')}`,
-      licenseType: 'OPERATOR_ALAT_BERAT',
-      licenseExpiry: new Date('2025-12-31'),
-      competency: { truck: true, excavator: false },
+export const seedSupportEquipment = async () => {
+  const equipment = [
+    {
+      code: 'GRD-001',
+      name: 'Caterpillar 16M',
+      equipmentType: 'GRADER',
+      brand: 'Caterpillar',
+      model: '16M',
       status: 'ACTIVE',
-      shift: i % 3 === 0 ? 'SHIFT_1' : i % 3 === 1 ? 'SHIFT_2' : 'SHIFT_3',
-      totalHours: 2000 + i * 500,
-      rating: 4.5 + i * 0.1,
-      joinDate: new Date('2023-01-15'),
-    });
-  }
+      lastMaintenance: new Date('2025-01-10'),
+      totalHours: 8500,
+      isActive: true,
+    },
+    {
+      code: 'WT-001',
+      name: 'Hino Water Truck',
+      equipmentType: 'WATER_TRUCK',
+      brand: 'Hino',
+      model: 'FM260JD',
+      status: 'ACTIVE',
+      lastMaintenance: new Date('2025-01-12'),
+      totalHours: 5200,
+      isActive: true,
+    },
+    {
+      code: 'FT-001',
+      name: 'Isuzu Fuel Truck',
+      equipmentType: 'FUEL_TRUCK',
+      brand: 'Isuzu',
+      model: 'FVZ34',
+      status: 'ACTIVE',
+      lastMaintenance: new Date('2025-01-09'),
+      totalHours: 4800,
+      isActive: true,
+    },
+    {
+      code: 'DOZ-001',
+      name: 'Komatsu D375A-8',
+      equipmentType: 'DOZER',
+      brand: 'Komatsu',
+      model: 'D375A-8',
+      status: 'ACTIVE',
+      lastMaintenance: new Date('2025-01-11'),
+      totalHours: 9200,
+      isActive: true,
+    },
+  ];
 
   const created = [];
-  for (const data of operators) {
-    const operator = await prisma.operator.upsert({
-      where: { userId: data.userId },
-      update: {},
-      create: data,
-    });
-    created.push(operator);
+  for (const data of equipment) {
+    const supportEquipment = await prisma.supportEquipment.create({ data });
+    created.push(supportEquipment);
   }
 
   return created;

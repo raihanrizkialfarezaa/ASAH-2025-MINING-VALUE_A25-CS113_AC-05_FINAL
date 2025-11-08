@@ -38,11 +38,11 @@ export const dashboardService = {
               },
             },
             _sum: {
-              actualTonnage: true,
-              targetTonnage: true,
+              actualProduction: true,
+              targetProduction: true,
             },
           })
-          .catch(() => ({ _sum: { actualTonnage: 0, targetTonnage: 0 } })),
+          .catch(() => ({ _sum: { actualProduction: 0, targetProduction: 0 } })),
         prisma.weatherLog
           .findFirst({
             orderBy: { timestamp: 'desc' },
@@ -67,8 +67,12 @@ export const dashboardService = {
           .catch(() => 0),
       ]);
 
-      const trucksOperating = truckStats.find((s) => s.status === 'OPERATING')?._count || 0;
-      const excavatorsOperating = excavatorStats.find((s) => s.status === 'OPERATING')?._count || 0;
+      const trucksOperating = truckStats
+        .filter((s) => ['HAULING', 'LOADING', 'DUMPING', 'IN_QUEUE'].includes(s.status))
+        .reduce((sum, s) => sum + s._count, 0);
+      const excavatorsOperating = excavatorStats
+        .filter((s) => ['ACTIVE', 'LOADING', 'STANDBY'].includes(s.status))
+        .reduce((sum, s) => sum + s._count, 0);
 
       return {
         fleetStatus: {
@@ -81,13 +85,14 @@ export const dashboardService = {
           activeOperations: activeHauling,
         },
         activeHauling,
-        todayProduction: todayProduction._sum.actualTonnage || 0,
+        todayProduction: todayProduction._sum.actualProduction || 0,
         production: {
-          todayActual: todayProduction._sum.actualTonnage || 0,
-          todayTarget: todayProduction._sum.targetTonnage || 0,
+          todayActual: todayProduction._sum.actualProduction || 0,
+          todayTarget: todayProduction._sum.targetProduction || 0,
           todayAchievement:
-            todayProduction._sum.targetTonnage > 0
-              ? (todayProduction._sum.actualTonnage / todayProduction._sum.targetTonnage) * 100
+            todayProduction._sum.targetProduction > 0
+              ? (todayProduction._sum.actualProduction / todayProduction._sum.targetProduction) *
+                100
               : 0,
         },
         weather: latestWeather,
