@@ -1,0 +1,6 @@
+"id","code","name","miningSiteId","dumpingType","isActive","capacity","currentStock","latitude","longitude","createdAt","updatedAt"
+"cmhq7r4kd000narmk0fn7bu7g","DP-01","Stockpile Central - Area A","cmhq7r4jx000carmkd4p0bnmp","STOCKPILE",true,50000,32500,1.235,116.7895,"2025-11-08T11:40:53.341Z","2025-11-08T11:40:53.341Z"
+"cmhq7r4kf000parmkl2blyx8q","DP-02","Stockpile Central - Area B","cmhq7r4jx000carmkd4p0bnmp","STOCKPILE",true,50000,28900,1.2352,116.7897,"2025-11-08T11:40:53.344Z","2025-11-08T11:40:53.344Z"
+"cmhq7r4kh000rarmkveu72zdp","DP-03","Crusher Plant Hopper","cmhq7r4jz000darmkcezc3itx","CRUSHER",true,5000,1200,1.2355,116.79,"2025-11-08T11:40:53.345Z","2025-11-08T11:40:53.345Z"
+"cmhq7r4kj000tarmk0w8z216o","DP-04","ROM Stockpile","cmhq7r4k1000farmk5w18co57","ROM_STOCKPILE",true,25000,15600,1.236,116.791,"2025-11-08T11:40:53.347Z","2025-11-08T11:40:53.347Z"
+"cmhq7r4kl000varmksymaqnsu","DP-05","Port Loading Area","cmhq7r4k0000earmk06jk76ng","PORT",true,100000,45000,1.24,116.81,"2025-11-08T11:40:53.349Z","2025-11-08T11:40:53.349Z"

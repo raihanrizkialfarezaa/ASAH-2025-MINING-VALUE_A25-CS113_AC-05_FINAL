@@ -1,0 +1,8 @@
+"id","code","category","name","description","isActive"
+"cmhq7r4m4001yarmk7bd8hui0","DLY-W01","WEATHER","Hujan Lebat","Penundaan karena hujan lebat yang mengganggu operasi",true
+"cmhq7r4m6001zarmkbgqgsxju","DLY-E01","EQUIPMENT","Kerusakan Truck","Kerusakan pada dump truck saat operasi",true
+"cmhq7r4m70020armk6b2v9kt7","DLY-E02","EQUIPMENT","Kerusakan Excavator","Kerusakan pada excavator loading point",true
+"cmhq7r4m80021armkcrywk5hl","DLY-Q01","QUEUE","Antrian Panjang","Antrian di loading point melebihi kapasitas",true
+"cmhq7r4m90022armkg1ch9dxx","DLY-R01","ROAD","Kondisi Jalan Buruk","Kondisi jalan yang buruk menghambat hauling",true
+"cmhq7r4mb0023armkjufy56rt","DLY-F01","FUEL","Pengisian BBM","Waktu tunggu untuk pengisian bahan bakar",true
+"cmhq7r4mc0024armkv969f6zg","DLY-S01","SAFETY","Safety Inspection","Inspeksi keselamatan mendadak",true

@@ -13,6 +13,7 @@
     "db:seed": "node prisma/seed/index.js",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset --force",
+    "db:export": "node scripts/export-db-to-csv.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "lint": "eslint src/**/*.js",
@@ -29,6 +30,7 @@
     "express-rate-limit": "^7.4.1",
     "express-validator": "^7.2.0",
     "helmet": "^8.0.0",
+    "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "winston": "^3.15.0"

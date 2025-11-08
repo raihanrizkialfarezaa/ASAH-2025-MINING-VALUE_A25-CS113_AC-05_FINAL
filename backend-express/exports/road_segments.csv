@@ -1,0 +1,5 @@
+"id","code","name","miningSiteId","startPoint","endPoint","distance","roadCondition","maxSpeed","gradient","isActive","lastMaintenance","createdAt","updatedAt"
+"cmhq7r4ko000xarmkand25969","RS-01","Pit 1 ke Stockpile","cmhq7r4jv000barmkfddw1hqv","LP-01","DP-01",3.5,"GOOD",40,-2.5,true,"2025-01-05T00:00:00.000Z","2025-11-08T11:40:53.352Z","2025-11-08T11:40:53.352Z"
+"cmhq7r4kr000zarmkvs3f8j7p","RS-02","Pit 1 ke Crusher","cmhq7r4jv000barmkfddw1hqv","LP-02","DP-03",4.2,"GOOD",35,-3,true,"2025-01-07T00:00:00.000Z","2025-11-08T11:40:53.355Z","2025-11-08T11:40:53.355Z"
+"cmhq7r4ks0011armkc1bo1ta9","RS-03","Stockpile ke Port","cmhq7r4jx000carmkd4p0bnmp","DP-01","DP-05",12.5,"FAIR",50,-1.5,true,"2024-12-20T00:00:00.000Z","2025-11-08T11:40:53.357Z","2025-11-08T11:40:53.357Z"
+"cmhq7r4ku0013armkej3p1ti3","RS-04","ROM ke Stockpile","cmhq7r4k1000farmk5w18co57","LP-03","DP-02",2.8,"EXCELLENT",45,-1,true,"2025-01-10T00:00:00.000Z","2025-11-08T11:40:53.359Z","2025-11-08T11:40:53.359Z"

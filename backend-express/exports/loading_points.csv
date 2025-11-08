@@ -1,0 +1,4 @@
+"id","code","name","miningSiteId","excavatorId","isActive","maxQueueSize","latitude","longitude","coalSeam","coalQuality","createdAt","updatedAt"
+"cmhq7r4k4000harmkzyanyvqs","LP-01","Loading Point Pit 1 - Seam A","cmhq7r4jv000barmkfddw1hqv",,true,5,1.2345,116.789,"Seam A","{""ash"":12.5,""calori"":5800,""sulfur"":0.8,""moisture"":18.5}","2025-11-08T11:40:53.333Z","2025-11-08T11:40:53.333Z"
+"cmhq7r4k7000jarmk2j2yiibg","LP-02","Loading Point Pit 1 - Seam B","cmhq7r4jv000barmkfddw1hqv",,true,5,1.2347,116.7892,"Seam B","{""ash"":10.2,""calori"":6200,""sulfur"":0.6,""moisture"":16}","2025-11-08T11:40:53.335Z","2025-11-08T11:40:53.335Z"
+"cmhq7r4k9000larmkpn8cs6rl","LP-03","Loading Point ROM Pad","cmhq7r4k1000farmk5w18co57",,true,3,1.236,116.791,"Mixed","{""ash"":14,""calori"":5500,""sulfur"":1,""moisture"":20}","2025-11-08T11:40:53.338Z","2025-11-08T11:40:53.338Z"

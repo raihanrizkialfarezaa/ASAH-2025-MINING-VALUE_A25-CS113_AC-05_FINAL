@@ -1,0 +1,6 @@
+"id","code","name","siteType","isActive","latitude","longitude","elevation","capacity","description","createdAt","updatedAt"
+"cmhq7r4jv000barmkfddw1hqv","PIT-01","Pit Kalimantan Utara","PIT",true,1.2345,116.789,150.5,500000,"Pit utama dengan cadangan batubara kalori tinggi","2025-11-08T11:40:53.323Z","2025-11-08T11:40:53.323Z"
+"cmhq7r4jx000carmkd4p0bnmp","SP-01","Stockpile Central","STOCKPILE",true,1.235,116.7895,120,100000,"Stockpile utama untuk penyimpanan batubara","2025-11-08T11:40:53.326Z","2025-11-08T11:40:53.326Z"
+"cmhq7r4jz000darmkcezc3itx","CR-01","Crusher Plant","CRUSHER",true,1.2355,116.79,115,3000,"Crusher plant dengan kapasitas 3000 ton/jam","2025-11-08T11:40:53.327Z","2025-11-08T11:40:53.327Z"
+"cmhq7r4k0000earmk06jk76ng","PORT-01","Pelabuhan Kalimantan","PORT",true,1.24,116.81,5,200000,"Pelabuhan loading untuk ekspor batubara","2025-11-08T11:40:53.328Z","2025-11-08T11:40:53.328Z"
+"cmhq7r4k1000farmk5w18co57","ROM-01","ROM Pad Area A","ROM_PAD",true,1.236,116.791,125,50000,"ROM Pad untuk temporary stockpile","2025-11-08T11:40:53.330Z","2025-11-08T11:40:53.330Z"
