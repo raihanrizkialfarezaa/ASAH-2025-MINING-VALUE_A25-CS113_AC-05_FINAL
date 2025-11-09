@@ -1,17 +1,17 @@
 import prisma from '../../src/config/database.js';
-import { seedUsers } from './users.seed.js';
+import { seedUsers } from './users.seed.large.js';
 import {
   seedMiningSites,
   seedLoadingPoints,
   seedDumpingPoints,
   seedRoadSegments,
-} from './locations.seed.js';
+} from './locations.seed.large.js';
 import {
   seedTrucks,
   seedExcavators,
   seedOperators,
   seedSupportEquipment,
-} from './equipment.seed.js';
+} from './equipment.seed.large.js';
 import {
   seedDelayReasons,
   seedWeatherLogs,
@@ -26,8 +26,8 @@ import {
   seedRecommendationLogs,
   seedChatbotInteractions,
   seedSystemConfigs,
-} from './operational.seed.js';
-import { seedVessels } from './vessels.seed.js';
+} from './operational.seed.large.js';
+import { seedVessels } from './vessels.seed.large.js';
 import logger from '../../src/config/logger.js';
 
 async function cleanDatabase() {
@@ -179,16 +179,24 @@ async function main() {
     logger.info(`Total Users: ${users.length}`);
     logger.info(`Total Operators: ${operators.length}`);
     logger.info(`Total Mining Sites: ${miningSites.length}`);
+    logger.info(`Total Loading Points: ${loadingPoints.length}`);
+    logger.info(`Total Dumping Points: ${dumpingPoints.length}`);
+    logger.info(`Total Road Segments: ${roadSegments.length}`);
     logger.info(`Total Trucks: ${trucks.length}`);
     logger.info(`Total Excavators: ${excavators.length}`);
     logger.info(`Total Support Equipment: ${supportEquipment.length}`);
+    logger.info(`Total Vessels: ${vessels.length}`);
     logger.info(`Total Hauling Activities: ${haulingActivities.length}`);
     logger.info(`Total Production Records: ${productionRecords.length}`);
     logger.info(`Total Weather Logs: ${weatherLogs.length}`);
     logger.info(`Total Maintenance Logs: ${maintenanceLogs.length}`);
+    logger.info(`Total Fuel Consumptions: ${fuelConsumptions.length}`);
     logger.info(`Total Incident Reports: ${incidentReports.length}`);
+    logger.info(`Total Queue Logs: ${queueLogs.length}`);
+    logger.info(`Total Equipment Status Logs: ${equipmentStatusLogs.length}`);
     logger.info(`Total Recommendation Logs: ${recommendationLogs.length}`);
     logger.info(`Total Prediction Logs: ${predictionLogs.length}`);
+    logger.info(`Total Chatbot Interactions: ${chatbotInteractions.length}`);
     logger.info(`Total System Configs: ${systemConfigs.length}`);
     logger.info('====================================');
   } catch (error) {
