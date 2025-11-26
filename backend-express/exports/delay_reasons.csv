@@ -1,0 +1,13 @@
+"id","code","category","name","description","isActive"
+"cmhsbjvjl0agpmaftrpdu8ozy","DLY-001","WEATHER","Hujan Lebat","Kondisi hujan deras menghambat operasional",true
+"cmhsbjvjm0agqmaftqva6lmx9","DLY-002","WEATHER","Kabut Tebal","Jarak pandang terbatas",true
+"cmhsbjvjn0agrmaft370jg5vq","DLY-003","EQUIPMENT","Ban Bocor","Kerusakan ban dump truck",true
+"cmhsbjvjo0agsmaftjdonjtyo","DLY-004","EQUIPMENT","Mesin Overheat","Temperatur mesin berlebih",true
+"cmhsbjvjp0agtmaftjs2watn7","DLY-005","EQUIPMENT","Hydraulic Failure","Sistem hidrolik bermasalah",true
+"cmhsbjvjq0agumaft6juu8i5a","DLY-006","QUEUE","Antrian Panjang","Waiting time di loading point",true
+"cmhsbjvjr0agvmaft877wtdox","DLY-007","ROAD","Jalan Rusak","Kondisi jalan buruk",true
+"cmhsbjvjt0agwmaftoret6flo","DLY-008","ROAD","Jalan Licin","Permukaan jalan licin",true
+"cmhsbjvju0agxmaftco9t6wdm","DLY-009","OPERATOR","Operator Terlambat","Keterlambatan shift operator",true
+"cmhsbjvjw0agymaft5q0ex4n2","DLY-010","FUEL","Refueling","Proses pengisian BBM",true
+"cmhsbjvjx0agzmaftohfcqqxw","DLY-011","ADMINISTRATIVE","Dokumentasi","Proses administrasi",true
+"cmhsbjvjy0ah0maftp6zwadza","DLY-012","SAFETY","Safety Briefing","Briefing keselamatan",true
