@@ -272,7 +272,7 @@ class AIService {
           top_3_strategies_context: context,
         },
         {
-          timeout: 60000, // 1 minute for chatbot
+          timeout: 180000,
           headers: {
             'Content-Type': 'application/json',
           },
@@ -281,7 +281,6 @@ class AIService {
 
       const responseTime = Date.now() - startTime;
 
-      // Save chatbot interaction
       await this.saveChatbotInteraction({
         userId,
         question,
