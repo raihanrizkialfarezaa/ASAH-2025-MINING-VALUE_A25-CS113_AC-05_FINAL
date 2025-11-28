@@ -87,7 +87,7 @@ try:
     print(f"3. Menghubungkan Ollama...")
     try:
         ollama.list()
-        LLM_PROVIDER, OLLAMA_MODEL = "ollama", "qwen2.5:7b"
+        LLM_PROVIDER, OLLAMA_MODEL = "ollama", "qwen3:1.7b"
         print(f"✅ SISTEM SIAP. Menggunakan model: {OLLAMA_MODEL}")
     except:
         print("⚠️ OLLAMA TIDAK TERHUBUNG.")
