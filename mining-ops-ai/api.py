@@ -13,11 +13,12 @@ from typing import List, Dict, Any, Optional
 # Ini akan memuat model ML dan database ke memori saat server start
 try:
     from simulator import (
-        CONFIG,                        # Konfigurasi Default
-        get_strategic_recommendations, # Fungsi Agen Strategis (Hybrid)
-        format_konteks_for_llm,        # Helper formatter data (JSON Cantik)
-        LLM_PROVIDER,                  # Cek status Ollama
-        OLLAMA_MODEL                   # Nama model 
+        CONFIG,
+        get_strategic_recommendations,
+        format_konteks_for_llm,
+        LLM_PROVIDER,
+        OLLAMA_MODEL,
+        load_fresh_data
     )
     print("✅ Berhasil mengimpor 'otak' dari simulator.py")
 except ImportError as e:
@@ -45,26 +46,27 @@ class FinancialParams(BaseModel):
     """Parameter Finansial Kustom (Opsional)"""
     HargaJualBatuBara: float = Field(800000, description="Harga Jual per Ton (IDR)")
     HargaSolar: float = Field(15000, description="Harga Solar per Liter (IDR)")
-    BiayaPenaltiKeterlambatanKapal: float = Field(100000000, description="Biaya Penalti per Jam Antri (IDR)")
-    BiayaRataRataInsiden: float = Field(50000000, description="Biaya rata-rata per insiden (IDR)")
-    BiayaDemurragePerJam: float = Field(50000000, description="Denda kapal per jam (IDR)")
+    BiayaAntrianPerJam: float = Field(100000, description="Biaya operasional per jam antri (IDR)")
+    BiayaPenaltiKeterlambatanKapal: float = Field(100000000, description="Biaya Penalti Flat jika kapal telat (IDR)")
+    BiayaRataRataInsiden: float = Field(500000, description="Biaya rata-rata per insiden/delay (IDR)")
+    BiayaDemurragePerJam: float = Field(5000000, description="Denda kapal per jam delay (IDR)")
 
 # Model untuk Kondisi Lapangan
 class FixedConditions(BaseModel):
-    """Input Kondisi Lapangan (Tetap)"""
     weatherCondition: str = Field("Cerah", example="Hujan Ringan")
     roadCondition: str = Field("GOOD", example="FAIR")
     shift: str = Field("SHIFT_1", example="SHIFT_1")
-    target_road_id: str = Field("cmhsbjn8x02s2maft90hi31ty", description="ID Rute dari database")
-    target_excavator_id: str = Field("cmhsbjpma05ddmaft5kv95dom", description="ID Excavator dari database")
+    target_road_id: Optional[str] = Field(None, description="ID Rute dari database (Optional - AI will explore all if not provided)")
+    target_excavator_id: Optional[str] = Field(None, description="ID Excavator dari database (Optional - AI will explore all if not provided)")
     target_schedule_id: Optional[str] = Field(None, description="ID Jadwal Kapal (Opsional)")
     simulation_start_date: Optional[str] = Field(None, description="Tanggal mulai simulasi (ISO 8601)")
 
 # Model untuk Variabel Keputusan
 class DecisionVariables(BaseModel):
-    """Input Variabel Keputusan (Yang ingin diuji)"""
-    alokasi_truk: List[int] = Field([5, 10], description="Daftar jumlah truk untuk disimulasikan")
-    jumlah_excavator: List[int] = Field([1, 2], description="Daftar jumlah excavator untuk disimulasikan")
+    min_trucks: int = Field(5, ge=1, le=100, description="Minimum number of trucks to test")
+    max_trucks: int = Field(15, ge=1, le=100, description="Maximum number of trucks to test")
+    min_excavators: int = Field(1, ge=1, le=20, description="Minimum number of excavators to test")
+    max_excavators: int = Field(3, ge=1, le=20, description="Maximum number of excavators to test")
 
 # Model Request Utama (Simulasi)
 class RecommendationRequest(BaseModel):
@@ -103,15 +105,9 @@ def read_root():
 
 @app.post("/get_top_3_strategies")
 async def dapatkan_rekomendasi_strategis(request: RecommendationRequest):
-    """
-    ENDPOINT 1: AGEN STRATEGIS (Simulasi Hybrid)
-    Menerima input user, menjalankan simulasi SimPy+ML, dan mengembalikan 3 strategi terbaik
-    yang sudah diformat rapi untuk ditampilkan di Dashboard.
-    """
     try:
         print(f"📡 Menerima request strategi baru...")
         
-        # 1. Tentukan Parameter Finansial (Default vs Kustom)
         active_financial_params = {}
         if request.financial_params:
             active_financial_params = request.financial_params.dict()
@@ -120,7 +116,6 @@ async def dapatkan_rekomendasi_strategis(request: RecommendationRequest):
             active_financial_params = CONFIG['financial_params']
             print("   ℹ️ Menggunakan Parameter Finansial Default Server")
         
-        # 2. Panggil Mesin Simulasi di simulator.py
         top_3_list = get_strategic_recommendations(
             request.fixed_conditions.dict(),
             request.decision_variables.dict(),
@@ -128,13 +123,12 @@ async def dapatkan_rekomendasi_strategis(request: RecommendationRequest):
         )
         
         if top_3_list:
-            # 3. Format Data 
-            formatted_json_str = format_konteks_for_llm(top_3_list)
+            data = load_fresh_data()
+            formatted_json_str = format_konteks_for_llm(top_3_list, data)
             formatted_data = json.loads(formatted_json_str)
             
             return {"top_3_strategies": formatted_data}
         else:
-            # Jika simulasi gagal menemukan solusi valid
             raise HTTPException(status_code=500, detail="Simulasi selesai tapi tidak menghasilkan rekomendasi valid.")
             
     except Exception as e:

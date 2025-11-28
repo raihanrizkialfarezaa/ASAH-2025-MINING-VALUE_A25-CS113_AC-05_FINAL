@@ -55,11 +55,30 @@ const AIRecommendations = () => {
     setRecommendations(null);
     setSelectedStrategy(null);
 
+    // Extract financial parameters and structure them for the API
+    const financialParams = {
+      HargaJualBatuBara: params.coalPrice || 900000,
+      HargaSolar: params.fuelPrice || 15000,
+      BiayaAntrianPerJam: params.queueCost || 100000,
+      BiayaDemurragePerJam: params.demurrageCost || 50000000,
+      BiayaRataRataInsiden: params.incidentCost || 500000,
+      BiayaPenaltiKeterlambatanKapal: 100000000, // Default value for major penalty
+    };
+
+    const uniqueParams = {
+      ...params,
+      financialParams, // Add the structured financial params
+      _cacheBreaker: `${Date.now()}_${Math.random().toString(36).substring(7)}`,
+    };
+
+    console.log('[AIRecommendations] Sending request with params:', uniqueParams);
+
     try {
-      const result = await aiService.getRecommendations(params);
+      const result = await aiService.getRecommendations(uniqueParams);
+
+      console.log('[AIRecommendations] Raw response:', JSON.stringify(result, null, 2));
 
       if (result.success && result.data.top_3_strategies) {
-        // Map backend response format (OPSI_X) to frontend expected format
         const mappedRecommendations = result.data.top_3_strategies
           .map((item, index) => {
             const key = Object.keys(item).find((k) => k.startsWith('OPSI_'));
@@ -67,10 +86,12 @@ const AIRecommendations = () => {
 
             if (!data) return null;
 
-            return {
+            const mapped = {
               skenario: {
                 alokasi_truk: data.INSTRUKSI_FLAT?.JUMLAH_DUMP_TRUCK || 'N/A',
                 jumlah_excavator: data.INSTRUKSI_FLAT?.JUMLAH_EXCAVATOR || 'N/A',
+                route: data.INSTRUKSI_FLAT?.JALUR_ANGKUT || 'N/A',
+                equipment: data.INSTRUKSI_FLAT?.ALAT_MUAT_TARGET || 'N/A',
               },
               profit_display: data.KPI_PREDIKSI?.PROFIT || 'N/A',
               total_tonase_display: data.KPI_PREDIKSI?.PRODUKSI || 'N/A',
@@ -79,17 +100,26 @@ const AIRecommendations = () => {
               efisiensi_display: data.KPI_PREDIKSI?.IDLE_ANTRIAN || 'N/A',
               delay_probability_avg: 0,
               insight: `${data.ANALISIS_KAPAL || ''} ${data.SOP_KESELAMATAN || ''}`.trim(),
+              ship_analysis: data.ANALISIS_KAPAL || '',
+              safety_sop: data.SOP_KESELAMATAN || '',
+              _uniqueId: `${Date.now()}_${index}`,
             };
+
+            console.log(`[AIRecommendations] Mapped strategy ${index + 1}:`, mapped);
+
+            return mapped;
           })
           .filter(Boolean);
 
+        console.log('[AIRecommendations] Setting recommendations:', mappedRecommendations);
         setRecommendations(mappedRecommendations);
-        toast.success('Recommendations generated successfully!');
+        toast.success(`Generated ${mappedRecommendations.length} unique strategies from database!`);
       } else {
+        console.error('[AIRecommendations] Invalid response structure:', result);
         toast.error('No recommendations returned');
       }
     } catch (error) {
-      console.error('Failed to get recommendations:', error);
+      console.error('[AIRecommendations] Error:', error);
       toast.error(error.response?.data?.message || 'Failed to get recommendations');
     } finally {
       setLoading(false);

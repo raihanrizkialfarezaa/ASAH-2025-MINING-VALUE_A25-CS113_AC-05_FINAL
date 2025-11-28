@@ -44,15 +44,29 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
         {/* Scenario Details */}
         <div className="bg-gray-50 p-4 rounded-md">
           <h4 className="font-semibold text-gray-700 mb-2">Configuration</h4>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <span className="text-gray-600">Trucks:</span>
-              <span className="font-semibold ml-2">{recommendation.skenario.alokasi_truk}</span>
+          <div className="space-y-2 text-sm">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <span className="text-gray-600">Trucks:</span>
+                <span className="font-semibold ml-2">{recommendation.skenario.alokasi_truk}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">Excavators:</span>
+                <span className="font-semibold ml-2">{recommendation.skenario.jumlah_excavator}</span>
+              </div>
             </div>
-            <div>
-              <span className="text-gray-600">Excavators:</span>
-              <span className="font-semibold ml-2">{recommendation.skenario.jumlah_excavator}</span>
-            </div>
+            {recommendation.skenario.route && (
+              <div className="pt-2 border-t">
+                <span className="text-gray-600 block mb-1">Route:</span>
+                <div className="font-semibold text-xs text-blue-700 break-words">{recommendation.skenario.route}</div>
+              </div>
+            )}
+            {recommendation.skenario.equipment && (
+              <div className="pt-2 border-t">
+                <span className="text-gray-600 block mb-1">Equipment:</span>
+                <div className="font-semibold text-xs text-green-700 break-words">{recommendation.skenario.equipment}</div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -74,7 +88,7 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-gray-600">Cycle Time</span>
+            <span className="text-gray-600">Est. Vessel Completion</span>
             <span className="font-semibold">{recommendation.cycle_time_avg_display}</span>
           </div>
         </div>

@@ -58,37 +58,31 @@ class AIController {
         targetRoadId,
         targetExcavatorId,
         targetScheduleId,
-        truckOptions,
-        excavatorOptions,
+        minTrucks,
+        maxTrucks,
+        minExcavators,
+        maxExcavators,
         financialParams,
       } = req.body;
 
-      // Validate required fields
-      if (!targetRoadId || !targetExcavatorId) {
-        return res.status(400).json({
-          success: false,
-          message: 'targetRoadId and targetExcavatorId are required',
-        });
-      }
-
-      // Build AI service parameters
       const aiParams = {
         fixed_conditions: {
           weatherCondition: weatherCondition || 'Cerah',
           roadCondition: roadCondition || 'GOOD',
           shift: shift || 'SHIFT_1',
-          target_road_id: targetRoadId,
-          target_excavator_id: targetExcavatorId,
+          target_road_id: targetRoadId || null,
+          target_excavator_id: targetExcavatorId || null,
           target_schedule_id: targetScheduleId || null,
           simulation_start_date: new Date().toISOString(),
         },
         decision_variables: {
-          alokasi_truk: truckOptions || [5, 10, 15],
-          jumlah_excavator: excavatorOptions || [1, 2],
+          min_trucks: minTrucks || 5,
+          max_trucks: maxTrucks || 15,
+          min_excavators: minExcavators || 1,
+          max_excavators: maxExcavators || 3,
         },
       };
 
-      // Add financial parameters if provided
       if (financialParams) {
         aiParams.financial_params = financialParams;
       }

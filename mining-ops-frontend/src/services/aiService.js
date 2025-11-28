@@ -30,13 +30,20 @@ class AIService {
     }
   }
 
-  /**
-   * Get strategic recommendations from AI
-   * @param {Object} params - Recommendation parameters
-   */
   async getRecommendations(params) {
     try {
-      const response = await api.post('/ai/recommendations', params);
+      const requestPayload = {
+        ...params,
+        _timestamp: Date.now(),
+        _requestId: Math.random().toString(36).substring(7),
+      };
+
+      console.log('[AI Service] Sending request:', requestPayload);
+
+      const response = await api.post('/ai/recommendations', requestPayload);
+
+      console.log('[AI Service] Received response:', response.data);
+
       return response.data;
     } catch (error) {
       console.error('Failed to get recommendations:', error);
