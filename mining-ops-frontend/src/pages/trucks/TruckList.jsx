@@ -4,7 +4,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
 import StatusBadge from '../../components/common/StatusBadge';
-import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Activity, Filter } from 'lucide-react';
 
 const TruckList = () => {
   const [trucks, setTrucks] = useState([]);
@@ -13,6 +13,9 @@ const TruckList = () => {
   const [selectedTruck, setSelectedTruck] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('view');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [performanceData, setPerformanceData] = useState(null);
+  const [showPerformanceModal, setShowPerformanceModal] = useState(false);
   const [formData, setFormData] = useState({
     code: '',
     name: '',
@@ -25,14 +28,27 @@ const TruckList = () => {
 
   useEffect(() => {
     fetchTrucks();
-  }, [pagination.page]);
+  }, [pagination.page, statusFilter]);
 
   const fetchTrucks = async () => {
     setLoading(true);
     try {
-      const res = await truckService.getAll({ page: pagination.page, limit: pagination.limit });
-      setTrucks(res.data || []);
-      setPagination((prev) => ({ ...prev, totalPages: res.meta?.totalPages || 1 }));
+      let res;
+      if (statusFilter) {
+        res = await truckService.getByStatus(statusFilter);
+        // Adjust response structure if getByStatus returns array directly
+        if (Array.isArray(res)) {
+          setTrucks(res);
+          setPagination({ page: 1, limit: 10, totalPages: 1 }); // Reset pagination for filter
+        } else {
+          setTrucks(res.data || []);
+          setPagination((prev) => ({ ...prev, totalPages: res.meta?.totalPages || 1 }));
+        }
+      } else {
+        res = await truckService.getAll({ page: pagination.page, limit: pagination.limit });
+        setTrucks(res.data || []);
+        setPagination((prev) => ({ ...prev, totalPages: res.meta?.totalPages || 1 }));
+      }
     } catch (error) {
       console.error('Failed to fetch trucks:', error);
       setTrucks([]);
@@ -74,6 +90,18 @@ const TruckList = () => {
     setSelectedTruck(truck);
     setModalMode('view');
     setShowModal(true);
+  };
+
+  const handlePerformance = async (truck) => {
+    setSelectedTruck(truck);
+    try {
+      const data = await truckService.getPerformance(truck.id);
+      setPerformanceData(data);
+      setShowPerformanceModal(true);
+    } catch (error) {
+      console.error('Failed to fetch performance:', error);
+      window.alert('Failed to fetch performance data.');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -147,7 +175,7 @@ const TruckList = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !trucks.length) {
     return <LoadingSpinner fullScreen />;
   }
 
@@ -155,10 +183,22 @@ const TruckList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Trucks</h1>
-        <button onClick={handleCreate} className="btn-primary flex items-center space-x-2">
-          <Plus size={20} />
-          <span>Add Truck</span>
-        </button>
+        <div className="flex space-x-2">
+          <div className="relative">
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input-field pl-8">
+              <option value="">All Status</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="OPERATING">Operating</option>
+              <option value="MAINTENANCE">Maintenance</option>
+              <option value="BREAKDOWN">Breakdown</option>
+            </select>
+            <Filter className="absolute left-2 top-2.5 text-gray-400" size={16} />
+          </div>
+          <button onClick={handleCreate} className="btn-primary flex items-center space-x-2">
+            <Plus size={20} />
+            <span>Add Truck</span>
+          </button>
+        </div>
       </div>
 
       <div className="card table-container">
@@ -187,13 +227,16 @@ const TruckList = () => {
                 </td>
                 <td className="table-cell">
                   <div className="flex space-x-2">
-                    <button onClick={() => handleView(truck)} className="text-blue-600 hover:text-blue-800">
+                    <button onClick={() => handleView(truck)} className="text-blue-600 hover:text-blue-800" title="View Details">
                       <Eye size={18} />
                     </button>
-                    <button onClick={() => handleEdit(truck)} className="text-green-600 hover:text-green-800">
+                    <button onClick={() => handleEdit(truck)} className="text-green-600 hover:text-green-800" title="Edit">
                       <Edit size={18} />
                     </button>
-                    <button onClick={() => handleDelete(truck.id)} className="text-red-600 hover:text-red-800">
+                    <button onClick={() => handlePerformance(truck)} className="text-purple-600 hover:text-purple-800" title="Performance">
+                      <Activity size={18} />
+                    </button>
+                    <button onClick={() => handleDelete(truck.id)} className="text-red-600 hover:text-red-800" title="Delete">
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -287,6 +330,33 @@ const TruckList = () => {
               </button>
             </div>
           </form>
+        )}
+      </Modal>
+
+      <Modal isOpen={showPerformanceModal} onClose={() => setShowPerformanceModal(false)} title={`Performance: ${selectedTruck?.code}`} size="md">
+        {performanceData ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-blue-50 p-3 rounded">
+                <p className="text-sm text-gray-600">Total Trips</p>
+                <p className="text-xl font-bold text-blue-700">{performanceData.totalTrips || 0}</p>
+              </div>
+              <div className="bg-green-50 p-3 rounded">
+                <p className="text-sm text-gray-600">Total Production</p>
+                <p className="text-xl font-bold text-green-700">{performanceData.totalProduction || 0} ton</p>
+              </div>
+              <div className="bg-orange-50 p-3 rounded">
+                <p className="text-sm text-gray-600">Fuel Consumed</p>
+                <p className="text-xl font-bold text-orange-700">{performanceData.totalFuel || 0} L</p>
+              </div>
+              <div className="bg-purple-50 p-3 rounded">
+                <p className="text-sm text-gray-600">Efficiency</p>
+                <p className="text-xl font-bold text-purple-700">{performanceData.totalProduction > 0 ? (performanceData.totalFuel / performanceData.totalProduction).toFixed(2) : 0} L/ton</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p>No performance data available.</p>
         )}
       </Modal>
     </div>

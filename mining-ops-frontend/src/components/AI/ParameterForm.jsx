@@ -36,9 +36,10 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
   useEffect(() => {
     if (realtimeData) {
       // Auto-populate from realtime data
-      if (realtimeData.upcomingSchedules) {
-        setSchedules(realtimeData.upcomingSchedules);
-      }
+      // Removed to prevent overwriting the full schedule list with limited upcoming schedules
+      // if (realtimeData.upcomingSchedules) {
+      //   setSchedules(realtimeData.upcomingSchedules);
+      // }
       if (realtimeData.weather) {
         setFormData((prev) => ({
           ...prev,

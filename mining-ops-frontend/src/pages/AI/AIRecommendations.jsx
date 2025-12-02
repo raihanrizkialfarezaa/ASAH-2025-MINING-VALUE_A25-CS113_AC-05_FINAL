@@ -105,6 +105,7 @@ const AIRecommendations = () => {
               detailed_equipment: data.DETAILED_EQUIPMENT || [],
               explanations: data.EXPLANATIONS || {},
               financial_breakdown: data.FINANCIAL_BREAKDOWN || {},
+              raw_data: data.RAW_DATA || {},
               _uniqueId: `${Date.now()}_${index}`,
             };
 

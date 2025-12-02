@@ -8,6 +8,7 @@ export const dashboardService = {
         excavatorStats,
         activeHauling,
         todayProduction,
+        operatorStats,
         latestWeather,
         recentIncidents,
       ] = await Promise.all([
@@ -40,9 +41,16 @@ export const dashboardService = {
             _sum: {
               actualProduction: true,
               targetProduction: true,
+              totalFuel: true,
             },
           })
-          .catch(() => ({ _sum: { actualProduction: 0, targetProduction: 0 } })),
+          .catch(() => ({ _sum: { actualProduction: 0, targetProduction: 0, totalFuel: 0 } })),
+        prisma.operator
+          .aggregate({
+            where: { status: 'ACTIVE' },
+            _sum: { salary: true },
+          })
+          .catch(() => ({ _sum: { salary: 0 } })),
         prisma.weatherLog
           .findFirst({
             orderBy: { timestamp: 'desc' },
@@ -95,6 +103,11 @@ export const dashboardService = {
                 100
               : 0,
         },
+        financials: {
+          estimatedFuelCost: (todayProduction._sum.totalFuel || 0) * 15000,
+          estimatedOperatorCost: (operatorStats._sum?.salary || 0) / 30, // Daily rate
+          currency: 'IDR',
+        },
         weather: latestWeather,
         safety: {
           recentIncidents,
@@ -102,15 +115,7 @@ export const dashboardService = {
       };
     } catch (error) {
       console.error('Dashboard overview error:', error);
-      return {
-        fleetStatus: { trucksOperating: 0, excavatorsOperating: 0 },
-        fleet: { trucks: [], excavators: [], activeOperations: 0 },
-        activeHauling: 0,
-        todayProduction: 0,
-        production: { todayActual: 0, todayTarget: 0, todayAchievement: 0 },
-        weather: null,
-        safety: { recentIncidents: 0 },
-      };
+      throw error;
     }
   },
 

@@ -19,7 +19,8 @@ def get_financial_params(data=None):
         'HargaSolar': 15000, 
         'BiayaPenaltiKeterlambatanKapal': 100000000,
         'BiayaRataRataInsiden': 50000000,
-        'BiayaDemurragePerJam': 50000000
+        'BiayaDemurragePerJam': 50000000,
+        'GajiOperatorRataRata': 5000000
     }
     
     if data and 'system_configs' in data and not data['system_configs'].empty:
@@ -35,6 +36,7 @@ def get_financial_params(data=None):
         defaults['HargaSolar'] = get_val('FUEL_PRICE_IDR', defaults['HargaSolar'])
         defaults['BiayaPenaltiKeterlambatanKapal'] = get_val('VESSEL_PENALTY_IDR', defaults['BiayaPenaltiKeterlambatanKapal'])
         defaults['BiayaDemurragePerJam'] = get_val('DEMURRAGE_COST_IDR', defaults['BiayaDemurragePerJam'])
+        defaults['GajiOperatorRataRata'] = get_val('OPERATOR_SALARY_IDR', defaults['GajiOperatorRataRata'])
         
     return defaults
 
@@ -353,8 +355,6 @@ def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, 
         
         feats = get_features_for_prediction(truck_id, operator_id, road_id, excavator_id, weather, road_cond, shift, current_sim_time, data)
         
-        # Default values with slight randomization to avoid identical outputs if ML fails
-        # Use specific fuel rate as baseline
         fuel_baseline = (road_distance_km * 2) * fuel_rate
         fuel = fuel_baseline * np.random.uniform(0.95, 1.05)
         
@@ -365,9 +365,8 @@ def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, 
         
         if not feats.empty:
             try:
-                # Blend ML prediction with physical calculation
                 ml_fuel = MODEL_FUEL.predict(feats)[0]
-                fuel = (fuel * 0.7) + (ml_fuel * 0.3) # Weighted average
+                fuel = (fuel * 0.7) + (ml_fuel * 0.3)
                 
                 fuel_real = MODEL_FUEL_REAL.predict(feats)[0]
                 raw_load = MODEL_LOAD.predict(feats)[0]
@@ -379,14 +378,14 @@ def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, 
                 load = max(load, tonase * 0.87)
                 
             except Exception as e:
-                # print(f"ML Prediction error: {e}")
                 pass
 
-        # HAULING (Loaded)
-        # Time = Distance / Speed
         avg_hauling_speed = calibrated_params['avg_hauling_speed_kmh'] * total_speed_factor
         hauling_time_hours = road_distance_km / avg_hauling_speed
+        haul_start = env.now
         yield env.timeout(hauling_time_hours)
+        haul_end = env.now
+        global_metrics['total_hauling_time_hours'] += (haul_end - haul_start)
         
         waktu_masuk_antrian = env.now
         
@@ -398,21 +397,27 @@ def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, 
             durasi_antri = waktu_keluar_antrian - waktu_masuk_antrian
             global_metrics['total_waktu_antri_jam'] += durasi_antri
             
-            # LOADING
             avg_loading_min = calibrated_params['avg_loading_time_min']
-            # Rain slows down loading slightly
             loading_factor = 1.1 if "Hujan" in str(weather) else 1.0
-            yield env.timeout((avg_loading_min * loading_factor) / 60.0)
+            loading_time_hours = (avg_loading_min * loading_factor) / 60.0
+            loading_start = env.now
+            yield env.timeout(loading_time_hours)
+            loading_end = env.now
+            global_metrics['total_loading_time_hours'] += (loading_end - loading_start)
             
-        # RETURN (Empty)
         avg_return_speed = calibrated_params['avg_return_speed_kmh'] * total_speed_factor
-        # Empty trucks might be slightly faster or same, usually faster
         return_time_hours = road_distance_km / avg_return_speed
+        return_start = env.now
         yield env.timeout(return_time_hours)
+        return_end = env.now
+        global_metrics['total_return_time_hours'] += (return_end - return_start)
         
-        # DUMPING
         avg_dump_min = calibrated_params['avg_dumping_time_min']
-        yield env.timeout(avg_dump_min / 60.0)
+        dumping_time_hours = avg_dump_min / 60.0
+        dump_start = env.now
+        yield env.timeout(dumping_time_hours)
+        dump_end = env.now
+        global_metrics['total_dumping_time_hours'] += (dump_end - dump_start)
         
         cycle_duration_hours = env.now - start_cycle_time
         global_metrics['total_cycle_time_hours'] += cycle_duration_hours
@@ -528,10 +533,14 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, ca
         'jumlah_siklus_selesai': 0, 'total_waktu_antri_jam': 0.0,
         'total_probabilitas_delay': 0.0,
         'total_cycle_time_hours': 0.0,
-        'total_maintenance_cost': 0.0
+        'total_maintenance_cost': 0.0,
+        'total_operator_cost': 0.0,
+        'total_loading_time_hours': 0.0,
+        'total_dumping_time_hours': 0.0,
+        'total_hauling_time_hours': 0.0,
+        'total_return_time_hours': 0.0
     }
     
-    # Filter for active trucks
     if 'status' in data['trucks'].columns:
         active_trucks = data['trucks'][~data['trucks']['status'].isin(['MAINTENANCE', 'BREAKDOWN'])]
         trucks = active_trucks.index.tolist()
@@ -544,7 +553,6 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, ca
         print("⚠️ No active trucks available for simulation!")
         return skenario 
 
-    # Use calibrated params if provided, else default
     if calibrated_params is None:
         calibrated_params = {
             'avg_hauling_speed_kmh': 25.0,
@@ -562,10 +570,8 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, ca
 
         env.process(truck_process_hybrid(env, t_id, o_id, res, metrics, skenario, sim_start_time, data, calibrated_params))
         
-    # Logic to capture used excavators
     used_excavator_ids = []
     
-    # Filter for active excavators
     if 'status' in data['excavators'].columns:
         active_excavators = data['excavators'][~data['excavators']['status'].isin(['MAINTENANCE', 'BREAKDOWN'])]
         excavators_list = active_excavators.index.tolist()
@@ -587,15 +593,35 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, ca
     
     p = financial_params
     rev = metrics['total_tonase'] * p['HargaJualBatuBara']
+    
+    num_trucks = skenario['alokasi_truk']
+    num_excavators = skenario['jumlah_excavator']
+    num_hauling_operators = num_trucks
+    num_loading_operators = num_excavators
+    num_dumping_operators = num_excavators
+    total_operators_needed = num_hauling_operators + num_loading_operators + num_dumping_operators
+    
+    avg_operator_salary = p.get('GajiOperatorRataRata', 5000000)
+    if 'operators' in data and not data['operators'].empty and 'salary' in data['operators'].columns:
+        salaries = data['operators']['salary'].dropna()
+        if len(salaries) > 0:
+            avg_operator_salary = salaries.mean()
+    
+    duration_hours_actual = env.now
+    salary_per_hour_per_operator = avg_operator_salary / 30 / 24
+    metrics['total_operator_cost'] = salary_per_hour_per_operator * total_operators_needed * duration_hours_actual
+    metrics['num_hauling_operators'] = num_hauling_operators
+    metrics['num_loading_operators'] = num_loading_operators
+    metrics['num_dumping_operators'] = num_dumping_operators
+    metrics['total_operators_needed'] = total_operators_needed
+    metrics['avg_operator_salary_monthly'] = avg_operator_salary
+    metrics['operator_salary_per_hour'] = salary_per_hour_per_operator
+    
     cost = metrics['total_bbm_liter'] * p['HargaSolar']
-    
-    # Add Maintenance Cost
     cost += metrics['total_maintenance_cost']
+    cost += metrics['total_operator_cost']
     
-    # FIX: Use operational queue cost (e.g. 100k/hr) instead of vessel penalty (100M)
     risk_antri = metrics['total_waktu_antri_jam'] * p.get('BiayaAntrianPerJam', 100000)
-    
-    # FIX: Use a smaller cost for operational delays, not major incidents
     risk_insiden = metrics['total_probabilitas_delay'] * p.get('BiayaRataRataInsiden', 500000) 
     
     schedule_id = skenario.get('target_schedule_id')
@@ -604,12 +630,6 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, ca
     
     profit = rev - cost - risk_antri - risk_insiden - biaya_demurrage
     
-    # Calculate total distance for reporting
-    # Assuming avg speed and cycle time, or just sum of trips * distance
-    # Since we don't track distance per truck explicitly in metrics, we estimate:
-    # Distance per cycle = 2 * road_distance (Haul + Return)
-    # We need road distance. It's in the truck process but not in metrics.
-    # Let's approximate or fetch road distance again.
     road_id = skenario.get('target_road_id')
     try: road_dist = data['roads'].loc[road_id]['distance']
     except: road_dist = 5.0
@@ -625,13 +645,16 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, ca
         'used_truck_ids': used_truck_ids,
         'used_excavator_ids': used_excavator_ids,
         'total_distance_km': total_distance_km,
-        'financial_params': p, # Pass params for explanation
+        'financial_params': p,
         'financial_breakdown': {
             'revenue': rev,
-            'fuel_cost': cost,
+            'fuel_cost': metrics['total_bbm_liter'] * p['HargaSolar'],
+            'maintenance_cost': metrics['total_maintenance_cost'],
+            'operator_cost': metrics['total_operator_cost'],
             'queue_cost': risk_antri,
             'incident_risk_cost': risk_insiden,
             'demurrage_cost': biaya_demurrage,
+            'total_cost': cost,
             'net_profit': profit
         }
     })
@@ -728,12 +751,10 @@ def format_konteks_for_llm(simulation_results, data):
 
         fin = res.get('financial_breakdown', {})
         
-        # Detailed Equipment List
         detailed_equipment = []
         used_trucks = res.get('used_truck_ids', [])
         used_excavators = res.get('used_excavator_ids', [])
         
-        # Group trucks by model/brand to summarize if too many
         truck_counts = {}
         for t_id in used_trucks:
             if not data['trucks'].empty and t_id in data['trucks'].index:
@@ -747,47 +768,164 @@ def format_konteks_for_llm(simulation_results, data):
                 name = f"{e_data['brand']} {e_data['model']} ({e_id})"
                 detailed_equipment.append({"type": "Excavator", "id": e_id, "name": name})
 
-        # Explanations
+        cycles = res.get('jumlah_siklus_selesai', 0)
         
-        # Financial Breakdown Details
+        loading_time_total = res.get('total_loading_time_hours', 0)
+        hauling_time_total = res.get('total_hauling_time_hours', 0)
+        dumping_time_total = res.get('total_dumping_time_hours', 0)
+        return_time_total = res.get('total_return_time_hours', 0)
+        queue_time_total = res.get('total_waktu_antri_jam', 0)
+        
+        loading_avg_min = (loading_time_total / cycles * 60) if cycles > 0 else 0
+        hauling_avg_min = (hauling_time_total / cycles * 60) if cycles > 0 else 0
+        dumping_avg_min = (dumping_time_total / cycles * 60) if cycles > 0 else 0
+        return_avg_min = (return_time_total / cycles * 60) if cycles > 0 else 0
+        queue_avg_min = (queue_time_total / cycles * 60) if cycles > 0 else 0
+        
+        road_id = res.get('target_road_id')
+        try: road_dist = data['roads'].loc[road_id]['distance']
+        except: road_dist = 5.0
+        
+        num_hauling_ops = res.get('num_hauling_operators', res.get('alokasi_truk', 0))
+        num_loading_ops = res.get('num_loading_operators', res.get('jumlah_excavator', 0))
+        num_dumping_ops = res.get('num_dumping_operators', res.get('jumlah_excavator', 0))
+
+        total_ops_needed = res.get('total_operators_needed', num_hauling_ops + num_loading_ops + num_dumping_ops)
+        
+        flow_breakdown = (
+            f"Rincian Alur Operasi Per Siklus (Hulu - Hilir)\n"
+            f"\n"
+            f"Siklus Lengkap: {avg_cycle_min:.1f} menit rata-rata per trip\n"
+            f"\n"
+            f"FASE 1: LOADING di Hulu (Area Tambang)\n"
+            f"   Waktu per Trip: {loading_avg_min:.1f} menit\n"
+            f"   Lokasi: Loading Point\n"
+            f"   Proses: Excavator memuat batubara ke dump truck\n"
+            f"   Equipment: {res.get('jumlah_excavator')} unit excavator - {e_name}\n"
+            f"   Operator Loading: {num_loading_ops} orang\n"
+            f"\n"
+            f"FASE 2: HAULING (Pengangkutan Terisi - Tambang ke Pelabuhan)\n"
+            f"   Waktu per Trip: {hauling_avg_min:.1f} menit\n"
+            f"   Jarak Tempuh: {road_dist:.2f} km\n"
+            f"   Kecepatan Rata-rata: {(road_dist / (hauling_avg_min / 60)):.1f} km/jam\n"
+            f"   Kondisi Jalan: {res.get('roadCondition')}\n"
+            f"   Kondisi Cuaca: {res.get('weatherCondition')}\n"
+            f"   Equipment: {res.get('alokasi_truk')} unit dump truck\n"
+            f"   Operator Hauling: {num_hauling_ops} orang\n"
+            f"\n"
+            f"FASE 3: QUEUE di Hilir (Antrian Dumping Point)\n"
+            f"   Waktu Tunggu per Trip: {queue_avg_min:.1f} menit\n"
+            f"   Status Antrian: {'Tinggi - Perlu Optimasi' if queue_avg_min > 10 else 'Lancar'}\n"
+            f"\n"
+            f"FASE 4: DUMPING di Hilir (Transfer ke Vessel)\n"
+            f"   Waktu per Trip: {dumping_avg_min:.1f} menit\n"
+            f"   Lokasi: Vessel Loading Area (Dermaga)\n"
+            f"   Proses: Transfer batubara dari truck ke vessel\n"
+            f"   Equipment: {res.get('jumlah_excavator')} unit excavator\n"
+            f"   Operator Dumping: {num_dumping_ops} orang\n"
+            f"\n"
+            f"FASE 5: RETURN (Perjalanan Kosong - Pelabuhan ke Tambang)\n"
+            f"   Waktu per Trip: {return_avg_min:.1f} menit\n"
+            f"   Jarak Tempuh: {road_dist:.2f} km\n"
+            f"   Kecepatan Rata-rata: {(road_dist / (return_avg_min / 60)):.1f} km/jam\n"
+            f"\n"
+            f"RINGKASAN PRODUKSI\n"
+            f"   Total Siklus Selesai: {cycles} trips\n"
+            f"   Total Jarak Tempuh: {res.get('total_distance_km', 0):.1f} km\n"
+            f"   Total Produksi: {ton:,.0f} ton\n"
+            f"   Rata-rata Muatan per Trip: {ton / cycles:.1f} ton/trip\n"
+            f"   Total BBM Terpakai: {res.get('total_bbm_liter', 0):,.0f} liter\n"
+            f"   Efisiensi BBM: {res.get('total_bbm_liter', 0) / ton:.2f} liter/ton\n"
+            f"   Total Operator Dibutuhkan: {total_ops_needed} orang\n"
+            f"   - Operator Hauling: {num_hauling_ops} orang\n"
+            f"   - Operator Loading: {num_loading_ops} orang\n"
+            f"   - Operator Dumping: {num_dumping_ops} orang"
+        )
+        
         rev_val = fin.get('revenue', 0)
         fuel_cost_val = fin.get('fuel_cost', 0)
         queue_cost_val = fin.get('queue_cost', 0)
         incident_cost_val = fin.get('incident_risk_cost', 0)
         demurrage_val = fin.get('demurrage_cost', 0)
         maint_cost_val = res.get('total_maintenance_cost', 0)
+        operator_cost_val = res.get('total_operator_cost', 0)
         net_profit_val = fin.get('net_profit', 0)
         
         coal_price = res.get('financial_params', {}).get('HargaJualBatuBara', 800000)
         fuel_price = res.get('financial_params', {}).get('HargaSolar', 15000)
+        avg_operator_salary = res.get('avg_operator_salary_monthly', res.get('financial_params', {}).get('GajiOperatorRataRata', 5000000))
+        
+        num_hauling_ops = res.get('num_hauling_operators', res.get('alokasi_truk', 0))
+        num_loading_ops = res.get('num_loading_operators', res.get('jumlah_excavator', 0))
+        num_dumping_ops = res.get('num_dumping_operators', res.get('jumlah_excavator', 0))
+        total_ops = res.get('total_operators_needed', num_hauling_ops + num_loading_ops + num_dumping_ops)
+        operator_hourly = res.get('operator_salary_per_hour', avg_operator_salary / 30 / 24)
+        duration_hours = 8
         
         financial_explanation = (
-            f"**Perhitungan Laba Bersih:**\n"
-            f"1. **Pendapatan (Revenue)**:\n"
-            f"   - Rumus: `Total Tonase × Harga Batubara`\n"
-            f"   - Perhitungan: {ton:,.0f} Ton × {format_currency(coal_price)}/Ton\n"
-            f"   - **Total Pendapatan**: **{format_currency(rev_val)}**\n"
-            f"2. **Rincian Biaya Operasional**:\n"
-            f"   - **Biaya Bahan Bakar**: {res.get('total_bbm_liter', 0):,.0f} L × {format_currency(fuel_price)}/L = {format_currency(fuel_cost_val)}\n"
-            f"   - **Biaya Maintenance**: {format_currency(maint_cost_val)} (Estimasi aus & servis per jam operasi)\n"
-            f"   - **Inefisiensi Antrean**: {format_currency(queue_cost_val)} (Biaya peluang dari waktu yang hilang)\n"
-            f"   - **Risiko Insiden**: {format_currency(incident_cost_val)} (Biaya probabilistik berdasarkan model keselamatan)\n"
-            f"   - **Denda Demurrage**: {format_currency(demurrage_val)} (Denda keterlambatan kapal)\n"
-            f"3. **Laba Bersih**:\n"
-            f"   - Rumus: `Pendapatan - (BBM + Maintenance + Antrean + Risiko + Demurrage)`\n"
-            f"   - **Hasil Akhir**: **{format_currency(net_profit_val)}**"
+            f"Perhitungan Laba Bersih:\n"
+            f"\n"
+            f"1. Pendapatan (Revenue)\n"
+            f"   Formula: Total Tonase × Harga Batubara per Ton\n"
+            f"   Perhitungan: {ton:,.0f} ton × {format_currency(coal_price)}/ton\n"
+            f"   Total Pendapatan: {format_currency(rev_val)}\n"
+            f"\n"
+            f"2. Rincian Biaya Operasional\n"
+            f"   a. Biaya Bahan Bakar\n"
+            f"      Total Konsumsi: {res.get('total_bbm_liter', 0):,.0f} liter\n"
+            f"      Harga Solar: {format_currency(fuel_price)}/liter\n"
+            f"      Subtotal: {format_currency(fuel_cost_val)}\n"
+            f"\n"
+            f"   b. Biaya Maintenance & Perawatan\n"
+            f"      Estimasi aus komponen & servis rutin\n"
+            f"      Subtotal: {format_currency(maint_cost_val)}\n"
+            f"\n"
+            f"   c. Biaya Gaji Operator\n"
+            f"      - Operator Pengangkutan (Truck): {num_hauling_ops} orang\n"
+            f"      - Operator Loading (Excavator Hulu): {num_loading_ops} orang\n"
+            f"      - Operator Dumping (Excavator Hilir): {num_dumping_ops} orang\n"
+            f"      Total Operator: {total_ops} orang\n"
+            f"      Gaji Rata-rata: {format_currency(avg_operator_salary)}/bulan\n"
+            f"      Tarif Per Jam: {format_currency(operator_hourly)}/jam/operator\n"
+            f"      Durasi Operasi: {duration_hours} jam\n"
+            f"      Formula: {total_ops} operator × {format_currency(operator_hourly)}/jam × {duration_hours} jam\n"
+            f"      Subtotal: {format_currency(operator_cost_val)}\n"
+            f"\n"
+            f"   d. Biaya Inefisiensi Antrian\n"
+            f"      Biaya peluang dari waktu tunggu\n"
+            f"      Subtotal: {format_currency(queue_cost_val)}\n"
+            f"\n"
+            f"   e. Biaya Risiko Insiden\n"
+            f"      Perhitungan probabilistik model keselamatan\n"
+            f"      Subtotal: {format_currency(incident_cost_val)}\n"
+            f"\n"
+            f"   f. Denda Demurrage Kapal\n"
+            f"      Penalti keterlambatan pengiriman\n"
+            f"      Subtotal: {format_currency(demurrage_val)}\n"
+            f"\n"
+            f"3. Laba Bersih\n"
+            f"   Formula: Pendapatan - Total Biaya\n"
+            f"   Perhitungan: {format_currency(rev_val)} - {format_currency(fuel_cost_val + maint_cost_val + operator_cost_val + queue_cost_val + incident_cost_val + demurrage_val)}\n"
+            f"   Hasil Akhir: {format_currency(net_profit_val)}"
         )
 
         # Production Target Details
         cycles = res.get('jumlah_siklus_selesai', 0)
         avg_load = ton / cycles if cycles > 0 else 0
         production_explanation = (
-            f"**Analisis Produksi:**\n"
-            f"- **Total Output**: **{ton:,.0f} Ton**\n"
-            f"- **Analisis Siklus**:\n"
-            f"   - **Total Siklus**: {cycles} trip selesai.\n"
-            f"   - **Rata-rata Muatan**: {avg_load:.2f} Ton/Trip (berdasarkan kapasitas truk & densitas material).\n"
-            f"- **Konteks Pencapaian**: Output ini merepresentasikan tonase maksimum yang layak dengan konfigurasi {res.get('alokasi_truk')} truk dan {res.get('jumlah_excavator')} excavator pada kondisi cuaca ({res.get('weatherCondition')}) dan jalan ({res.get('roadCondition')}) saat ini."
+            f"Analisis Produksi:\n"
+            f"\n"
+            f"Total Output: {ton:,.0f} ton\n"
+            f"\n"
+            f"Analisis Siklus:\n"
+            f"   - Total Siklus: {cycles} trip selesai\n"
+            f"   - Rata-rata Muatan: {avg_load:.2f} ton/trip\n"
+            f"   - Basis: Kapasitas truk & densitas material batubara\n"
+            f"\n"
+            f"Konteks Pencapaian:\n"
+            f"Output ini merepresentasikan tonase maksimum yang dapat dicapai\n"
+            f"dengan konfigurasi {res.get('alokasi_truk')} truk dan {res.get('jumlah_excavator')} excavator\n"
+            f"pada kondisi cuaca {res.get('weatherCondition')} dan jalan {res.get('roadCondition')}."
         )
 
         # Fuel Efficiency Details
@@ -797,46 +935,66 @@ def format_konteks_for_llm(simulation_results, data):
         avg_fuel_per_km = fuel_total / total_dist if total_dist > 0 else 0
         
         fuel_explanation = (
-            f"**Rincian Efisiensi Bahan Bakar:**\n"
-            f"1. **Sumber Data**: Telemetri Real-time & Prediksi ML (Model XGBoost).\n"
-            f"2. **Rumus**: `Efisiensi (L/Ton) = Total BBM Terpakai / Total Produksi`\n"
-            f"3. **Perhitungan Detail**:\n"
-            f"   - **Total Jarak**: {cycles} siklus × {res.get('distance_km', 0)*2:.2f} km/trip = **{total_dist:.1f} km**\n"
-            f"   - **Tingkat Konsumsi**: {avg_fuel_per_km:.2f} L/km (Rata-rata berdasarkan gradien & muatan)\n"
-            f"   - **Total BBM**: {total_dist:.1f} km × {avg_fuel_per_km:.2f} L/km = **{fuel_total:,.0f} Liter**\n"
-            f"   - **Skor Efisiensi**: {fuel_total:,.0f} L / {ton:,.0f} Ton = **{fuel_efficiency_val:.2f} L/Ton**\n"
-            f"4. **Wawasan**: Skor lebih rendah menunjukkan efisiensi lebih baik. Skor saat ini dipengaruhi oleh kondisi jalan ({res.get('roadCondition')})."
+            f"Rincian Efisiensi Bahan Bakar:\n"
+            f"\n"
+            f"1. Sumber Data\n"
+            f"   Telemetri real-time & prediksi ML (Model XGBoost)\n"
+            f"\n"
+            f"2. Formula Efisiensi\n"
+            f"   Efisiensi (liter/ton) = Total BBM / Total Produksi\n"
+            f"\n"
+            f"3. Perhitungan Detail\n"
+            f"   - Total Jarak: {cycles} siklus × {res.get('distance_km', 0)*2:.2f} km/trip = {total_dist:.1f} km\n"
+            f"   - Tingkat Konsumsi: {avg_fuel_per_km:.2f} liter/km\n"
+            f"     (Rata-rata berdasarkan gradien & muatan)\n"
+            f"   - Total BBM: {total_dist:.1f} km × {avg_fuel_per_km:.2f} liter/km = {fuel_total:,.0f} liter\n"
+            f"   - Skor Efisiensi: {fuel_total:,.0f} liter / {ton:,.0f} ton = {fuel_efficiency_val:.2f} liter/ton\n"
+            f"\n"
+            f"4. Interpretasi\n"
+            f"   Skor lebih rendah = efisiensi lebih baik\n"
+            f"   Dipengaruhi oleh kondisi jalan {res.get('roadCondition')} dan cuaca {res.get('weatherCondition')}"
         )
 
         # Configuration Rationale
         match_factor = (res.get('alokasi_truk') * res.get('avg_loading_time_min', 3)) / (res.get('jumlah_excavator') * res.get('avg_cycle_time_min', 20)) if res.get('jumlah_excavator') > 0 and res.get('avg_cycle_time_min', 0) > 0 else 0
         config_explanation = (
-            f"**Rasional Konfigurasi Armada:**\n"
-            f"- **Pilihan**: {res.get('alokasi_truk')} Truk + {res.get('jumlah_excavator')} Excavator.\n"
-            f"- **Analisis Match Factor**: Match factor yang dihitung adalah sekitar **{match_factor:.2f}**.\n"
-            f"   - {('**Under-trucked (< 1.0)**: Excavator mungkin menunggu. Memprioritaskan efisiensi BBM daripada produksi maksimal.' if match_factor < 1.0 else '**Over-trucked (> 1.0)**: Truk mungkin mengantre. Memprioritaskan volume produksi maksimal.')}\n"
-            f"- **Tujuan Optimasi**: Kombinasi spesifik ini menghasilkan Laba Bersih tertinggi dengan menyeimbangkan biaya unit tambahan terhadap keuntungan marjinal dalam tonase."
+            f"Rasional Konfigurasi Armada:\n"
+            f"\n"
+            f"Konfigurasi Terpilih: {res.get('alokasi_truk')} Truk + {res.get('jumlah_excavator')} Excavator\n"
+            f"\n"
+            f"Analisis Match Factor: {match_factor:.2f}\n"
+            f"   - {('Under-trucked (< 1.0): Excavator mungkin menunggu. Prioritas efisiensi BBM.' if match_factor < 1.0 else 'Over-trucked (> 1.0): Truk mungkin mengantre. Prioritas volume produksi maksimal.')}\n"
+            f"\n"
+            f"Tujuan Optimasi:\n"
+            f"Kombinasi ini menghasilkan Laba Bersih tertinggi dengan menyeimbangkan\n"
+            f"biaya penambahan unit terhadap keuntungan marjinal dalam tonase produksi."
         )
 
         # Vessel Status Details
         vessel_name = ship.get('vessel_name', 'N/A')
-        eta = ship.get('eta', 'N/A') # Assuming ETA is available or use days
-        planned = ship.get('target_tonase', 0) # Assuming this field exists or derived
+        eta = ship.get('eta', 'N/A')
+        planned = ship.get('target_tonase', 0)
         remaining = ship.get('remaining_target', 0)
         daily_rate = ship.get('daily_production_rate', 0)
         
         vessel_explanation = (
-            f"**Rincian Status Kapal:**\n"
-            f"- **Identitas Kapal**: **{vessel_name}**\n"
-            f"- **Kebutuhan Kargo**:\n"
-            f"   - **Sisa Angkut**: **{remaining:,.0f} Ton**\n"
-            f"   - **Target Harian**: {daily_rate:,.0f} Ton/Hari\n"
-            f"- **Analisis Waktu**:\n"
-            f"   - **Est. Selesai**: {ship.get('days_to_complete', 0):.1f} Hari\n"
-            f"   - **Tenggat Waktu**: {ship.get('time_remaining_days', 0):.1f} Hari tersisa\n"
-            f"- **Status Akhir**: **{ship.get('status', 'N/A')}**\n"
-            f"   - {ship.get('info', '')}\n"
-            f"- **Dampak Finansial**: Potensi Demurrage sebesar {format_currency(demurrage_val)} jika terlambat."
+            f"Rincian Status Kapal:\n"
+            f"\n"
+            f"Identitas Kapal: {vessel_name}\n"
+            f"\n"
+            f"Kebutuhan Kargo:\n"
+            f"   - Sisa Target: {remaining:,.0f} ton\n"
+            f"   - Target Harian: {daily_rate:,.0f} ton/hari\n"
+            f"\n"
+            f"Analisis Waktu:\n"
+            f"   - Estimasi Selesai: {ship.get('days_to_complete', 0):.1f} hari\n"
+            f"   - Waktu Tersisa: {ship.get('time_remaining_days', 0):.1f} hari\n"
+            f"\n"
+            f"Status: {ship.get('status', 'N/A')}\n"
+            f"   {ship.get('info', '')}\n"
+            f"\n"
+            f"Dampak Finansial:\n"
+            f"   Potensi Demurrage: {format_currency(demurrage_val)}"
         )
 
         # Efficiency Analysis Details
@@ -846,36 +1004,54 @@ def format_konteks_for_llm(simulation_results, data):
         efficiency_pct = (active_time / total_time * 100) if total_time > 0 else 0
         
         efficiency_explanation = (
-            f"**Analisis Mendalam Efisiensi Operasional:**\n"
-            f"- **Skor Efisiensi**: **{efficiency_pct:.1f}%** (Aktif vs Total Waktu)\n"
-            f"- **Distribusi Waktu**:\n"
-            f"   - **Hauling Aktif**: {active_time:.1f} Jam ({efficiency_pct:.1f}%) - Pergerakan produktif.\n"
-            f"   - **Mengantre (Idle)**: {queue_time:.1f} Jam ({100-efficiency_pct:.1f}%) - Waktu terbuang di loader/dump.\n"
-            f"- **Analisis Hambatan**: {'Waktu antrean tinggi menunjukkan perlunya dispatching yang lebih baik atau pengurangan truk.' if queue_time > active_time * 0.2 else 'Aliran optimal dengan waktu tunggu minimal.'}"
+            f"Analisis Efisiensi Operasional:\n"
+            f"\n"
+            f"Skor Efisiensi: {efficiency_pct:.1f}% (Aktif vs Total Waktu)\n"
+            f"\n"
+            f"Distribusi Waktu:\n"
+            f"   - Hauling Aktif: {active_time:.1f} jam ({efficiency_pct:.1f}%)\n"
+            f"     Pergerakan produktif trucks & excavators\n"
+            f"   - Mengantre (Idle): {queue_time:.1f} jam ({100-efficiency_pct:.1f}%)\n"
+            f"     Waktu terbuang di loading/dumping point\n"
+            f"\n"
+            f"Analisis Hambatan:\n"
+            f"   {'Waktu antrean tinggi - Perlu optimasi dispatching atau pengurangan truk' if queue_time > active_time * 0.2 else 'Aliran optimal dengan waktu tunggu minimal'}"
         )
 
-        # Delay Risk Analysis Details
         delay_risk_explanation = (
-            f"**Penilaian Risiko Keterlambatan:**\n"
-            f"- **Tingkat Risiko**: **{delay_risk}**\n"
-            f"- **Probabilitas**: **{res.get('total_probabilitas_delay', 0) / cycles * 100 if cycles > 0 else 0:.1f}%** peluang keterlambatan siklus per trip.\n"
-            f"- **Faktor Kontribusi**:\n"
-            f"   1. **Cuaca**: {res.get('weatherCondition')} (Dampak pada kecepatan/traksi)\n"
-            f"   2. **Kondisi Jalan**: {res.get('roadCondition')} (Dampak pada hambatan gulir)\n"
-            f"   3. **Kepadatan Lalu Lintas**: {res.get('alokasi_truk')} Truk di rute (Probabilitas antrean)\n"
-            f"- **Mitigasi**: {sop[0] if sop else 'Ikuti protokol keselamatan standar.'}"
+            f"Penilaian Risiko Keterlambatan:\n"
+            f"\n"
+            f"Tingkat Risiko: {delay_risk}\n"
+            f"Probabilitas Delay: {res.get('total_probabilitas_delay', 0) / cycles * 100 if cycles > 0 else 0:.1f}% per trip\n"
+            f"\n"
+            f"Faktor Kontribusi:\n"
+            f"   1. Cuaca: {res.get('weatherCondition')}\n"
+            f"      Dampak pada kecepatan & traksi kendaraan\n"
+            f"   2. Kondisi Jalan: {res.get('roadCondition')}\n"
+            f"      Dampak pada hambatan gulir & waktu tempuh\n"
+            f"   3. Kepadatan Lalu Lintas: {res.get('alokasi_truk')} truk\n"
+            f"      Probabilitas antrean di loading/dumping point\n"
+            f"\n"
+            f"Mitigasi: {sop[0] if sop else 'Ikuti protokol keselamatan standar'}"
         )
 
         explanations = {
             "CONFIGURATION": config_explanation,
-            "ROUTE": f"**Route Analysis:**\n- **Path**: {r_name}\n- **Distance**: {res.get('distance_km', 0):.2f} km (One way)\n- **Condition**: {res.get('roadCondition')}\n- **Reasoning**: Shortest viable path with acceptable gradient.",
+            "ROUTE": f"Route Analysis:\n\nPath: {r_name}\nDistance: {res.get('distance_km', 0):.2f} km (One way)\nCondition: {res.get('roadCondition')}\n\nReasoning:\nShortest viable path with acceptable gradient for loaded trucks.",
             "FINANCIAL": financial_explanation,
             "PRODUCTION": production_explanation,
             "FUEL": fuel_explanation,
             "VESSEL": vessel_explanation,
             "EFFICIENCY": efficiency_explanation,
-            "DELAY_RISK": delay_risk_explanation
+            "DELAY_RISK": delay_risk_explanation,
+            "FLOW_BREAKDOWN": flow_breakdown
         }
+
+        road_id = res.get('target_road_id')
+        mining_site_id = None
+        if not data['roads'].empty and road_id in data['roads'].index:
+            if 'miningSiteId' in data['roads'].columns:
+                mining_site_id = data['roads'].loc[road_id, 'miningSiteId']
 
         formatted_data.append({
             f"OPSI_{i}": {
@@ -906,7 +1082,26 @@ def format_konteks_for_llm(simulation_results, data):
                 "DETAILED_EQUIPMENT": detailed_equipment,
                 "EXPLANATIONS": explanations,
                 "ANALISIS_KAPAL": ship_str,
-                "SOP_KESELAMATAN": " | ".join(sop)
+                "SOP_KESELAMATAN": " | ".join(sop),
+                "RAW_DATA": {
+                    "total_tonase": res.get('total_tonase', 0),
+                    "jumlah_siklus_selesai": res.get('jumlah_siklus_selesai', 0),
+                    "total_distance_km": res.get('total_distance_km', 0),
+                    "total_bbm_liter": res.get('total_bbm_liter', 0),
+                    "total_cycle_time_hours": res.get('total_cycle_time_hours', 0),
+                    "distance_km": res.get('distance_km', 0),
+                    "weatherCondition": res.get('weatherCondition'),
+                    "roadCondition": res.get('roadCondition'),
+                    "shift": res.get('shift'),
+                    "alokasi_truk": res.get('alokasi_truk'),
+                    "jumlah_excavator": res.get('jumlah_excavator'),
+                    "target_road_id": res.get('target_road_id'),
+                    "target_excavator_id": res.get('target_excavator_id'),
+                    "target_schedule_id": res.get('target_schedule_id'),
+                    "miningSiteId": mining_site_id,
+                    "delay_risk_level": delay_risk,
+                    "strategy_objective": res.get('strategy_objective', 'Optimal Configuration')
+                }
             }
         })
     return json.dumps(formatted_data, indent=2)
@@ -941,13 +1136,14 @@ def get_strategic_recommendations(fixed, vars, params):
     target_road = fixed.get('target_road_id')
     target_excavator = fixed.get('target_excavator_id')
     target_schedule = fixed.get('target_schedule_id')
+    target_production = float(fixed.get('totalProductionTarget', 0))
     
     all_roads = data['roads'].index.tolist()
     all_excavators = data['excavators'].index.tolist()
     all_schedules = data['schedules'].index.tolist() if not data['schedules'].empty else [None]
     
     print(f"   > Database: {len(all_roads)} roads, {len(all_excavators)} excavators, {len(all_schedules)} schedules")
-    print(f"   > Parameters: Weather={user_weather}, RoadCond={user_road_cond}")
+    print(f"   > Parameters: Weather={user_weather}, RoadCond={user_road_cond}, TargetProduction={target_production}")
     print(f"   > Decision Variables: Trucks [{min_trucks}-{max_trucks}], Excavators [{min_excavators}-{max_excavators}]")
     
     import random
@@ -976,8 +1172,42 @@ def get_strategic_recommendations(fixed, vars, params):
         sample_schedules = [None]
         print(f"   ⚠️ No valid vessel schedules available")
     
+    # Adjust truck configs if target production is set and low
     truck_configs = list(range(min_trucks, max_trucks + 1, max(1, (max_trucks - min_trucks) // 4)))
-    if max_trucks not in truck_configs:
+    
+    if target_production > 0:
+        # Smart Fleet Sizing Estimation
+        # Asumsi kasar: 1 Truck ~ 20-30 ton/trip. 
+        # Cycle time ~ 30-60 menit -> 8-16 trip/shift.
+        # Kapasitas per truck per shift ~ 200 - 400 ton.
+        # Ambil konservatif: 250 ton/truck/shift.
+        
+        est_trucks_needed = max(1, int(target_production / 250))
+        
+        # Buat range pencarian di sekitar estimasi (+- 2 unit)
+        # Tapi tetap hormati batas min/max global jika masuk akal, 
+        # namun jika target kecil, paksa turun ke bawah min_trucks default.
+        
+        search_min = max(1, est_trucks_needed - 2)
+        search_max = est_trucks_needed + 3
+        
+        # Jika target sangat kecil (< 1000 ton), pastikan kita cek 1-5 truk
+        if target_production < 1000:
+            search_min = 1
+            search_max = max(5, search_max)
+            
+        print(f"   ℹ️ Target {target_production} tons -> Est. {est_trucks_needed} trucks. Adjusting search range to [{search_min}, {search_max}]")
+        
+        truck_configs = list(range(search_min, search_max + 1))
+        
+        # Filter agar tidak melebihi batas absolut (misal 100) tapi boleh melebihi max_trucks user jika perlu
+        truck_configs = [t for t in truck_configs if t > 0 and t <= 100]
+        
+        # Ensure we have enough granularity
+        if len(truck_configs) < 3:
+             truck_configs = list(range(search_min, search_max + 2))
+
+    if max_trucks not in truck_configs and target_production <= 0:
         truck_configs.append(max_trucks)
     
     excavator_configs = list(range(min_excavators, max_excavators + 1))
@@ -1035,7 +1265,19 @@ def get_strategic_recommendations(fixed, vars, params):
     
     print(f"\n   📊 Applying Multi-Objective Ranking...")
     
-    strategy_1_profit = sorted(results, key=lambda x: x['Z_SCORE_PROFIT'], reverse=True)[:20]
+    # Strategy 1: Target Production (if specified) or Max Profit
+    if target_production > 0:
+        # Filter for scenarios that meet at least 80% of target (relaxed constraint)
+        # candidates = [r for r in results if r['total_tonase'] >= target_production * 0.8]
+        # if not candidates: candidates = results
+        
+        # STRICTER LOGIC: We want the closest match, period.
+        # Sort by absolute difference from target (closest first), then by profit
+        strategy_1_target = sorted(results, key=lambda x: (abs(x['total_tonase'] - target_production), -x['Z_SCORE_PROFIT']))[:20]
+        strategy_1_label = f'Target Production ({target_production} Ton)'
+    else:
+        strategy_1_target = sorted(results, key=lambda x: x['Z_SCORE_PROFIT'], reverse=True)[:20]
+        strategy_1_label = 'Maximum Profit'
     
     strategy_2_speed = sorted(results, key=lambda x: x['cycle_time_hours'])[:20]
     
@@ -1056,12 +1298,21 @@ def get_strategic_recommendations(fixed, vars, params):
     
     seen = set()
     
-    best_profit = get_unique_strategy(strategy_1_profit, seen)
+    best_primary = get_unique_strategy(strategy_1_target, seen)
     best_speed = get_unique_strategy(strategy_2_speed, seen)
     best_distance = get_unique_strategy(strategy_3_distance, seen)
     
-    final_strategies = [best_profit, best_speed, best_distance]
+    final_strategies = [best_primary, best_speed, best_distance]
     final_strategies = [s for s in final_strategies if s is not None]
+    
+    for i, strat in enumerate(final_strategies, 1):
+        strat['rank'] = i
+        if i == 1:
+            strat['strategy_objective'] = strategy_1_label
+        elif i == 2:
+            strat['strategy_objective'] = 'Fastest Cycle Time'
+        else:
+            strat['strategy_objective'] = 'Shortest Distance'
     
     print(f"   ✅ Selected 3 strategies with different objectives:")
     for i, strat in enumerate(final_strategies, 1):

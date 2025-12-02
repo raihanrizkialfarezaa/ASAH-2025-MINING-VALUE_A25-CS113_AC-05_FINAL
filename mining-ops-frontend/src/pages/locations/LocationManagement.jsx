@@ -3,10 +3,12 @@ import { miningSiteService, loadingPointService, dumpingPointService, roadSegmen
 import { excavatorService } from '../../services';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Modal from '../../components/common/Modal';
-import { MapPin, ArrowRight, Activity, Plus, Edit, Trash2, Eye } from 'lucide-react';
+import MiningMap from '../../components/MiningMap';
+import { MapPin, ArrowRight, Activity, Plus, Edit, Trash2, Eye, Map as MapIcon, List } from 'lucide-react';
 
 const LocationManagement = () => {
   const [activeTab, setActiveTab] = useState('sites');
+  const [viewMode, setViewMode] = useState('list');
   const [sites, setSites] = useState([]);
   const [loadingPoints, setLoadingPoints] = useState([]);
   const [dumpingPoints, setDumpingPoints] = useState([]);
@@ -38,7 +40,7 @@ const LocationManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, [activeTab]);
+  }, [activeTab, viewMode]);
 
   useEffect(() => {
     const loadExcavators = async () => {
@@ -55,18 +57,26 @@ const LocationManagement = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      if (activeTab === 'sites') {
-        const res = await miningSiteService.getAll();
-        setSites(Array.isArray(res.data) ? res.data : []);
-      } else if (activeTab === 'loading') {
-        const res = await loadingPointService.getAll();
-        setLoadingPoints(Array.isArray(res.data) ? res.data : []);
-      } else if (activeTab === 'dumping') {
-        const res = await dumpingPointService.getAll();
-        setDumpingPoints(Array.isArray(res.data) ? res.data : []);
-      } else if (activeTab === 'roads') {
-        const res = await roadSegmentService.getAll();
-        setRoadSegments(Array.isArray(res.data) ? res.data : []);
+      if (viewMode === 'map') {
+        const [sitesRes, loadingRes, dumpingRes, roadsRes] = await Promise.all([miningSiteService.getAll(), loadingPointService.getAll(), dumpingPointService.getAll(), roadSegmentService.getAll()]);
+        setSites(Array.isArray(sitesRes.data) ? sitesRes.data : []);
+        setLoadingPoints(Array.isArray(loadingRes.data) ? loadingRes.data : []);
+        setDumpingPoints(Array.isArray(dumpingRes.data) ? dumpingRes.data : []);
+        setRoadSegments(Array.isArray(roadsRes.data) ? roadsRes.data : []);
+      } else {
+        if (activeTab === 'sites') {
+          const res = await miningSiteService.getAll();
+          setSites(Array.isArray(res.data) ? res.data : []);
+        } else if (activeTab === 'loading') {
+          const res = await loadingPointService.getAll();
+          setLoadingPoints(Array.isArray(res.data) ? res.data : []);
+        } else if (activeTab === 'dumping') {
+          const res = await dumpingPointService.getAll();
+          setDumpingPoints(Array.isArray(res.data) ? res.data : []);
+        } else if (activeTab === 'roads') {
+          const res = await roadSegmentService.getAll();
+          setRoadSegments(Array.isArray(res.data) ? res.data : []);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -265,10 +275,20 @@ const LocationManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Location Management</h1>
-        <button onClick={handleCreate} className="btn-primary flex items-center space-x-2">
-          <Plus size={20} />
-          <span>Add {activeTab === 'sites' ? 'Mining Site' : activeTab === 'loading' ? 'Loading Point' : activeTab === 'dumping' ? 'Dumping Point' : 'Road Segment'}</span>
-        </button>
+        <div className="flex space-x-2">
+          <div className="bg-white rounded-lg shadow p-1 flex">
+            <button onClick={() => setViewMode('list')} className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`} title="List View">
+              <List size={20} />
+            </button>
+            <button onClick={() => setViewMode('map')} className={`p-2 rounded ${viewMode === 'map' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`} title="Map View">
+              <MapIcon size={20} />
+            </button>
+          </div>
+          <button onClick={handleCreate} className="btn-primary flex items-center space-x-2">
+            <Plus size={20} />
+            <span>Add New</span>
+          </button>
+        </div>
       </div>
 
       <div className="flex space-x-2 border-b">
@@ -287,113 +307,122 @@ const LocationManagement = () => {
         })}
       </div>
 
-      {activeTab === 'sites' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sites.map((site) => (
-            <div key={site.id} className="card">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-lg">{site.name}</h3>
-                <div className="flex space-x-1">
-                  <button onClick={() => handleView(site)} className="text-blue-600 hover:text-blue-800">
-                    <Eye size={16} />
-                  </button>
-                  <button onClick={() => handleEdit(site)} className="text-green-600 hover:text-green-800">
-                    <Edit size={16} />
-                  </button>
-                  <button onClick={() => handleDelete(site.id)} className="text-red-600 hover:text-red-800">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 mb-1">Code: {site.code}</p>
-              <p className="text-sm text-gray-600 mb-1">Type: {site.siteType}</p>
-              <p className="text-sm text-gray-600">Capacity: {site.capacity || '-'} ton/day</p>
-            </div>
-          ))}
+      {viewMode === 'map' ? (
+        <div className="card p-4 mt-4">
+          <h2 className="text-xl font-bold mb-4">Geospatial View</h2>
+          <MiningMap sites={sites} loadingPoints={loadingPoints} dumpingPoints={dumpingPoints} roads={roadSegments} />
         </div>
-      )}
-
-      {activeTab === 'loading' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {loadingPoints.map((point) => (
-            <div key={point.id} className="card">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-lg">{point.name}</h3>
-                <div className="flex space-x-1">
-                  <button onClick={() => handleView(point)} className="text-blue-600 hover:text-blue-800">
-                    <Eye size={16} />
-                  </button>
-                  <button onClick={() => handleEdit(point)} className="text-green-600 hover:text-green-800">
-                    <Edit size={16} />
-                  </button>
-                  <button onClick={() => handleDelete(point.id)} className="text-red-600 hover:text-red-800">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 mb-1">Code: {point.code}</p>
-              <p className="text-sm text-gray-600 mb-1">Mining Site: {point.miningSite?.name || '-'}</p>
-              <p className="text-sm text-gray-600">Max Queue: {point.maxQueueSize}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {activeTab === 'dumping' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {dumpingPoints.map((point) => (
-            <div key={point.id} className="card">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-lg">{point.name}</h3>
-                <div className="flex space-x-1">
-                  <button onClick={() => handleView(point)} className="text-blue-600 hover:text-blue-800">
-                    <Eye size={16} />
-                  </button>
-                  <button onClick={() => handleEdit(point)} className="text-green-600 hover:text-green-800">
-                    <Edit size={16} />
-                  </button>
-                  <button onClick={() => handleDelete(point.id)} className="text-red-600 hover:text-red-800">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 mb-1">Code: {point.code}</p>
-              <p className="text-sm text-gray-600 mb-1">Type: {point.dumpingType}</p>
-              <p className="text-sm text-gray-600">Current Stock: {point.currentStock} ton</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {activeTab === 'roads' && (
-        <div className="grid grid-cols-1 gap-4">
-          {roadSegments.map((road) => (
-            <div key={road.id} className="card">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg mb-2">{road.name}</h3>
-                  <p className="text-sm text-gray-600 mb-1">Code: {road.code}</p>
-                  <p className="text-sm text-gray-600 mb-1">Distance: {road.distance} km</p>
-                </div>
-                <div className="flex flex-col items-end">
-                  <div className="flex space-x-1 mb-2">
-                    <button onClick={() => handleView(road)} className="text-blue-600 hover:text-blue-800">
-                      <Eye size={16} />
-                    </button>
-                    <button onClick={() => handleEdit(road)} className="text-green-600 hover:text-green-800">
-                      <Edit size={16} />
-                    </button>
-                    <button onClick={() => handleDelete(road.id)} className="text-red-600 hover:text-red-800">
-                      <Trash2 size={16} />
-                    </button>
+      ) : (
+        <>
+          {activeTab === 'sites' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sites.map((site) => (
+                <div key={site.id} className="card">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-lg">{site.name}</h3>
+                    <div className="flex space-x-1">
+                      <button onClick={() => handleView(site)} className="text-blue-600 hover:text-blue-800">
+                        <Eye size={16} />
+                      </button>
+                      <button onClick={() => handleEdit(site)} className="text-green-600 hover:text-green-800">
+                        <Edit size={16} />
+                      </button>
+                      <button onClick={() => handleDelete(site.id)} className="text-red-600 hover:text-red-800">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">Max Speed: {road.maxSpeed} km/h</p>
-                  <p className="text-sm text-gray-600">Condition: {road.roadCondition}</p>
+                  <p className="text-sm text-gray-600 mb-1">Code: {site.code}</p>
+                  <p className="text-sm text-gray-600 mb-1">Type: {site.siteType}</p>
+                  <p className="text-sm text-gray-600">Capacity: {site.capacity || '-'} ton/day</p>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+
+          {activeTab === 'loading' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {loadingPoints.map((point) => (
+                <div key={point.id} className="card">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-lg">{point.name}</h3>
+                    <div className="flex space-x-1">
+                      <button onClick={() => handleView(point)} className="text-blue-600 hover:text-blue-800">
+                        <Eye size={16} />
+                      </button>
+                      <button onClick={() => handleEdit(point)} className="text-green-600 hover:text-green-800">
+                        <Edit size={16} />
+                      </button>
+                      <button onClick={() => handleDelete(point.id)} className="text-red-600 hover:text-red-800">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-1">Code: {point.code}</p>
+                  <p className="text-sm text-gray-600 mb-1">Mining Site: {point.miningSite?.name || '-'}</p>
+                  <p className="text-sm text-gray-600">Max Queue: {point.maxQueueSize}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'dumping' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {dumpingPoints.map((point) => (
+                <div key={point.id} className="card">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-lg">{point.name}</h3>
+                    <div className="flex space-x-1">
+                      <button onClick={() => handleView(point)} className="text-blue-600 hover:text-blue-800">
+                        <Eye size={16} />
+                      </button>
+                      <button onClick={() => handleEdit(point)} className="text-green-600 hover:text-green-800">
+                        <Edit size={16} />
+                      </button>
+                      <button onClick={() => handleDelete(point.id)} className="text-red-600 hover:text-red-800">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-1">Code: {point.code}</p>
+                  <p className="text-sm text-gray-600 mb-1">Type: {point.dumpingType}</p>
+                  <p className="text-sm text-gray-600">Current Stock: {point.currentStock} ton</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'roads' && (
+            <div className="grid grid-cols-1 gap-4">
+              {roadSegments.map((road) => (
+                <div key={road.id} className="card">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-bold text-lg mb-2">{road.name}</h3>
+                      <p className="text-sm text-gray-600 mb-1">Code: {road.code}</p>
+                      <p className="text-sm text-gray-600 mb-1">Distance: {road.distance} km</p>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <div className="flex space-x-1 mb-2">
+                        <button onClick={() => handleView(road)} className="text-blue-600 hover:text-blue-800">
+                          <Eye size={16} />
+                        </button>
+                        <button onClick={() => handleEdit(road)} className="text-green-600 hover:text-green-800">
+                          <Edit size={16} />
+                        </button>
+                        <button onClick={() => handleDelete(road.id)} className="text-red-600 hover:text-red-800">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-1">Max Speed: {road.maxSpeed} km/h</p>
+                      <p className="text-sm text-gray-600">Condition: {road.roadCondition}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={getModalTitle()} size="lg">

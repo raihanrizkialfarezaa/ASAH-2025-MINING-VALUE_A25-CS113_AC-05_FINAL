@@ -2,6 +2,14 @@ import prisma from '../config/database.js';
 import ApiError from '../utils/apiError.js';
 import { getPaginationParams, calculatePagination } from '../utils/pagination.js';
 
+const normalizeRecordDate = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  date.setUTCHours(0, 0, 0, 0);
+  return date;
+};
+
 export const productionService = {
   async getAll(query) {
     const { page, limit, skip } = getPaginationParams(query);
@@ -58,14 +66,30 @@ export const productionService = {
   },
 
   async create(data) {
-    const achievement =
-      data.targetTonnage > 0 ? (data.actualTonnage / data.targetTonnage) * 100 : 0;
+    const recordDate = normalizeRecordDate(data.recordDate);
+    if (!recordDate) {
+      throw ApiError.badRequest('Invalid record date');
+    }
 
-    const record = await prisma.productionRecord.create({
-      data: {
-        ...data,
-        achievement,
+    const achievement =
+      data.targetProduction > 0 ? (data.actualProduction / data.targetProduction) * 100 : 0;
+
+    const payload = {
+      ...data,
+      recordDate,
+      achievement,
+    };
+
+    const record = await prisma.productionRecord.upsert({
+      where: {
+        recordDate_shift_miningSiteId: {
+          recordDate,
+          shift: payload.shift,
+          miningSiteId: payload.miningSiteId,
+        },
       },
+      update: payload,
+      create: payload,
       include: {
         miningSite: {
           select: {
@@ -89,9 +113,9 @@ export const productionService = {
       throw ApiError.notFound('Production record not found');
     }
 
-    const targetTonnage = data.targetTonnage ?? record.targetTonnage;
-    const actualTonnage = data.actualTonnage ?? record.actualTonnage;
-    const achievement = targetTonnage > 0 ? (actualTonnage / targetTonnage) * 100 : 0;
+    const targetProduction = data.targetProduction ?? record.targetProduction;
+    const actualProduction = data.actualProduction ?? record.actualProduction;
+    const achievement = targetProduction > 0 ? (actualProduction / targetProduction) * 100 : 0;
 
     const updatedRecord = await prisma.productionRecord.update({
       where: { id },

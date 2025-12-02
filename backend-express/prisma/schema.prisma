@@ -160,6 +160,7 @@ model Truck {
   capacity         Float
   fuelCapacity     Float?
   fuelConsumption  Float?         @default(1.0) // L/km
+  averageSpeed     Float          @default(30.0) // km/h
   maintenanceCost  Float?         @default(0.0) // Cost per hour
   status           TruckStatus    @default(IDLE)
   lastMaintenance  DateTime?
@@ -206,6 +207,7 @@ model Excavator {
   model            String?
   yearManufacture  Int?
   bucketCapacity   Float?
+  productionRate   Float?          @default(5.0) // tons/minute
   fuelConsumption  Float?          @default(50.0) // L/hour
   maintenanceCost  Float?          @default(0.0) // Cost per hour
   status           ExcavatorStatus   @default(ACTIVE)
@@ -289,6 +291,7 @@ model Operator {
   shift           Shift?
   totalHours      Int          @default(0)
   rating          Float?       @default(5.0)
+  salary          Float        @default(0)
   joinDate        DateTime
   resignDate      DateTime?
   createdAt       DateTime     @default(now())
@@ -445,9 +448,11 @@ model ProductionRecord {
   excavatorsOperating Int  @default(0)
   excavatorsBreakdown Int  @default(0)
   
-  utilizationRate Float?
   downtimeHours   Float    @default(0)
+  utilizationRate Float?
   
+  equipmentAllocation Json?
+
   remarks         String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

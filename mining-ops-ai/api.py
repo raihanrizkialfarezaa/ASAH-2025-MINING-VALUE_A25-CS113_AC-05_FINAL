@@ -61,6 +61,7 @@ class FixedConditions(BaseModel):
     target_excavator_id: Optional[str] = Field(None, description="ID Excavator dari database (Optional - AI will explore all if not provided)")
     target_schedule_id: Optional[str] = Field(None, description="ID Jadwal Kapal (Opsional)")
     simulation_start_date: Optional[str] = Field(None, description="Tanggal mulai simulasi (ISO 8601)")
+    totalProductionTarget: Optional[float] = Field(0, description="Target Produksi Batubara (Ton)")
 
 # Model untuk Variabel Keputusan
 class DecisionVariables(BaseModel):
@@ -103,6 +104,16 @@ class NewSchedule(BaseModel):
 @app.get("/")
 def read_root():
     return {"status": "online", "service": "Mining Ops AI Assistant v3.0"}
+
+@app.get("/health")
+def health_check():
+    return {
+        "status": "healthy",
+        "service": "Mining Ops AI",
+        "version": "3.1.0",
+        "llm_provider": LLM_PROVIDER,
+        "timestamp": datetime.now().isoformat()
+    }
 
 @app.post("/get_top_3_strategies")
 async def dapatkan_rekomendasi_strategis(request: RecommendationRequest):

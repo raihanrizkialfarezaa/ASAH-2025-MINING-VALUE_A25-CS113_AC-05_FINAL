@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Helper to render rich markdown (bold, code, lists, indentation)
 const renderMarkdown = (text) => {
   if (!text) return null;
   return text.split('\n').map((line, index) => {
-    // Determine indentation based on spaces or list markers
     let indentClass = '';
-    if (line.startsWith('   -') || line.startsWith('   1.')) indentClass = 'pl-8';
-    else if (line.startsWith('-') || line.match(/^\d+\./)) indentClass = 'pl-4';
+    if (line.startsWith('      ')) indentClass = 'pl-12';
+    else if (line.startsWith('   ')) indentClass = 'pl-6';
+    else if (line.startsWith('-') || line.match(/^\d+\./)) indentClass = 'pl-3';
 
-    // Split by bold markers first
     const parts = line.split(/(\*\*.*?\*\*|`.*?`)/g);
 
     return (
@@ -17,14 +17,14 @@ const renderMarkdown = (text) => {
         {parts.map((part, i) => {
           if (part.startsWith('**') && part.endsWith('**')) {
             return (
-              <strong key={i} className="font-bold text-gray-900">
+              <strong key={i} className="font-semibold text-gray-900">
                 {part.slice(2, -2)}
               </strong>
             );
           }
           if (part.startsWith('`') && part.endsWith('`')) {
             return (
-              <code key={i} className="bg-gray-100 text-red-600 px-1 rounded font-mono text-xs">
+              <code key={i} className="bg-gray-100 text-blue-700 px-1 rounded font-mono text-xs">
                 {part.slice(1, -1)}
               </code>
             );
@@ -38,6 +38,7 @@ const renderMarkdown = (text) => {
 
 const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
   const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
 
   const getBadgeColor = (rank) => {
     switch (rank) {
@@ -55,13 +56,13 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
   const getMedalEmoji = (rank) => {
     switch (rank) {
       case 1:
-        return '🥇';
+        return '#1';
       case 2:
-        return '🥈';
+        return '#2';
       case 3:
-        return '🥉';
+        return '#3';
       default:
-        return '📊';
+        return `#${rank}`;
     }
   };
 
@@ -74,16 +75,26 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
     onSelect();
   };
 
+  const handleImplementStrategy = () => {
+    sessionStorage.setItem(
+      'selectedStrategy',
+      JSON.stringify({
+        rank: rank,
+        recommendation: recommendation,
+        implementedAt: new Date().toISOString(),
+      })
+    );
+    navigate('/production');
+  };
+
   return (
     <>
       <div className={`bg-white rounded-lg shadow-lg overflow-hidden transition-all ${isSelected ? 'ring-4 ring-blue-500 transform scale-105' : 'hover:shadow-xl'}`}>
         {/* Header with Rank */}
         <div className={`${getBadgeColor(rank)} text-white p-4`}>
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold">
-              {getMedalEmoji(rank)} Strategy {rank}
-            </h3>
-            <span className="text-sm bg-white bg-opacity-20 px-3 py-1 rounded-full">Rank #{rank}</span>
+            <h3 className="text-xl font-bold">Strategy {getMedalEmoji(rank)}</h3>
+            <span className="text-sm bg-white bg-opacity-20 px-3 py-1 rounded-full font-medium">Rank {rank}</span>
           </div>
         </div>
 
@@ -177,10 +188,8 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
             {/* Modal Header */}
             <div className={`${getBadgeColor(rank)} text-white p-6 rounded-t-xl flex justify-between items-center sticky top-0 z-10`}>
               <div>
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                  {getMedalEmoji(rank)} Strategy {rank} - Detailed Guidebook
-                </h2>
-                <p className="text-white text-opacity-90 mt-1">Comprehensive Analysis & Operational Guidelines</p>
+                <h2 className="text-2xl font-bold flex items-center gap-2">Strategy {getMedalEmoji(rank)} - Comprehensive Analysis & Guidebook</h2>
+                <p className="text-white text-opacity-90 mt-1 text-sm">Detailed Operational Plan & Financial Breakdown</p>
               </div>
               <button onClick={() => setShowModal(false)} className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,29 +221,35 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
 
               {/* 2. Operational Configuration & Rationale */}
               <section>
-                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <span className="bg-gray-200 p-1 rounded mr-2">⚙️</span> Operational Configuration
-                </h3>
+                <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-gray-300 pb-2">Operational Configuration & Equipment</h3>
                 <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 space-y-4">
                   <div>
-                    <h4 className="font-semibold text-gray-700">Why this configuration?</h4>
-                    <div className="text-gray-600 text-sm mt-1">{renderMarkdown(recommendation.explanations?.CONFIGURATION)}</div>
+                    <h4 className="font-semibold text-gray-700 mb-2">Configuration Rationale</h4>
+                    <div className="text-gray-700 text-sm whitespace-pre-line leading-relaxed">{renderMarkdown(recommendation.explanations?.CONFIGURATION)}</div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-200">
                     <div>
                       <h4 className="font-semibold text-gray-700 mb-2">Route Selection</h4>
-                      <div className="bg-white p-3 rounded border border-gray-200">
+                      <div className="bg-white p-3 rounded border border-gray-300">
                         <p className="font-medium text-blue-700">{recommendation.skenario.route}</p>
-                        <div className="text-xs text-gray-500 mt-1">{renderMarkdown(recommendation.explanations?.ROUTE)}</div>
+                        <div className="text-xs text-gray-600 mt-2 whitespace-pre-line leading-relaxed">{renderMarkdown(recommendation.explanations?.ROUTE)}</div>
                       </div>
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-700 mb-2">Vessel Status</h4>
-                      <div className="bg-white p-3 rounded border border-gray-200">
-                        <div className="text-sm text-gray-600">{renderMarkdown(recommendation.explanations?.VESSEL)}</div>
+                      <div className="bg-white p-3 rounded border border-gray-300">
+                        <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{renderMarkdown(recommendation.explanations?.VESSEL)}</div>
                       </div>
                     </div>
                   </div>
+                </div>
+              </section>
+
+              {/* 2.5 Flow Breakdown (Hulu → Hilir) */}
+              <section>
+                <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Production Flow Analysis (Upstream - Downstream)</h3>
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200 shadow-sm">
+                  <div className="text-sm text-gray-800 whitespace-pre-line leading-relaxed">{renderMarkdown(recommendation.explanations?.FLOW_BREAKDOWN)}</div>
                 </div>
               </section>
 
@@ -275,16 +290,9 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
 
               {/* 4. Financial Breakdown */}
               <section>
-                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <span className="bg-gray-200 p-1 rounded mr-2">💰</span> Financial Breakdown
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {Object.entries(recommendation.financial_breakdown || {}).map(([key, value]) => (
-                    <div key={key} className="bg-gray-50 p-3 rounded border border-gray-200">
-                      <span className="text-xs text-gray-500 uppercase block mb-1">{key.replace(/_/g, ' ')}</span>
-                      <span className="font-mono font-semibold text-gray-800">{value}</span>
-                    </div>
-                  ))}
+                <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-green-200 pb-2">Financial Breakdown & Profitability Analysis</h3>
+                <div className="bg-white rounded-lg p-6 border-2 border-green-200 shadow-sm">
+                  <div className="text-sm text-gray-800 whitespace-pre-line leading-relaxed font-mono">{renderMarkdown(recommendation.explanations?.FINANCIAL)}</div>
                 </div>
               </section>
 
@@ -318,10 +326,16 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
               <button onClick={() => setShowModal(false)} className="px-6 py-2 rounded-lg text-gray-600 hover:bg-gray-200 font-medium transition-colors">
                 Close
               </button>
-              <button onClick={handleConfirmSelect} className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-bold shadow-lg transition-colors flex items-center gap-2">
-                <span>Confirm & Execute Strategy</span>
+              <button onClick={handleConfirmSelect} className="px-6 py-2 rounded-lg bg-gray-600 text-white hover:bg-gray-700 font-bold shadow-lg transition-colors flex items-center gap-2">
+                <span>Select Strategy</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+              <button onClick={handleImplementStrategy} className="px-6 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 font-bold shadow-lg transition-colors flex items-center gap-2">
+                <span>Implement Strategy</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </button>
             </div>

@@ -14,6 +14,13 @@ const OperatorList = () => {
   const [selectedOperator, setSelectedOperator] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('view');
+  const [formData, setFormData] = useState({
+    salary: '',
+    shift: '',
+    status: '',
+    licenseNumber: '',
+    licenseType: '',
+  });
 
   useEffect(() => {
     fetchOperators();
@@ -39,6 +46,39 @@ const OperatorList = () => {
     setShowModal(true);
   };
 
+  const handleEdit = (operator) => {
+    setSelectedOperator(operator);
+    setFormData({
+      salary: operator.salary || '',
+      shift: operator.shift || '',
+      status: operator.status || '',
+      licenseNumber: operator.licenseNumber || '',
+      licenseType: operator.licenseType || '',
+    });
+    setModalMode('edit');
+    setShowModal(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        salary: parseFloat(formData.salary),
+        shift: formData.shift,
+        status: formData.status,
+        licenseNumber: formData.licenseNumber,
+        licenseType: formData.licenseType,
+      };
+
+      await operatorService.update(selectedOperator.id, payload);
+      setShowModal(false);
+      fetchOperators();
+    } catch (error) {
+      console.error('Failed to update operator:', error);
+      alert('Failed to update operator');
+    }
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this operator?')) {
       try {
@@ -48,6 +88,10 @@ const OperatorList = () => {
         console.error('Failed to delete operator:', error);
       }
     }
+  };
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value || 0);
   };
 
   if (loading) {
@@ -67,9 +111,9 @@ const OperatorList = () => {
               <th className="table-header">Employee No</th>
               <th className="table-header">Name</th>
               <th className="table-header">License Type</th>
-              <th className="table-header">License Number</th>
               <th className="table-header">Shift</th>
               <th className="table-header">Status</th>
+              <th className="table-header">Salary</th>
               <th className="table-header">Rating</th>
               <th className="table-header">Actions</th>
             </tr>
@@ -80,16 +124,19 @@ const OperatorList = () => {
                 <td className="table-cell font-medium">{operator.employeeNumber}</td>
                 <td className="table-cell">{operator.user?.fullName || '-'}</td>
                 <td className="table-cell">{operator.licenseType}</td>
-                <td className="table-cell">{operator.licenseNumber || '-'}</td>
                 <td className="table-cell">{operator.shift || '-'}</td>
                 <td className="table-cell">
                   <StatusBadge status={operator.status} />
                 </td>
+                <td className="table-cell">{formatCurrency(operator.salary)}</td>
                 <td className="table-cell">{operator.rating?.toFixed(1) || '-'}</td>
                 <td className="table-cell">
                   <div className="flex space-x-2">
                     <button onClick={() => handleView(operator)} className="text-blue-600 hover:text-blue-800">
                       <Eye size={18} />
+                    </button>
+                    <button onClick={() => handleEdit(operator)} className="text-green-600 hover:text-green-800">
+                      <Edit size={18} />
                     </button>
                     <button onClick={() => handleDelete(operator.id)} className="text-red-600 hover:text-red-800">
                       <Trash2 size={18} />
@@ -104,8 +151,8 @@ const OperatorList = () => {
 
       <Pagination currentPage={pagination.page} totalPages={pagination.totalPages} onPageChange={(page) => setPagination((prev) => ({ ...prev, page }))} />
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Operator Details" size="lg">
-        {selectedOperator && (
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={modalMode === 'edit' ? 'Edit Operator' : 'Operator Details'} size="lg">
+        {modalMode === 'view' && selectedOperator ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -135,6 +182,10 @@ const OperatorList = () => {
                 </div>
               </div>
               <div>
+                <label className="text-sm font-medium text-gray-600">Salary</label>
+                <p className="text-lg font-semibold text-green-700">{formatCurrency(selectedOperator.salary)}</p>
+              </div>
+              <div>
                 <label className="text-sm font-medium text-gray-600">Rating</label>
                 <p className="text-lg">{selectedOperator.rating?.toFixed(1) || '-'}</p>
               </div>
@@ -148,6 +199,60 @@ const OperatorList = () => {
               </div>
             </div>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Salary (IDR)</label>
+                <input type="number" value={formData.salary} onChange={(e) => setFormData({ ...formData, salary: e.target.value })} className="input-field" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Shift</label>
+                <select value={formData.shift} onChange={(e) => setFormData({ ...formData, shift: e.target.value })} className="input-field">
+                  <option value="">Select Shift</option>
+                  {Object.values(SHIFT).map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="input-field">
+                  <option value="">Select Status</option>
+                  {Object.values(OPERATOR_STATUS).map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">License Type</label>
+                <select value={formData.licenseType} onChange={(e) => setFormData({ ...formData, licenseType: e.target.value })} className="input-field">
+                  <option value="">Select License</option>
+                  {Object.values(LICENSE_TYPE).map((l) => (
+                    <option key={l} value={l}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">License Number</label>
+                <input type="text" value={formData.licenseNumber} onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })} className="input-field" />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 mt-6">
+              <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary">
+                Update Operator
+              </button>
+            </div>
+          </form>
         )}
       </Modal>
     </div>

@@ -44,30 +44,29 @@ class AIService {
 
         // Available trucks
         prisma.truck.count({
-          where: { status: 'AVAILABLE' },
+          where: { status: 'IDLE' },
         }),
 
         // Available excavators
         prisma.excavator.count({
-          where: { status: 'OPERATIONAL' },
+          where: { status: { in: ['IDLE', 'ACTIVE'] } },
         }),
 
         // All operational trucks
         prisma.truck.findMany({
-          where: { status: { in: ['AVAILABLE', 'ASSIGNED'] } },
+          where: { status: { in: ['IDLE', 'STANDBY'] } },
           select: {
             id: true,
             code: true,
             capacity: true,
             brand: true,
-            fuelLevel: true,
             status: true,
           },
         }),
 
         // All operational excavators
         prisma.excavator.findMany({
-          where: { status: 'OPERATIONAL' },
+          where: { status: { in: ['IDLE', 'ACTIVE'] } },
           select: {
             id: true,
             code: true,
@@ -93,7 +92,7 @@ class AIService {
               select: {
                 name: true,
                 capacity: true,
-                type: true,
+                vesselType: true,
               },
             },
           },
@@ -102,7 +101,7 @@ class AIService {
         // Recent incidents (last 24 hours)
         prisma.incidentReport.count({
           where: {
-            timestamp: {
+            incidentDate: {
               gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
             },
           },
@@ -111,7 +110,7 @@ class AIService {
         // Today's production
         prisma.productionRecord.aggregate({
           where: {
-            productionDate: {
+            recordDate: {
               gte: new Date(new Date().setHours(0, 0, 0, 0)),
             },
           },

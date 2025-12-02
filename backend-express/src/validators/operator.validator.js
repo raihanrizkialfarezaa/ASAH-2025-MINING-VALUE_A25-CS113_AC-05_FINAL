@@ -27,6 +27,7 @@ export const createOperatorValidator = [
     .optional()
     .isFloat({ min: 0, max: 5 })
     .withMessage('Rating must be between 0 and 5'),
+  body('salary').optional().isFloat({ min: 0 }).withMessage('Salary must be a positive number'),
 ];
 
 export const updateOperatorValidator = [
@@ -46,6 +47,7 @@ export const updateOperatorValidator = [
     .optional()
     .isFloat({ min: 0, max: 5 })
     .withMessage('Rating must be between 0 and 5'),
+  body('salary').optional().isFloat({ min: 0 }).withMessage('Salary must be a positive number'),
 ];
 
 export const getOperatorByIdValidator = [

@@ -13,6 +13,22 @@ export const errorHandler = (err, req, res, next) => {
     message = 'Internal server error';
   }
 
+  if (err.code === 'P2002') {
+    statusCode = 409;
+    const fields = err.meta?.target || [];
+    message = `Duplicate entry: A record with the same ${fields.join(', ')} already exists.`;
+  }
+
+  if (err.code === 'P2025') {
+    statusCode = 404;
+    message = 'Record not found.';
+  }
+
+  if (err.code === 'P2003') {
+    statusCode = 400;
+    message = 'Foreign key constraint failed. Referenced record does not exist.';
+  }
+
   const response = {
     success: false,
     statusCode,

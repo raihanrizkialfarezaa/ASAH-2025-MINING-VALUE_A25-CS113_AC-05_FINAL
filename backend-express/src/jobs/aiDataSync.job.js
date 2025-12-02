@@ -194,6 +194,7 @@ class AIDataSyncJob {
           gradient: true,
           roadCondition: true,
           surfaceType: true,
+          miningSiteId: true,
         },
       });
 
@@ -244,10 +245,10 @@ class AIDataSyncJob {
         select: {
           id: true,
           name: true,
-          type: true,
+          vesselType: true,
           capacity: true,
-          flag: true,
-          imo: true,
+          // flag: true, // Removed as not in schema
+          // imo: true, // Removed as not in schema
         },
       });
 

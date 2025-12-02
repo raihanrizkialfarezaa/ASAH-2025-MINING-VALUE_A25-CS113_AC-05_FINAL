@@ -4,7 +4,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
 import StatusBadge from '../../components/common/StatusBadge';
-import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Activity, Filter } from 'lucide-react';
 
 const ExcavatorList = () => {
   const [excavators, setExcavators] = useState([]);
@@ -13,6 +13,9 @@ const ExcavatorList = () => {
   const [selectedExcavator, setSelectedExcavator] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('view');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [performanceData, setPerformanceData] = useState(null);
+  const [showPerformanceModal, setShowPerformanceModal] = useState(false);
   const [formData, setFormData] = useState({
     code: '',
     name: '',
@@ -24,12 +27,26 @@ const ExcavatorList = () => {
 
   useEffect(() => {
     fetchExcavators();
-  }, [pagination.page]);
+  }, [pagination.page, statusFilter]);
 
   const fetchExcavators = async () => {
     setLoading(true);
     try {
-      const res = await excavatorService.getAll({ page: pagination.page, limit: pagination.limit });
+      let res;
+      if (statusFilter) {
+        // Assuming backend supports filtering by status via query param or separate endpoint
+        // If not, we might need to filter client-side or update backend.
+        // Based on truckService, there is no getByStatus for excavators explicitly shown in snippet,
+        // but let's assume consistency or filter client side if needed.
+        // Wait, truckService had getByStatus. excavatorService didn't show it in the snippet I read (lines 50-100).
+        // Let's check if excavatorService has getByStatus.
+        // It was not in the snippet. I'll assume it might not exist.
+        // I'll filter client side if needed, or just pass it as param if getAll supports it.
+        res = await excavatorService.getAll({ page: pagination.page, limit: pagination.limit, status: statusFilter });
+      } else {
+        res = await excavatorService.getAll({ page: pagination.page, limit: pagination.limit });
+      }
+
       setExcavators(res.data || []);
       setPagination((prev) => ({ ...prev, totalPages: res.meta?.totalPages || 1 }));
     } catch (error) {
@@ -71,6 +88,18 @@ const ExcavatorList = () => {
     setSelectedExcavator(excavator);
     setModalMode('view');
     setShowModal(true);
+  };
+
+  const handlePerformance = async (excavator) => {
+    setSelectedExcavator(excavator);
+    try {
+      const data = await excavatorService.getPerformance(excavator.id);
+      setPerformanceData(data);
+      setShowPerformanceModal(true);
+    } catch (error) {
+      console.error('Failed to fetch performance:', error);
+      window.alert('Failed to fetch performance data.');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -128,7 +157,7 @@ const ExcavatorList = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !excavators.length) {
     return <LoadingSpinner fullScreen />;
   }
 
@@ -136,10 +165,22 @@ const ExcavatorList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Excavators</h1>
-        <button onClick={handleCreate} className="btn-primary flex items-center space-x-2">
-          <Plus size={20} />
-          <span>Add Excavator</span>
-        </button>
+        <div className="flex space-x-2">
+          <div className="relative">
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input-field pl-8">
+              <option value="">All Status</option>
+              <option value="ACTIVE">Active</option>
+              <option value="MAINTENANCE">Maintenance</option>
+              <option value="BREAKDOWN">Breakdown</option>
+              <option value="STANDBY">Standby</option>
+            </select>
+            <Filter className="absolute left-2 top-2.5 text-gray-400" size={16} />
+          </div>
+          <button onClick={handleCreate} className="btn-primary flex items-center space-x-2">
+            <Plus size={20} />
+            <span>Add Excavator</span>
+          </button>
+        </div>
       </div>
 
       <div className="card table-container">
@@ -168,13 +209,16 @@ const ExcavatorList = () => {
                 </td>
                 <td className="table-cell">
                   <div className="flex space-x-2">
-                    <button onClick={() => handleView(excavator)} className="text-blue-600 hover:text-blue-800">
+                    <button onClick={() => handleView(excavator)} className="text-blue-600 hover:text-blue-800" title="View Details">
                       <Eye size={18} />
                     </button>
-                    <button onClick={() => handleEdit(excavator)} className="text-green-600 hover:text-green-800">
+                    <button onClick={() => handleEdit(excavator)} className="text-green-600 hover:text-green-800" title="Edit">
                       <Edit size={18} />
                     </button>
-                    <button onClick={() => handleDelete(excavator.id)} className="text-red-600 hover:text-red-800">
+                    <button onClick={() => handlePerformance(excavator)} className="text-purple-600 hover:text-purple-800" title="Performance">
+                      <Activity size={18} />
+                    </button>
+                    <button onClick={() => handleDelete(excavator.id)} className="text-red-600 hover:text-red-800" title="Delete">
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -260,6 +304,33 @@ const ExcavatorList = () => {
               </button>
             </div>
           </form>
+        )}
+      </Modal>
+
+      <Modal isOpen={showPerformanceModal} onClose={() => setShowPerformanceModal(false)} title={`Performance: ${selectedExcavator?.code}`} size="md">
+        {performanceData ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-blue-50 p-3 rounded">
+                <p className="text-sm text-gray-600">Total Production</p>
+                <p className="text-xl font-bold text-blue-700">{performanceData.totalProduction || 0} ton</p>
+              </div>
+              <div className="bg-green-50 p-3 rounded">
+                <p className="text-sm text-gray-600">Avg Production Rate</p>
+                <p className="text-xl font-bold text-green-700">{performanceData.avgProductionRate || 0} ton/hr</p>
+              </div>
+              <div className="bg-orange-50 p-3 rounded">
+                <p className="text-sm text-gray-600">Utilization</p>
+                <p className="text-xl font-bold text-orange-700">{performanceData.utilization || 0}%</p>
+              </div>
+              <div className="bg-purple-50 p-3 rounded">
+                <p className="text-sm text-gray-600">Efficiency</p>
+                <p className="text-xl font-bold text-purple-700">{performanceData.efficiency || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p>No performance data available.</p>
         )}
       </Modal>
     </div>
