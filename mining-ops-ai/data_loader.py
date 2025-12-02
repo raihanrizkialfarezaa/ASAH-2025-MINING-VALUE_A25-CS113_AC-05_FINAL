@@ -18,7 +18,8 @@ TABLE_MAPPING = {
     'production_records': 'production_records',
     'incident_reports': 'incident_reports',
     'fuel_consumption': 'fuel_consumption',
-    'vessels': 'vessels'
+    'vessels': 'vessels',
+    'system_configs': 'system_configs'
 }
 
 def load_data(table_key, csv_filename=None):

@@ -13,16 +13,35 @@ warnings.filterwarnings('ignore')
 DATA_FOLDER = 'data'
 MODEL_FOLDER = 'models'
 
+def get_financial_params(data=None):
+    defaults = {
+        'HargaJualBatuBara': 800000, 
+        'HargaSolar': 15000, 
+        'BiayaPenaltiKeterlambatanKapal': 100000000,
+        'BiayaRataRataInsiden': 50000000,
+        'BiayaDemurragePerJam': 50000000
+    }
+    
+    if data and 'system_configs' in data and not data['system_configs'].empty:
+        configs = data['system_configs']
+        def get_val(key, default):
+            row = configs[configs['configKey'] == key]
+            if not row.empty:
+                try: return float(row.iloc[0]['configValue'])
+                except: return default
+            return default
+            
+        defaults['HargaJualBatuBara'] = get_val('COAL_PRICE_IDR', defaults['HargaJualBatuBara'])
+        defaults['HargaSolar'] = get_val('FUEL_PRICE_IDR', defaults['HargaSolar'])
+        defaults['BiayaPenaltiKeterlambatanKapal'] = get_val('VESSEL_PENALTY_IDR', defaults['BiayaPenaltiKeterlambatanKapal'])
+        defaults['BiayaDemurragePerJam'] = get_val('DEMURRAGE_COST_IDR', defaults['BiayaDemurragePerJam'])
+        
+    return defaults
+
 def load_config():
     """Memuat parameter finansial default."""
     return {
-        'financial_params': {
-            'HargaJualBatuBara': 800000, 
-            'HargaSolar': 15000, 
-            'BiayaPenaltiKeterlambatanKapal': 100000000,
-            'BiayaRataRataInsiden': 50000000,
-            'BiayaDemurragePerJam': 50000000
-        }
+        'financial_params': get_financial_params()
     }
 
 def format_currency(value):
@@ -132,6 +151,11 @@ def load_fresh_data():
     maint['completionDate'] = pd.to_datetime(maint['completionDate'])
     DB_MAINTENANCE_SORTED = maint.sort_values('completionDate')
     
+    try:
+        DB_CONFIGS = load_data('system_configs', 'system_configs.csv')
+    except:
+        DB_CONFIGS = pd.DataFrame()
+
     print(f"✅ Fresh data loaded successfully!")
     
     return {
@@ -142,7 +166,8 @@ def load_fresh_data():
         'schedules': DB_SCHEDULES,
         'vessels': DB_VESSELS,
         'maintenance': DB_MAINTENANCE_SORTED,
-        'hauling_activities': load_data('hauling_activities', 'hauling_activities.csv')
+        'hauling_activities': load_data('hauling_activities', 'hauling_activities.csv'),
+        'system_configs': DB_CONFIGS
     }
 
 def calibrate_simulation_parameters(data):
@@ -298,6 +323,15 @@ def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, 
     try: kapasitas_ton = data['trucks'].loc[truck_id]['capacity']
     except: return 
 
+    # Get Truck Specifics
+    try: 
+        truck_data = data['trucks'].loc[truck_id]
+        fuel_rate = float(truck_data.get('fuelConsumption', 1.0)) # L/km
+        maint_rate = float(truck_data.get('maintenanceCost', 0.0)) # IDR/hour
+    except: 
+        fuel_rate = 1.0
+        maint_rate = 0.0
+
     # Weather Impact Factors
     weather_speed_factor = 1.0
     if "Hujan Ringan" in str(weather): weather_speed_factor = 0.85
@@ -320,8 +354,10 @@ def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, 
         feats = get_features_for_prediction(truck_id, operator_id, road_id, excavator_id, weather, road_cond, shift, current_sim_time, data)
         
         # Default values with slight randomization to avoid identical outputs if ML fails
-        fuel = 10.0 * np.random.uniform(0.9, 1.1)
-        fuel_real = 10.0 * np.random.uniform(0.9, 1.1)
+        # Use specific fuel rate as baseline
+        fuel_baseline = (road_distance_km * 2) * fuel_rate
+        fuel = fuel_baseline * np.random.uniform(0.95, 1.05)
+        
         load = kapasitas_ton * 0.87 * np.random.uniform(0.95, 1.05)
         tonase = load
         delay = 0.05
@@ -329,7 +365,10 @@ def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, 
         
         if not feats.empty:
             try:
-                fuel = MODEL_FUEL.predict(feats)[0]
+                # Blend ML prediction with physical calculation
+                ml_fuel = MODEL_FUEL.predict(feats)[0]
+                fuel = (fuel * 0.7) + (ml_fuel * 0.3) # Weighted average
+                
                 fuel_real = MODEL_FUEL_REAL.predict(feats)[0]
                 raw_load = MODEL_LOAD.predict(feats)[0]
                 load = raw_load * 0.87
@@ -337,7 +376,6 @@ def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, 
                 delay = MODEL_DELAY.predict_proba(feats)[0][1]
                 risiko = MODEL_RISIKO.predict(feats)[0]
                 
-                fuel = max(fuel, fuel_real)
                 load = max(load, tonase * 0.87)
                 
             except Exception as e:
@@ -380,9 +418,10 @@ def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, 
         global_metrics['total_cycle_time_hours'] += cycle_duration_hours
         
         global_metrics['total_tonase'] += load
-        global_metrics['total_bbm_liter'] += (fuel * 1.6) # Adjustment factor
+        global_metrics['total_bbm_liter'] += fuel
         global_metrics['total_probabilitas_delay'] += delay
         global_metrics['jumlah_siklus_selesai'] += 1
+        global_metrics['total_maintenance_cost'] += (cycle_duration_hours * maint_rate)
 
 def calculate_shipment_risk(simulated_tonnage_8h, schedule_id, financial_params, sim_start_time, data):
     if data['schedules'].empty or schedule_id not in data['schedules'].index:
@@ -488,12 +527,22 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, ca
         'total_tonase': 0, 'total_bbm_liter': 0, 
         'jumlah_siklus_selesai': 0, 'total_waktu_antri_jam': 0.0,
         'total_probabilitas_delay': 0.0,
-        'total_cycle_time_hours': 0.0
+        'total_cycle_time_hours': 0.0,
+        'total_maintenance_cost': 0.0
     }
     
-    trucks = data['trucks'].index.tolist()
+    # Filter for active trucks
+    if 'status' in data['trucks'].columns:
+        active_trucks = data['trucks'][~data['trucks']['status'].isin(['MAINTENANCE', 'BREAKDOWN'])]
+        trucks = active_trucks.index.tolist()
+    else:
+        trucks = data['trucks'].index.tolist()
+
     ops = data['operators'].index.tolist()
-    if not trucks: return skenario 
+    
+    if not trucks: 
+        print("⚠️ No active trucks available for simulation!")
+        return skenario 
 
     # Use calibrated params if provided, else default
     if calibrated_params is None:
@@ -515,7 +564,14 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, ca
         
     # Logic to capture used excavators
     used_excavator_ids = []
-    excavators_list = data['excavators'].index.tolist()
+    
+    # Filter for active excavators
+    if 'status' in data['excavators'].columns:
+        active_excavators = data['excavators'][~data['excavators']['status'].isin(['MAINTENANCE', 'BREAKDOWN'])]
+        excavators_list = active_excavators.index.tolist()
+    else:
+        excavators_list = data['excavators'].index.tolist()
+
     target_exc_id = skenario.get('target_excavator_id')
     
     if excavators_list:
@@ -533,6 +589,9 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, ca
     rev = metrics['total_tonase'] * p['HargaJualBatuBara']
     cost = metrics['total_bbm_liter'] * p['HargaSolar']
     
+    # Add Maintenance Cost
+    cost += metrics['total_maintenance_cost']
+    
     # FIX: Use operational queue cost (e.g. 100k/hr) instead of vessel penalty (100M)
     risk_antri = metrics['total_waktu_antri_jam'] * p.get('BiayaAntrianPerJam', 100000)
     
@@ -545,6 +604,17 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, ca
     
     profit = rev - cost - risk_antri - risk_insiden - biaya_demurrage
     
+    # Calculate total distance for reporting
+    # Assuming avg speed and cycle time, or just sum of trips * distance
+    # Since we don't track distance per truck explicitly in metrics, we estimate:
+    # Distance per cycle = 2 * road_distance (Haul + Return)
+    # We need road distance. It's in the truck process but not in metrics.
+    # Let's approximate or fetch road distance again.
+    road_id = skenario.get('target_road_id')
+    try: road_dist = data['roads'].loc[road_id]['distance']
+    except: road_dist = 5.0
+    total_distance_km = metrics['jumlah_siklus_selesai'] * road_dist * 2
+    
     result = skenario.copy()
     result.update(metrics)
     result.update({
@@ -554,6 +624,8 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, ca
         'shipment_analysis': ship_res,
         'used_truck_ids': used_truck_ids,
         'used_excavator_ids': used_excavator_ids,
+        'total_distance_km': total_distance_km,
+        'financial_params': p, # Pass params for explanation
         'financial_breakdown': {
             'revenue': rev,
             'fuel_cost': cost,
@@ -676,15 +748,133 @@ def format_konteks_for_llm(simulation_results, data):
                 detailed_equipment.append({"type": "Excavator", "id": e_id, "name": name})
 
         # Explanations
+        
+        # Financial Breakdown Details
+        rev_val = fin.get('revenue', 0)
+        fuel_cost_val = fin.get('fuel_cost', 0)
+        queue_cost_val = fin.get('queue_cost', 0)
+        incident_cost_val = fin.get('incident_risk_cost', 0)
+        demurrage_val = fin.get('demurrage_cost', 0)
+        maint_cost_val = res.get('total_maintenance_cost', 0)
+        net_profit_val = fin.get('net_profit', 0)
+        
+        coal_price = res.get('financial_params', {}).get('HargaJualBatuBara', 800000)
+        fuel_price = res.get('financial_params', {}).get('HargaSolar', 15000)
+        
+        financial_explanation = (
+            f"**Perhitungan Laba Bersih:**\n"
+            f"1. **Pendapatan (Revenue)**:\n"
+            f"   - Rumus: `Total Tonase × Harga Batubara`\n"
+            f"   - Perhitungan: {ton:,.0f} Ton × {format_currency(coal_price)}/Ton\n"
+            f"   - **Total Pendapatan**: **{format_currency(rev_val)}**\n"
+            f"2. **Rincian Biaya Operasional**:\n"
+            f"   - **Biaya Bahan Bakar**: {res.get('total_bbm_liter', 0):,.0f} L × {format_currency(fuel_price)}/L = {format_currency(fuel_cost_val)}\n"
+            f"   - **Biaya Maintenance**: {format_currency(maint_cost_val)} (Estimasi aus & servis per jam operasi)\n"
+            f"   - **Inefisiensi Antrean**: {format_currency(queue_cost_val)} (Biaya peluang dari waktu yang hilang)\n"
+            f"   - **Risiko Insiden**: {format_currency(incident_cost_val)} (Biaya probabilistik berdasarkan model keselamatan)\n"
+            f"   - **Denda Demurrage**: {format_currency(demurrage_val)} (Denda keterlambatan kapal)\n"
+            f"3. **Laba Bersih**:\n"
+            f"   - Rumus: `Pendapatan - (BBM + Maintenance + Antrean + Risiko + Demurrage)`\n"
+            f"   - **Hasil Akhir**: **{format_currency(net_profit_val)}**"
+        )
+
+        # Production Target Details
+        cycles = res.get('jumlah_siklus_selesai', 0)
+        avg_load = ton / cycles if cycles > 0 else 0
+        production_explanation = (
+            f"**Analisis Produksi:**\n"
+            f"- **Total Output**: **{ton:,.0f} Ton**\n"
+            f"- **Analisis Siklus**:\n"
+            f"   - **Total Siklus**: {cycles} trip selesai.\n"
+            f"   - **Rata-rata Muatan**: {avg_load:.2f} Ton/Trip (berdasarkan kapasitas truk & densitas material).\n"
+            f"- **Konteks Pencapaian**: Output ini merepresentasikan tonase maksimum yang layak dengan konfigurasi {res.get('alokasi_truk')} truk dan {res.get('jumlah_excavator')} excavator pada kondisi cuaca ({res.get('weatherCondition')}) dan jalan ({res.get('roadCondition')}) saat ini."
+        )
+
+        # Fuel Efficiency Details
+        fuel_total = res.get('total_bbm_liter', 0)
+        fuel_efficiency_val = fuel_total / ton if ton > 0 else 0
+        total_dist = res.get('total_distance_km', 0)
+        avg_fuel_per_km = fuel_total / total_dist if total_dist > 0 else 0
+        
+        fuel_explanation = (
+            f"**Rincian Efisiensi Bahan Bakar:**\n"
+            f"1. **Sumber Data**: Telemetri Real-time & Prediksi ML (Model XGBoost).\n"
+            f"2. **Rumus**: `Efisiensi (L/Ton) = Total BBM Terpakai / Total Produksi`\n"
+            f"3. **Perhitungan Detail**:\n"
+            f"   - **Total Jarak**: {cycles} siklus × {res.get('distance_km', 0)*2:.2f} km/trip = **{total_dist:.1f} km**\n"
+            f"   - **Tingkat Konsumsi**: {avg_fuel_per_km:.2f} L/km (Rata-rata berdasarkan gradien & muatan)\n"
+            f"   - **Total BBM**: {total_dist:.1f} km × {avg_fuel_per_km:.2f} L/km = **{fuel_total:,.0f} Liter**\n"
+            f"   - **Skor Efisiensi**: {fuel_total:,.0f} L / {ton:,.0f} Ton = **{fuel_efficiency_val:.2f} L/Ton**\n"
+            f"4. **Wawasan**: Skor lebih rendah menunjukkan efisiensi lebih baik. Skor saat ini dipengaruhi oleh kondisi jalan ({res.get('roadCondition')})."
+        )
+
+        # Configuration Rationale
+        match_factor = (res.get('alokasi_truk') * res.get('avg_loading_time_min', 3)) / (res.get('jumlah_excavator') * res.get('avg_cycle_time_min', 20)) if res.get('jumlah_excavator') > 0 and res.get('avg_cycle_time_min', 0) > 0 else 0
+        config_explanation = (
+            f"**Rasional Konfigurasi Armada:**\n"
+            f"- **Pilihan**: {res.get('alokasi_truk')} Truk + {res.get('jumlah_excavator')} Excavator.\n"
+            f"- **Analisis Match Factor**: Match factor yang dihitung adalah sekitar **{match_factor:.2f}**.\n"
+            f"   - {('**Under-trucked (< 1.0)**: Excavator mungkin menunggu. Memprioritaskan efisiensi BBM daripada produksi maksimal.' if match_factor < 1.0 else '**Over-trucked (> 1.0)**: Truk mungkin mengantre. Memprioritaskan volume produksi maksimal.')}\n"
+            f"- **Tujuan Optimasi**: Kombinasi spesifik ini menghasilkan Laba Bersih tertinggi dengan menyeimbangkan biaya unit tambahan terhadap keuntungan marjinal dalam tonase."
+        )
+
+        # Vessel Status Details
+        vessel_name = ship.get('vessel_name', 'N/A')
+        eta = ship.get('eta', 'N/A') # Assuming ETA is available or use days
+        planned = ship.get('target_tonase', 0) # Assuming this field exists or derived
+        remaining = ship.get('remaining_target', 0)
+        daily_rate = ship.get('daily_production_rate', 0)
+        
+        vessel_explanation = (
+            f"**Rincian Status Kapal:**\n"
+            f"- **Identitas Kapal**: **{vessel_name}**\n"
+            f"- **Kebutuhan Kargo**:\n"
+            f"   - **Sisa Angkut**: **{remaining:,.0f} Ton**\n"
+            f"   - **Target Harian**: {daily_rate:,.0f} Ton/Hari\n"
+            f"- **Analisis Waktu**:\n"
+            f"   - **Est. Selesai**: {ship.get('days_to_complete', 0):.1f} Hari\n"
+            f"   - **Tenggat Waktu**: {ship.get('time_remaining_days', 0):.1f} Hari tersisa\n"
+            f"- **Status Akhir**: **{ship.get('status', 'N/A')}**\n"
+            f"   - {ship.get('info', '')}\n"
+            f"- **Dampak Finansial**: Potensi Demurrage sebesar {format_currency(demurrage_val)} jika terlambat."
+        )
+
+        # Efficiency Analysis Details
+        active_time = res.get('total_cycle_time_hours', 0)
+        queue_time = res.get('total_waktu_antri_jam', 0)
+        total_time = active_time + queue_time
+        efficiency_pct = (active_time / total_time * 100) if total_time > 0 else 0
+        
+        efficiency_explanation = (
+            f"**Analisis Mendalam Efisiensi Operasional:**\n"
+            f"- **Skor Efisiensi**: **{efficiency_pct:.1f}%** (Aktif vs Total Waktu)\n"
+            f"- **Distribusi Waktu**:\n"
+            f"   - **Hauling Aktif**: {active_time:.1f} Jam ({efficiency_pct:.1f}%) - Pergerakan produktif.\n"
+            f"   - **Mengantre (Idle)**: {queue_time:.1f} Jam ({100-efficiency_pct:.1f}%) - Waktu terbuang di loader/dump.\n"
+            f"- **Analisis Hambatan**: {'Waktu antrean tinggi menunjukkan perlunya dispatching yang lebih baik atau pengurangan truk.' if queue_time > active_time * 0.2 else 'Aliran optimal dengan waktu tunggu minimal.'}"
+        )
+
+        # Delay Risk Analysis Details
+        delay_risk_explanation = (
+            f"**Penilaian Risiko Keterlambatan:**\n"
+            f"- **Tingkat Risiko**: **{delay_risk}**\n"
+            f"- **Probabilitas**: **{res.get('total_probabilitas_delay', 0) / cycles * 100 if cycles > 0 else 0:.1f}%** peluang keterlambatan siklus per trip.\n"
+            f"- **Faktor Kontribusi**:\n"
+            f"   1. **Cuaca**: {res.get('weatherCondition')} (Dampak pada kecepatan/traksi)\n"
+            f"   2. **Kondisi Jalan**: {res.get('roadCondition')} (Dampak pada hambatan gulir)\n"
+            f"   3. **Kepadatan Lalu Lintas**: {res.get('alokasi_truk')} Truk di rute (Probabilitas antrean)\n"
+            f"- **Mitigasi**: {sop[0] if sop else 'Ikuti protokol keselamatan standar.'}"
+        )
+
         explanations = {
-            "CONFIGURATION": f"Alokasi {res.get('alokasi_truk')} truk dan {res.get('jumlah_excavator')} excavator dipilih untuk menyeimbangkan target produksi dengan biaya operasional. Rasio ini meminimalkan waktu tunggu (queue time) sambil memaksimalkan output tonase.",
-            "ROUTE": f"Rute {r_name} dipilih berdasarkan analisis jarak ({res.get('distance_km', 0):.2f} km) dan kondisi jalan ({res.get('roadCondition')}) untuk efisiensi bahan bakar terbaik.",
-            "FINANCIAL": f"Profit {profit_fmt} didapat dari Revenue {format_currency(fin.get('revenue', 0))} dikurangi Biaya BBM {format_currency(fin.get('fuel_cost', 0))} dan risiko operasional.",
-            "PRODUCTION": f"Total produksi {ton:,.0f} Ton dicapai dengan {res.get('jumlah_siklus_selesai')} siklus hauling yang sukses dalam durasi simulasi.",
-            "FUEL": f"Konsumsi BBM {fr_fmt} dipengaruhi oleh jarak angkut, beban muatan, dan kondisi jalan.",
-            "VESSEL": f"Status kapal: {ship.get('status', 'N/A')}. {ship.get('info', '')}",
-            "EFFICIENCY": f"Efisiensi diukur dari total waktu antri ({res.get('total_waktu_antri_jam', 0):.1f} Jam). Semakin rendah waktu antri, semakin efisien penggunaan alat.",
-            "DELAY_RISK": f"Risiko delay {delay_risk} dihitung berdasarkan varians antara waktu yang dibutuhkan untuk memenuhi target muatan vs waktu tersisa sebelum ETS (Estimated Time of Sailing)."
+            "CONFIGURATION": config_explanation,
+            "ROUTE": f"**Route Analysis:**\n- **Path**: {r_name}\n- **Distance**: {res.get('distance_km', 0):.2f} km (One way)\n- **Condition**: {res.get('roadCondition')}\n- **Reasoning**: Shortest viable path with acceptable gradient.",
+            "FINANCIAL": financial_explanation,
+            "PRODUCTION": production_explanation,
+            "FUEL": fuel_explanation,
+            "VESSEL": vessel_explanation,
+            "EFFICIENCY": efficiency_explanation,
+            "DELAY_RISK": delay_risk_explanation
         }
 
         formatted_data.append({
@@ -726,6 +916,18 @@ def get_strategic_recommendations(fixed, vars, params):
     
     data = load_fresh_data()
     calibrated_params = calibrate_simulation_parameters(data)
+    
+    # Use dynamic financial params if not provided by user
+    if params is None:
+        params = get_financial_params(data)
+    else:
+        # If params is a Pydantic model or dict, ensure it's a dict
+        if hasattr(params, 'dict'):
+            params = params.dict()
+        # Merge with defaults to ensure all keys exist
+        defaults = get_financial_params(data)
+        defaults.update(params)
+        params = defaults
     
     user_weather = fixed.get('weatherCondition', 'Cerah')
     user_road_cond = fixed.get('roadCondition', 'GOOD')

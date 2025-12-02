@@ -21,6 +21,7 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
     queueCost: 100000,
     demurrageCost: 50000000,
     incidentCost: 500000,
+    totalProductionTarget: 0, // New field
   });
 
   const [excavators, setExcavators] = useState([]);
@@ -251,6 +252,11 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
         {showAdvanced && (
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md">
             <p className="col-span-2 text-sm text-gray-600 mb-2">Financial Parameters (IDR)</p>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Target Produksi Batubara (Ton)</label>
+              <input type="number" name="totalProductionTarget" value={formData.totalProductionTarget} onChange={handleNumberChange} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Opsional (0 = Auto)" />
+            </div>
 
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Coal Price (per Ton)</label>

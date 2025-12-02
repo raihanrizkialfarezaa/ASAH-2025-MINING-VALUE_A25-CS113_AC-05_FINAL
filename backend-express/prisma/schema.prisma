@@ -159,6 +159,8 @@ model Truck {
   yearManufacture  Int?
   capacity         Float
   fuelCapacity     Float?
+  fuelConsumption  Float?         @default(1.0) // L/km
+  maintenanceCost  Float?         @default(0.0) // Cost per hour
   status           TruckStatus    @default(IDLE)
   lastMaintenance  DateTime?
   nextMaintenance  DateTime?
@@ -204,6 +206,8 @@ model Excavator {
   model            String?
   yearManufacture  Int?
   bucketCapacity   Float?
+  fuelConsumption  Float?          @default(50.0) // L/hour
+  maintenanceCost  Float?          @default(0.0) // Cost per hour
   status           ExcavatorStatus   @default(ACTIVE)
   lastMaintenance  DateTime?
   nextMaintenance  DateTime?

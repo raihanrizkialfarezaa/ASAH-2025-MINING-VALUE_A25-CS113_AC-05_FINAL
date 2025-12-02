@@ -1,5 +1,41 @@
 import React, { useState } from 'react';
 
+// Helper to render rich markdown (bold, code, lists, indentation)
+const renderMarkdown = (text) => {
+  if (!text) return null;
+  return text.split('\n').map((line, index) => {
+    // Determine indentation based on spaces or list markers
+    let indentClass = '';
+    if (line.startsWith('   -') || line.startsWith('   1.')) indentClass = 'pl-8';
+    else if (line.startsWith('-') || line.match(/^\d+\./)) indentClass = 'pl-4';
+
+    // Split by bold markers first
+    const parts = line.split(/(\*\*.*?\*\*|`.*?`)/g);
+
+    return (
+      <div key={index} className={`mb-1 text-sm leading-relaxed ${indentClass} text-gray-700`}>
+        {parts.map((part, i) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return (
+              <strong key={i} className="font-bold text-gray-900">
+                {part.slice(2, -2)}
+              </strong>
+            );
+          }
+          if (part.startsWith('`') && part.endsWith('`')) {
+            return (
+              <code key={i} className="bg-gray-100 text-red-600 px-1 rounded font-mono text-xs">
+                {part.slice(1, -1)}
+              </code>
+            );
+          }
+          return <span key={i}>{part}</span>;
+        })}
+      </div>
+    );
+  });
+};
+
 const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
   const [showModal, setShowModal] = useState(false);
 
@@ -160,17 +196,17 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
                 <div className="bg-green-50 p-4 rounded-lg border border-green-100">
                   <h4 className="text-green-800 font-bold mb-1">Net Profit</h4>
                   <p className="text-2xl font-bold text-green-600">{recommendation.profit_display}</p>
-                  <p className="text-xs text-green-700 mt-2">{recommendation.explanations?.FINANCIAL}</p>
+                  <div className="text-xs text-green-700 mt-2">{renderMarkdown(recommendation.explanations?.FINANCIAL)}</div>
                 </div>
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                   <h4 className="text-blue-800 font-bold mb-1">Production Target</h4>
                   <p className="text-2xl font-bold text-blue-600">{recommendation.total_tonase_display}</p>
-                  <p className="text-xs text-blue-700 mt-2">{recommendation.explanations?.PRODUCTION}</p>
+                  <div className="text-xs text-blue-700 mt-2">{renderMarkdown(recommendation.explanations?.PRODUCTION)}</div>
                 </div>
                 <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
                   <h4 className="text-orange-800 font-bold mb-1">Fuel Efficiency</h4>
                   <p className="text-2xl font-bold text-orange-600">{recommendation.total_bbm_display}</p>
-                  <p className="text-xs text-orange-700 mt-2">{recommendation.explanations?.FUEL}</p>
+                  <div className="text-xs text-orange-700 mt-2">{renderMarkdown(recommendation.explanations?.FUEL)}</div>
                 </div>
               </section>
 
@@ -182,20 +218,20 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
                 <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 space-y-4">
                   <div>
                     <h4 className="font-semibold text-gray-700">Why this configuration?</h4>
-                    <p className="text-gray-600 text-sm mt-1">{recommendation.explanations?.CONFIGURATION}</p>
+                    <div className="text-gray-600 text-sm mt-1">{renderMarkdown(recommendation.explanations?.CONFIGURATION)}</div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-200">
                     <div>
                       <h4 className="font-semibold text-gray-700 mb-2">Route Selection</h4>
                       <div className="bg-white p-3 rounded border border-gray-200">
                         <p className="font-medium text-blue-700">{recommendation.skenario.route}</p>
-                        <p className="text-xs text-gray-500 mt-1">{recommendation.explanations?.ROUTE}</p>
+                        <div className="text-xs text-gray-500 mt-1">{renderMarkdown(recommendation.explanations?.ROUTE)}</div>
                       </div>
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-700 mb-2">Vessel Status</h4>
                       <div className="bg-white p-3 rounded border border-gray-200">
-                        <p className="text-sm text-gray-600">{recommendation.explanations?.VESSEL}</p>
+                        <div className="text-sm text-gray-600">{renderMarkdown(recommendation.explanations?.VESSEL)}</div>
                       </div>
                     </div>
                   </div>
@@ -256,11 +292,11 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
               <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-bold text-gray-800 mb-2">Efficiency Analysis</h3>
-                  <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">{recommendation.explanations?.EFFICIENCY}</div>
+                  <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">{renderMarkdown(recommendation.explanations?.EFFICIENCY)}</div>
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-gray-800 mb-2">Delay Risk Analysis</h3>
-                  <div className="bg-purple-50 p-4 rounded-lg text-sm text-purple-800">{recommendation.explanations?.DELAY_RISK}</div>
+                  <div className="bg-purple-50 p-4 rounded-lg text-sm text-purple-800">{renderMarkdown(recommendation.explanations?.DELAY_RISK)}</div>
                 </div>
               </section>
 
