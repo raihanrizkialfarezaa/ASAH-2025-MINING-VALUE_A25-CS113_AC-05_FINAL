@@ -3,6 +3,64 @@ import aiService from '../../services/aiService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+const ThinkingIndicator = () => {
+  const [text, setText] = useState('Menganalisis pertanyaan...');
+
+  useEffect(() => {
+    const texts = ['Menganalisis pertanyaan...', 'Memahami struktur database...', 'Membuat query SQL...', 'Mengeksekusi query...', 'Memvalidasi data...', 'Menyusun jawaban...'];
+    let i = 0;
+    const interval = setInterval(() => {
+      i = (i + 1) % texts.length;
+      setText(texts[i]);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="mb-2 border border-blue-100 rounded-lg overflow-hidden bg-blue-50/50 animate-pulse">
+      <div className="px-3 py-2 text-xs text-blue-600 flex items-center gap-2">
+        <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <span className="font-medium">{text}</span>
+      </div>
+    </div>
+  );
+};
+
+const ThinkingProcess = ({ steps }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!steps || steps.length === 0) return null;
+
+  return (
+    <div className="mb-3 border border-blue-100 rounded-lg overflow-hidden bg-blue-50/50">
+      <button onClick={() => setExpanded(!expanded)} className="w-full px-3 py-2 text-xs text-blue-600 flex items-center justify-between hover:bg-blue-100/50 transition-colors">
+        <span className="flex items-center gap-2 font-medium">🤖 Thinking Process</span>
+        <span>{expanded ? '▼' : '▶'}</span>
+      </button>
+
+      {expanded && (
+        <div className="p-3 bg-white text-xs space-y-3 border-t border-blue-100 transition-all duration-200">
+          {steps.map((step, idx) => (
+            <div key={idx} className="flex items-start gap-2.5">
+              <div
+                className={`mt-0.5 w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                  step.status === 'error' ? 'bg-red-100 text-red-600' : step.status === 'blocked' ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'
+                }`}
+              >
+                {step.status === 'error' || step.status === 'blocked' ? '!' : '✓'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-gray-700">{step.message}</div>
+                {step.detail && <div className="mt-1.5 p-2 bg-slate-800 text-green-400 font-mono rounded text-[10px] overflow-x-auto whitespace-pre-wrap border border-slate-700 shadow-sm">{step.detail}</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ChatbotWidget = ({ context, aiServiceStatus }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -53,11 +111,13 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
       console.log('Chatbot response:', response);
 
       const answer = response.data?.jawaban_ai || response.data?.answer || response.jawaban_ai || 'I apologize, but I could not generate a response.';
+      const steps = response.data?.steps || [];
 
       const aiMessage = {
         role: 'assistant',
         content: answer,
         timestamp: new Date(),
+        steps: steps,
       };
 
       setMessages((prev) => [...prev, aiMessage]);
@@ -142,6 +202,7 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
                 <div className={`max-w-[85%] p-3 rounded-lg ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm'}`}>
                   {msg.role === 'assistant' ? (
                     <div className="prose prose-sm max-w-none dark:prose-invert">
+                      {msg.steps && msg.steps.length > 0 && <ThinkingProcess steps={msg.steps} />}
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                     </div>
                   ) : (
@@ -154,12 +215,9 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
 
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-white border border-gray-200 p-3 rounded-lg rounded-bl-none shadow-sm">
-                  <div className="flex space-x-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
+                <div className="max-w-[85%] p-3 rounded-lg bg-white border border-gray-200 rounded-bl-none shadow-sm">
+                  <ThinkingIndicator />
+                  <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mt-2"></div>
                 </div>
               </div>
             )}

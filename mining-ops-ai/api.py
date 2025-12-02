@@ -6,6 +6,7 @@ import os
 import uuid
 from datetime import datetime
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 
@@ -191,8 +192,16 @@ async def tanya_jawab_chatbot(request: ChatRequest):
         # KASUS 2: Jika TIDAK ada konteks strategi (User bertanya umum / data database)
         else:
             print("   ℹ️ Mode: Query Database (Text-to-SQL)")
-            jawaban_ai = execute_and_summarize(request.pertanyaan_user)
-            return {"jawaban_ai": jawaban_ai}
+            result = execute_and_summarize(request.pertanyaan_user)
+            
+            if isinstance(result, dict):
+                return {
+                    "jawaban_ai": result.get("answer"),
+                    "steps": result.get("steps"),
+                    "sql_query": result.get("sql_query")
+                }
+            else:
+                return {"jawaban_ai": result}
 
     except Exception as e:
         # Handle jika Ollama mati mendadak
