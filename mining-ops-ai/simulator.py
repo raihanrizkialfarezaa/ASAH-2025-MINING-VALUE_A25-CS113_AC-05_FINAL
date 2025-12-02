@@ -141,8 +141,91 @@ def load_fresh_data():
         'roads': DB_ROADS,
         'schedules': DB_SCHEDULES,
         'vessels': DB_VESSELS,
-        'maintenance': DB_MAINTENANCE_SORTED
+        'maintenance': DB_MAINTENANCE_SORTED,
+        'hauling_activities': load_data('hauling_activities', 'hauling_activities.csv')
     }
+
+def calibrate_simulation_parameters(data):
+    """
+    Auto-calibrates simulation parameters based on recent hauling activities (last 24h).
+    If no recent data, falls back to historical averages or defaults.
+    """
+    print("⚙️ Auto-Calibrating Simulation Parameters...")
+    
+    defaults = {
+        'avg_hauling_speed_kmh': 25.0,
+        'avg_return_speed_kmh': 30.0,
+        'avg_loading_time_min': 3.0,
+        'avg_dumping_time_min': 2.0,
+        'avg_queue_time_min': 5.0
+    }
+    
+    try:
+        df = data.get('hauling_activities')
+        if df is None or df.empty:
+            print("   ⚠️ No hauling data found. Using defaults.")
+            return defaults
+            
+        # Ensure timestamps are datetime
+        # Assuming columns: loadingStart, loadingEnd, dumpingStart, dumpingEnd, etc.
+        # Or if we have duration columns directly
+        
+        # Let's check if we have duration columns
+        required_cols = ['loadingDuration', 'haulingDuration', 'dumpingDuration', 'returnDuration', 'distance']
+        available_cols = [c for c in required_cols if c in df.columns]
+        
+        if len(available_cols) < len(required_cols):
+             print(f"   ⚠️ Missing duration columns in hauling data. Using defaults. Found: {available_cols}")
+             return defaults
+
+        # Filter for last 24 hours if possible, otherwise use all
+        # For now, let's use all valid data to be robust against sparse data
+        valid_df = df.dropna(subset=available_cols)
+        
+        if valid_df.empty:
+             print("   ⚠️ No valid hauling rows after dropna. Using defaults.")
+             return defaults
+             
+        # Calculate Averages
+        avg_loading = valid_df['loadingDuration'].mean()
+        avg_dumping = valid_df['dumpingDuration'].mean()
+        
+        # Calculate Speeds (Distance is usually in km, Duration in minutes)
+        # Speed = Distance / (Duration / 60) = km/h
+        
+        # Filter out zero durations to avoid division by zero
+        valid_haul = valid_df[valid_df['haulingDuration'] > 0]
+        if not valid_haul.empty:
+            avg_hauling_speed = (valid_haul['distance'] / (valid_haul['haulingDuration'] / 60.0)).mean()
+        else:
+            avg_hauling_speed = defaults['avg_hauling_speed_kmh']
+            
+        valid_return = valid_df[valid_df['returnDuration'] > 0]
+        if not valid_return.empty:
+            avg_return_speed = (valid_return['distance'] / (valid_return['returnDuration'] / 60.0)).mean()
+        else:
+            avg_return_speed = defaults['avg_return_speed_kmh']
+            
+        # Sanity Checks (Clamp values to reasonable ranges)
+        avg_loading = max(0.5, min(avg_loading, 15.0))
+        avg_dumping = max(0.5, min(avg_dumping, 10.0))
+        avg_hauling_speed = max(5.0, min(avg_hauling_speed, 60.0))
+        avg_return_speed = max(5.0, min(avg_return_speed, 70.0))
+        
+        calibrated = {
+            'avg_hauling_speed_kmh': avg_hauling_speed,
+            'avg_return_speed_kmh': avg_return_speed,
+            'avg_loading_time_min': avg_loading,
+            'avg_dumping_time_min': avg_dumping,
+            'avg_queue_time_min': defaults['avg_queue_time_min'] # Queue is dynamic in sim
+        }
+        
+        print(f"   ✅ Calibrated: Load={avg_loading:.1f}m, Dump={avg_dumping:.1f}m, Haul={avg_hauling_speed:.1f}km/h, Return={avg_return_speed:.1f}km/h")
+        return calibrated
+        
+    except Exception as e:
+        print(f"   ❌ Calibration failed: {e}. Using defaults.")
+        return defaults
 
 print("\n--- INITIALIZING SYSTEM (v3.1 - Dynamic Data) ---")
 load_models()
@@ -200,7 +283,7 @@ def get_features_for_prediction(truck_id, operator_id, road_id, excavator_id, we
         # print(f"Feature extraction error: {e}") # Debug only
         return pd.DataFrame(columns=MODEL_COLUMNS)
 
-def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, skenario, sim_start_time, data):
+def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, skenario, sim_start_time, data, calibrated_params):
     weather = skenario['weatherCondition']
     road_cond = skenario['roadCondition']
     shift = skenario['shift']
@@ -215,7 +298,20 @@ def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, 
     try: kapasitas_ton = data['trucks'].loc[truck_id]['capacity']
     except: return 
 
-    weather_factor = 1.25 if "Hujan" in str(weather) else 1.0
+    # Weather Impact Factors
+    weather_speed_factor = 1.0
+    if "Hujan Ringan" in str(weather): weather_speed_factor = 0.85
+    elif "Hujan Lebat" in str(weather): weather_speed_factor = 0.60
+    
+    road_cond_factor = 1.0
+    if road_cond == "FAIR": road_cond_factor = 0.9
+    elif road_cond == "POOR": road_cond_factor = 0.7
+    
+    total_speed_factor = weather_speed_factor * road_cond_factor
+
+    # Get Road Distance
+    try: road_distance_km = data['roads'].loc[road_id]['distance']
+    except: road_distance_km = 5.0 # Default
 
     while True:
         start_cycle_time = env.now
@@ -248,8 +344,11 @@ def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, 
                 # print(f"ML Prediction error: {e}")
                 pass
 
-        avg_hauling = 31.76 * weather_factor
-        yield env.timeout(avg_hauling / 60.0)
+        # HAULING (Loaded)
+        # Time = Distance / Speed
+        avg_hauling_speed = calibrated_params['avg_hauling_speed_kmh'] * total_speed_factor
+        hauling_time_hours = road_distance_km / avg_hauling_speed
+        yield env.timeout(hauling_time_hours)
         
         waktu_masuk_antrian = env.now
         
@@ -261,21 +360,27 @@ def truck_process_hybrid(env, truck_id, operator_id, resources, global_metrics, 
             durasi_antri = waktu_keluar_antrian - waktu_masuk_antrian
             global_metrics['total_waktu_antri_jam'] += durasi_antri
             
-            avg_loading = 11.02
-            actual_loading = avg_loading * (1.1 if "Hujan" in str(weather) else 1.0)
-            yield env.timeout(actual_loading / 60.0)
+            # LOADING
+            avg_loading_min = calibrated_params['avg_loading_time_min']
+            # Rain slows down loading slightly
+            loading_factor = 1.1 if "Hujan" in str(weather) else 1.0
+            yield env.timeout((avg_loading_min * loading_factor) / 60.0)
             
-        avg_return = 25.29 * weather_factor
-        yield env.timeout(avg_return / 60.0)
+        # RETURN (Empty)
+        avg_return_speed = calibrated_params['avg_return_speed_kmh'] * total_speed_factor
+        # Empty trucks might be slightly faster or same, usually faster
+        return_time_hours = road_distance_km / avg_return_speed
+        yield env.timeout(return_time_hours)
         
-        avg_dump = 8.10
-        yield env.timeout(avg_dump / 60.0)
+        # DUMPING
+        avg_dump_min = calibrated_params['avg_dumping_time_min']
+        yield env.timeout(avg_dump_min / 60.0)
         
         cycle_duration_hours = env.now - start_cycle_time
         global_metrics['total_cycle_time_hours'] += cycle_duration_hours
         
         global_metrics['total_tonase'] += load
-        global_metrics['total_bbm_liter'] += (fuel * 1.6)
+        global_metrics['total_bbm_liter'] += (fuel * 1.6) # Adjustment factor
         global_metrics['total_probabilitas_delay'] += delay
         global_metrics['jumlah_siklus_selesai'] += 1
 
@@ -355,29 +460,21 @@ def calculate_shipment_risk(simulated_tonnage_8h, schedule_id, financial_params,
     if variance_hours < 0:
         status = "DELAY_RISK"
         hours_short = abs(variance_hours)
-        demurrage = hours_short * financial_params.get('BiayaDemurragePerJam', 5000000)
-        
-        if hours_short > 48:
-            delay_risk_level = "CRITICAL"
-        elif hours_short > 24:
-            delay_risk_level = "HIGH"
-        else:
-            delay_risk_level = "MEDIUM"
+        delay_risk_level = "HIGH" if hours_short > 24 else "MEDIUM"
     elif variance_hours < 24:
-        delay_risk_level = "MEDIUM"
         status = "TIGHT_SCHEDULE"
+        delay_risk_level = "MEDIUM"
 
     return {
-        "vessel_name": vessel_name,
         "status": status,
         "demurrage_cost": demurrage,
-        "hours_needed": hours_needed,
+        "info": f"Kapal {vessel_name} status: {status}",
+        "vessel_name": vessel_name,
         "days_to_complete": days_needed,
-        "delay_risk_level": delay_risk_level,
-        "info": f"Selesai dalam {days_needed:.1f} Hari ({hours_needed:.1f} Jam)"
+        "hours_needed": hours_needed,
+        "delay_risk_level": delay_risk_level
     }
-
-def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8):
+def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, calibrated_params=None):
     sim_start_str = skenario.get('simulation_start_date', pd.Timestamp.now(tz='UTC').isoformat())
     try:
         sim_start_time = pd.to_datetime(sim_start_str)
@@ -398,12 +495,38 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8):
     ops = data['operators'].index.tolist()
     if not trucks: return skenario 
 
+    # Use calibrated params if provided, else default
+    if calibrated_params is None:
+        calibrated_params = {
+            'avg_hauling_speed_kmh': 25.0,
+            'avg_return_speed_kmh': 30.0,
+            'avg_loading_time_min': 3.0,
+            'avg_dumping_time_min': 2.0,
+            'avg_queue_time_min': 5.0
+        }
+
+    used_truck_ids = []
     for i in range(skenario['alokasi_truk']):
         t_id = trucks[i % len(trucks)]
+        used_truck_ids.append(t_id)
         o_id = ops[i % len(ops)]
 
-        env.process(truck_process_hybrid(env, t_id, o_id, res, metrics, skenario, sim_start_time, data))
+        env.process(truck_process_hybrid(env, t_id, o_id, res, metrics, skenario, sim_start_time, data, calibrated_params))
         
+    # Logic to capture used excavators
+    used_excavator_ids = []
+    excavators_list = data['excavators'].index.tolist()
+    target_exc_id = skenario.get('target_excavator_id')
+    
+    if excavators_list:
+        start_idx = 0
+        if target_exc_id in excavators_list:
+            start_idx = excavators_list.index(target_exc_id)
+        
+        for i in range(skenario['jumlah_excavator']):
+            e_id = excavators_list[(start_idx + i) % len(excavators_list)]
+            used_excavator_ids.append(e_id)
+
     env.run(until=duration_hours)
     
     p = financial_params
@@ -428,34 +551,80 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8):
         'Z_SCORE_PROFIT': profit,
         'total_biaya_risiko_antrian': risk_antri,
         'total_biaya_risiko_insiden': risk_insiden,
-        'shipment_analysis': ship_res
+        'shipment_analysis': ship_res,
+        'used_truck_ids': used_truck_ids,
+        'used_excavator_ids': used_excavator_ids,
+        'financial_breakdown': {
+            'revenue': rev,
+            'fuel_cost': cost,
+            'queue_cost': risk_antri,
+            'incident_risk_cost': risk_insiden,
+            'demurrage_cost': biaya_demurrage,
+            'net_profit': profit
+        }
     })
     return result
 
-# --- 3. AGEN & HELPER ---
-
-def get_operational_guidelines(weather, road_cond, total_trucks, total_excavators):
+def get_operational_guidelines(weather, road_cond, trucks, excavators):
     guidelines = []
-    if "Hujan" in str(weather): guidelines.append("⚠️ SLIPPERY: Batasi kecepatan 20 km/jam")
-    if total_trucks/total_excavators > 5: guidelines.append("🔄 TRAFIK: Aktifkan Waiting Bay")
+    
+    # Weather based guidelines
+    if weather and ("Hujan" in str(weather) or "Rain" in str(weather)):
+        guidelines.append("Waspada jalan licin, kurangi kecepatan unit.")
+        guidelines.append("Pastikan drainase area loading/dumping berfungsi baik.")
+        guidelines.append("Gunakan mode 4WD jika diperlukan.")
+    elif weather and "Kabut" in str(weather):
+        guidelines.append("Nyalakan lampu kabut dan lampu hazard.")
+        guidelines.append("Jaga jarak aman antar unit minimal 50 meter.")
+        
+    # Road Condition based guidelines
+    if road_cond == "POOR":
+        guidelines.append("Perbaikan jalan prioritas di segmen kritis (grade/undulation).")
+        guidelines.append("Hindari muatan berlebih (overload) untuk mencegah kerusakan jalan.")
+        guidelines.append("Kurangi kecepatan di tikungan tajam.")
+    elif road_cond == "FAIR":
+        guidelines.append("Lakukan maintenance rutin grading jalan.")
+        
+    # Fleet density based guidelines
+    if trucks and trucks > 10:
+        guidelines.append("Atur jarak iring antar unit (min 30m) untuk hindari antrian.")
+        guidelines.append("Waspada potensi antrian panjang di area dumping/loading.")
+        guidelines.append("Optimalkan traffic management di persimpangan.")
+        
+    # Excavator based guidelines
+    if excavators and excavators > 2:
+        guidelines.append("Pastikan area loading cukup luas untuk manuver multiple excavator.")
+        guidelines.append("Koordinasi antar operator excavator untuk pembagian front loading.")
+        
+    # Default safety guidelines
+    if not guidelines:
+        guidelines.append("Lakukan P5M (Pembicaraan Pagi) sebelum operasi.")
+        guidelines.append("Patuhi rambu batas kecepatan dan aturan lalu lintas tambang.")
+        guidelines.append("Gunakan APD lengkap dan sabuk pengaman.")
+        
     return guidelines
 
-def format_konteks_for_llm(top_3_list, data):
+def format_konteks_for_llm(simulation_results, data):
     formatted_data = []
-    for i, res in enumerate(top_3_list, 1):
+    i = 0
+    for res in simulation_results:
+        i += 1
+        
         r_id = res.get('target_road_id')
         e_id = res.get('target_excavator_id')
         
-        try: r_name = f"{data['roads'].loc[r_id]['name']} ({data['roads'].loc[r_id]['distance']} km)"
-        except: r_name = str(r_id)
-        try: e_name = f"{data['excavators'].loc[e_id]['currentLocation']} (Unit: {data['excavators'].loc[e_id]['name']})"
-        except: e_name = str(e_id)
-
+        r_name = r_id
+        if not data['roads'].empty and r_id in data['roads'].index:
+            r_name = data['roads'].loc[r_id, 'name']
+            
+        e_name = e_id
+        if not data['excavators'].empty and e_id in data['excavators'].index:
+            e_name = data['excavators'].loc[e_id, 'name']
+            
         profit_fmt = format_currency(res.get('Z_SCORE_PROFIT', 0))
         ton = res.get('total_tonase', 0)
-        bbm = res.get('total_bbm_liter', 0)
-        fr_fmt = f"{(bbm/ton):.2f} L/Ton" if ton>0 else "0"
-        
+        fr_fmt = f"{res.get('total_bbm_liter', 0) / ton:.2f} L/Ton" if ton > 0 else "N/A"
+
         avg_cycle_min = (res.get('total_cycle_time_hours', 0) / res.get('jumlah_siklus_selesai', 1)) * 60 if res.get('jumlah_siklus_selesai', 0) > 0 else 0
         
         sop = get_operational_guidelines(res.get('weatherCondition'), res.get('roadCondition'), res.get('alokasi_truk'), res.get('jumlah_excavator'))
@@ -485,6 +654,39 @@ def format_konteks_for_llm(top_3_list, data):
             if ship.get('demurrage_cost', 0) > 0:
                 ship_str += f" | Denda: {format_currency(ship.get('demurrage_cost'))}"
 
+        fin = res.get('financial_breakdown', {})
+        
+        # Detailed Equipment List
+        detailed_equipment = []
+        used_trucks = res.get('used_truck_ids', [])
+        used_excavators = res.get('used_excavator_ids', [])
+        
+        # Group trucks by model/brand to summarize if too many
+        truck_counts = {}
+        for t_id in used_trucks:
+            if not data['trucks'].empty and t_id in data['trucks'].index:
+                t_data = data['trucks'].loc[t_id]
+                name = f"{t_data['brand']} {t_data['model']} ({t_id})"
+                detailed_equipment.append({"type": "Truck", "id": t_id, "name": name})
+        
+        for e_id in used_excavators:
+            if not data['excavators'].empty and e_id in data['excavators'].index:
+                e_data = data['excavators'].loc[e_id]
+                name = f"{e_data['brand']} {e_data['model']} ({e_id})"
+                detailed_equipment.append({"type": "Excavator", "id": e_id, "name": name})
+
+        # Explanations
+        explanations = {
+            "CONFIGURATION": f"Alokasi {res.get('alokasi_truk')} truk dan {res.get('jumlah_excavator')} excavator dipilih untuk menyeimbangkan target produksi dengan biaya operasional. Rasio ini meminimalkan waktu tunggu (queue time) sambil memaksimalkan output tonase.",
+            "ROUTE": f"Rute {r_name} dipilih berdasarkan analisis jarak ({res.get('distance_km', 0):.2f} km) dan kondisi jalan ({res.get('roadCondition')}) untuk efisiensi bahan bakar terbaik.",
+            "FINANCIAL": f"Profit {profit_fmt} didapat dari Revenue {format_currency(fin.get('revenue', 0))} dikurangi Biaya BBM {format_currency(fin.get('fuel_cost', 0))} dan risiko operasional.",
+            "PRODUCTION": f"Total produksi {ton:,.0f} Ton dicapai dengan {res.get('jumlah_siklus_selesai')} siklus hauling yang sukses dalam durasi simulasi.",
+            "FUEL": f"Konsumsi BBM {fr_fmt} dipengaruhi oleh jarak angkut, beban muatan, dan kondisi jalan.",
+            "VESSEL": f"Status kapal: {ship.get('status', 'N/A')}. {ship.get('info', '')}",
+            "EFFICIENCY": f"Efisiensi diukur dari total waktu antri ({res.get('total_waktu_antri_jam', 0):.1f} Jam). Semakin rendah waktu antri, semakin efisien penggunaan alat.",
+            "DELAY_RISK": f"Risiko delay {delay_risk} dihitung berdasarkan varians antara waktu yang dibutuhkan untuk memenuhi target muatan vs waktu tersisa sebelum ETS (Estimated Time of Sailing)."
+        }
+
         formatted_data.append({
             f"OPSI_{i}": {
                 "TYPE": "REKOMENDASI UTAMA" if i==1 else "ALTERNATIF",
@@ -503,6 +705,16 @@ def format_konteks_for_llm(top_3_list, data):
                     "CYCLE_TIME_AVG": f"{avg_cycle_min:.1f} Min",
                     "DELAY_RISK": delay_risk
                 },
+                "FINANCIAL_BREAKDOWN": {
+                    "REVENUE": format_currency(fin.get('revenue', 0)),
+                    "FUEL_COST": format_currency(fin.get('fuel_cost', 0)),
+                    "QUEUE_COST": format_currency(fin.get('queue_cost', 0)),
+                    "INCIDENT_COST": format_currency(fin.get('incident_risk_cost', 0)),
+                    "DEMURRAGE": format_currency(fin.get('demurrage_cost', 0)),
+                    "NET_PROFIT": format_currency(fin.get('net_profit', 0))
+                },
+                "DETAILED_EQUIPMENT": detailed_equipment,
+                "EXPLANATIONS": explanations,
                 "ANALISIS_KAPAL": ship_str,
                 "SOP_KESELAMATAN": " | ".join(sop)
             }
@@ -513,6 +725,7 @@ def get_strategic_recommendations(fixed, vars, params):
     print(f"\n--- [Multi-Objective Optimization Engine] ---")
     
     data = load_fresh_data()
+    calibrated_params = calibrate_simulation_parameters(data)
     
     user_weather = fixed.get('weatherCondition', 'Cerah')
     user_road_cond = fixed.get('roadCondition', 'GOOD')
@@ -600,7 +813,7 @@ def get_strategic_recommendations(fixed, vars, params):
                     'jumlah_excavator': exc_count
                 }
                 
-                res = run_hybrid_simulation(scenario, params, data, duration_hours=8)
+                res = run_hybrid_simulation(scenario, params, data, duration_hours=8, calibrated_params=calibrated_params)
                 
                 road_data = data['roads'].loc[road_id]
                 road_distance = road_data['distance']
@@ -656,21 +869,6 @@ def get_strategic_recommendations(fixed, vars, params):
               f"CycleTime={strat['cycle_time_hours']:.2f}h")
     
     return final_strategies[:3]
-
-def run_follow_up_chat(top_3, data):
-    if not LLM_PROVIDER: return
-    print("\n--- [Chatbot AI] Menganalisis... ---")
-    context = format_konteks_for_llm(top_3, data)
-    prompt = f"""
-    PERAN: Kepala Teknik Tambang.
-    DATA: {context}
-    TUGAS: Analisis 3 strategi ini (Termasuk status Kapal/Demurrage).
-    FORMAT WAJIB: Gunakan pemisah "---BATAS_OPSI---".
-    """
-    try:
-        res = ollama.chat(model=OLLAMA_MODEL, messages=[{'role':'system', 'content':prompt}])
-        print(f"\n{res['message']['content']}\n")
-    except: pass
 
 def run_follow_up_chat(top_3, data):
     if not LLM_PROVIDER: return

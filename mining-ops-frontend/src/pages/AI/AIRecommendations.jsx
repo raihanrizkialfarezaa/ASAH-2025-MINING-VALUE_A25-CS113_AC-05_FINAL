@@ -102,6 +102,9 @@ const AIRecommendations = () => {
               insight: `${data.ANALISIS_KAPAL || ''} ${data.SOP_KESELAMATAN || ''}`.trim(),
               ship_analysis: data.ANALISIS_KAPAL || '',
               safety_sop: data.SOP_KESELAMATAN || '',
+              detailed_equipment: data.DETAILED_EQUIPMENT || [],
+              explanations: data.EXPLANATIONS || {},
+              financial_breakdown: data.FINANCIAL_BREAKDOWN || {},
               _uniqueId: `${Date.now()}_${index}`,
             };
 

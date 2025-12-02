@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { dashboardService } from '../services';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { Truck, Construction, Package, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Truck, Construction, Package, TrendingUp, AlertTriangle, Map as MapIcon } from 'lucide-react';
+import MiningMap from '../components/MiningMap';
 
 const Dashboard = () => {
   const [overview, setOverview] = useState(null);
@@ -83,6 +84,15 @@ const Dashboard = () => {
             </div>
           );
         })}
+      </div>
+
+      {/* Geospatial Visualization (Map) */}
+      <div className="card">
+        <div className="flex items-center space-x-2 mb-4">
+          <MapIcon className="text-blue-600" size={20} />
+          <h2 className="text-xl font-bold">Live Mining Operations Map</h2>
+        </div>
+        <MiningMap />
       </div>
 
       {overview?.alerts && overview.alerts.length > 0 && (

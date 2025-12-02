@@ -2,46 +2,39 @@ import ollama
 import pandas as pd
 from database import fetch_dataframe
 import json
+import os
 
 MODEL_NAME = "qwen2.5:7b"
 
-SCHEMA_DESCRIPTION = """
-Database Schema (PostgreSQL):
+def read_schema_file():
+    """Reads the Prisma schema file to get the latest database structure."""
+    try:
+        # Adjust path relative to this file
+        schema_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend-express', 'prisma', 'schema.prisma'))
+        if os.path.exists(schema_path):
+            with open(schema_path, 'r') as f:
+                return f.read()
+        else:
+            return "Schema file not found."
+    except Exception as e:
+        return f"Error reading schema: {e}"
 
-1. trucks (id, code, name, capacity, status, fuel_capacity, total_hours, total_distance)
-   - status: IDLE, HAULING, LOADING, DUMPING, MAINTENANCE, BREAKDOWN
-2. excavators (id, code, name, bucket_capacity, status, total_hours)
-   - status: ACTIVE, IDLE, MAINTENANCE, BREAKDOWN
-3. operators (id, employee_number, status, total_hours, rating)
-4. road_segments (id, code, name, distance, road_condition, max_speed)
-   - road_condition: GOOD, FAIR, POOR, CRITICAL
-5. hauling_activities (id, truck_id, excavator_id, road_segment_id, status, payload_amount, distance, cycle_time, fuel_consumed)
-   - status: COMPLETED, IN_PROGRESS
-6. sailing_schedules (id, vessel_id, eta_loading, ets_loading, planned_quantity, status)
-   - status: SCHEDULED, ARRIVED, LOADING, COMPLETED, DEPARTED
-7. weather_logs (id, condition, temperature, rainfall, wind_speed, timestamp)
-   - condition: Cerah, Hujan Ringan, Hujan Lebat
-8. production_records (id, date, shift, total_production, target_production)
-
-Relationships:
-- hauling_activities.truck_id -> trucks.id
-- hauling_activities.excavator_id -> excavators.id
-- hauling_activities.road_segment_id -> road_segments.id
-"""
+SCHEMA_DESCRIPTION = read_schema_file()
 
 def generate_sql_query(user_question):
     prompt = f"""
     You are a PostgreSQL expert. Convert the user's question into a valid SQL query.
     
-    Schema:
+    The database schema is defined in Prisma format below:
     {SCHEMA_DESCRIPTION}
     
     Rules:
     1. Return ONLY the SQL query. No markdown, no explanation.
     2. The query must be READ-ONLY (SELECT only). No INSERT, UPDATE, DELETE, DROP.
     3. Use standard PostgreSQL syntax.
-    4. If the question cannot be answered with the schema, return "SELECT 'I cannot answer that based on the available data' as message;".
-    5. Limit results to 10 rows unless specified otherwise.
+    4. Map the Prisma models to table names using the @@map attribute if present (e.g. @@map("trucks") means table name is "trucks").
+    5. If the question cannot be answered with the schema, return "SELECT 'I cannot answer that based on the available data' as message;".
+    6. Limit results to 10 rows unless specified otherwise.
     
     User Question: {user_question}
     SQL Query:
