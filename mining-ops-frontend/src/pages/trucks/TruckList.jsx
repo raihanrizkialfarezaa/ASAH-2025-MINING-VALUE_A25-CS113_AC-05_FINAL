@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { truckService } from '../../services/equipmentService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { loadingPointService, dumpingPointService } from '../../services/locationService';
 import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -64,7 +65,12 @@ const TruckList = () => {
     yearManufacture: '',
     fuelConsumption: '',
     averageSpeed: '',
+    currentLocation: '',
   });
+  const [loadingPoints, setLoadingPoints] = useState([]);
+  const [dumpingPoints, setDumpingPoints] = useState([]);
+  const [locationOptions, setLocationOptions] = useState([]);
+  const [codeEditable, setCodeEditable] = useState(false);
 
   const applyFiltersAndPagination = useCallback(() => {
     let filtered = [...allTrucks];
@@ -122,11 +128,18 @@ const TruckList = () => {
 
   useEffect(() => {
     fetchTrucks();
+    fetchLocationPoints();
   }, []);
 
   useEffect(() => {
     applyFiltersAndPagination();
   }, [applyFiltersAndPagination]);
+
+  useEffect(() => {
+    if (modalMode === 'create' && (!formData.currentLocation || formData.currentLocation === '') && locationOptions.length) {
+      setFormData((prev) => ({ ...prev, currentLocation: locationOptions[0].name || '' }));
+    }
+  }, [locationOptions]);
 
   const fetchTrucks = async () => {
     setLoading(true);
@@ -155,6 +168,43 @@ const TruckList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchLocationPoints = async () => {
+    try {
+      const [loadsRes, dumpsRes] = await Promise.all([loadingPointService.getAll(), dumpingPointService.getAll()]);
+      const loads = Array.isArray(loadsRes?.data) ? loadsRes.data : Array.isArray(loadsRes?.data?.data) ? loadsRes.data.data : [];
+      const dumps = Array.isArray(dumpsRes?.data) ? dumpsRes.data : Array.isArray(dumpsRes?.data?.data) ? dumpsRes.data.data : [];
+      setLoadingPoints(loads);
+      setDumpingPoints(dumps);
+      const unified = [];
+      loads.forEach((l) => unified.push({ id: `load:${l.id}`, type: 'LOADING', name: l.name || l.code || '' }));
+      dumps.forEach((d) => unified.push({ id: `dump:${d.id}`, type: 'DUMPING', name: d.name || d.code || '' }));
+      setLocationOptions(unified);
+    } catch (error) {
+      setLoadingPoints([]);
+      setDumpingPoints([]);
+      setLocationOptions([]);
+    }
+  };
+
+  const generateAutoTruckCode = () => {
+    const prefix = 'H';
+    const nums = allTrucks
+      .map((t) => {
+        if (!t.code?.startsWith(`${prefix}-`)) return null;
+        const m = t.code?.match(/-(\d+)$/);
+        return m ? parseInt(m[1], 10) : null;
+      })
+      .filter(Boolean);
+    const max = nums.length ? Math.max(...nums) : 0;
+    let next = max + 1;
+    let code = `${prefix}-${String(next).padStart(4, '0')}`;
+    while (allTrucks.some((e) => e.code === code)) {
+      next += 1;
+      code = `${prefix}-${String(next).padStart(4, '0')}`;
+    }
+    return code;
   };
 
   const handleSort = (field) => {
@@ -201,8 +251,10 @@ const TruckList = () => {
 
   const handleCreate = () => {
     setModalMode('create');
+    setCodeEditable(false);
+    const defaultCode = generateAutoTruckCode();
     setFormData({
-      code: '',
+      code: defaultCode,
       name: '',
       brand: '',
       model: '',
@@ -211,6 +263,7 @@ const TruckList = () => {
       yearManufacture: '',
       fuelConsumption: '',
       averageSpeed: '',
+      currentLocation: locationOptions.length ? locationOptions[0].name || '' : '',
     });
     setShowModal(true);
   };
@@ -228,6 +281,7 @@ const TruckList = () => {
       yearManufacture: truck.yearManufacture || '',
       fuelConsumption: truck.fuelConsumption || '',
       averageSpeed: truck.averageSpeed || '',
+      currentLocation: truck.currentLocation || '',
     });
     setShowModal(true);
   };
@@ -270,6 +324,7 @@ const TruckList = () => {
       if (fuelConsumption !== undefined && !Number.isNaN(fuelConsumption)) payload.fuelConsumption = fuelConsumption;
       const averageSpeed = formData.averageSpeed !== '' && formData.averageSpeed !== undefined ? Number(formData.averageSpeed) : undefined;
       if (averageSpeed !== undefined && !Number.isNaN(averageSpeed)) payload.averageSpeed = averageSpeed;
+      if (formData.currentLocation) payload.currentLocation = formData.currentLocation.toString().trim();
 
       const codeRegex = /^[A-Z]{1,2}-\d{3,4}$/;
       if (modalMode === 'create') {
@@ -739,12 +794,74 @@ const TruckList = () => {
                   <p className="text-lg font-medium text-gray-900">{selectedTruck.currentOperator?.user?.fullName || selectedTruck.currentOperator?.employeeNumber || 'N/A'}</p>
                 </div>
               )}
+
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Fuel className="text-orange-600" size={18} />
+                  <label className="text-sm font-semibold text-gray-600">Fuel Consumption</label>
+                </div>
+                <p className="text-lg font-medium text-gray-900">{selectedTruck.fuelConsumption ?? '-'} <span className="text-sm">L/km</span></p>
+              </div>
+
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Gauge className="text-purple-600" size={18} />
+                  <label className="text-sm font-semibold text-gray-600">Average Speed</label>
+                </div>
+                <p className="text-lg font-medium text-gray-900">{selectedTruck.averageSpeed ?? '-'} <span className="text-sm">km/h</span></p>
+              </div>
+
+              <div className="col-span-2 bg-white p-4 rounded-lg border border-gray-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <MapPin className="text-red-600" size={18} />
+                  <label className="text-sm font-semibold text-gray-600">Current Location</label>
+                </div>
+                <p className="text-lg font-medium text-gray-900">{selectedTruck.currentLocation || '-'}</p>
+              </div>
             </div>
 
             {selectedTruck.remarks && (
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <label className="text-sm font-semibold text-gray-600 mb-2 block">Remarks</label>
                 <p className="text-gray-900">{selectedTruck.remarks}</p>
+              </div>
+            )}
+
+            {selectedTruck.haulingActivities && selectedTruck.haulingActivities.length > 0 && (
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">Recent Hauling Activities</h4>
+                <div className="space-y-3">
+                  {selectedTruck.haulingActivities.map((h) => (
+                    <div key={h.id} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-700 font-medium">{h.loadingPoint?.name || h.loadingPoint?.code || '-' } → {h.dumpingPoint?.name || h.dumpingPoint?.code || '-' }</div>
+                        <div className="text-xs text-gray-500">{h.status || '-'}</div>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1 flex items-center space-x-3">
+                        <div>Load: {h.loadWeight ?? '-'} ton</div>
+                        <div>Cycle: {h.totalCycleTime ?? '-'} min</div>
+                        <div>Fuel: {h.fuelConsumed ?? '-'} L</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedTruck.maintenanceLogs && selectedTruck.maintenanceLogs.length > 0 && (
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">Recent Maintenance</h4>
+                <div className="space-y-3 text-sm text-gray-700">
+                  {selectedTruck.maintenanceLogs.map((m) => (
+                    <div key={m.id} className="p-3 bg-gray-50 rounded-lg border border-gray-100 flex items-start justify-between">
+                      <div>
+                        <div className="font-medium">{m.title || m.type || 'Maintenance'}</div>
+                        <div className="text-xs text-gray-500">{m.actualDate ? new Date(m.actualDate).toLocaleString() : '-'}</div>
+                      </div>
+                      <div className="text-xs text-gray-500">{m.notes || '-'}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -758,10 +875,37 @@ const TruckList = () => {
 
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Code * <span className="text-xs font-normal text-gray-500">(e.g., HD-0001)</span>
-                </label>
-                <input type="text" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} className="input-field" required placeholder="HD-0001" disabled={modalMode === 'edit'} />
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-semibold text-gray-700">Code *</label>
+                  {modalMode === 'create' ? (
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCodeEditable((s) => !s);
+                          if (codeEditable) {
+                            const auto = generateAutoTruckCode();
+                            setFormData((prev) => ({ ...prev, code: auto }));
+                          }
+                        }}
+                        className="text-xs px-2 py-1 rounded border bg-white text-gray-700 hover:bg-gray-50 transition"
+                      >
+                        {codeEditable ? 'Auto' : 'Edit'}
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-xs font-normal text-gray-500">(e.g., HD-0001)</span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  className="input-field"
+                  required
+                  placeholder="HD-0001"
+                  disabled={modalMode === 'edit' || (modalMode === 'create' && !codeEditable)}
+                />
               </div>
 
               <div>
@@ -810,6 +954,22 @@ const TruckList = () => {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Average Speed (km/h)</label>
                 <input type="number" step="0.1" value={formData.averageSpeed} onChange={(e) => setFormData({ ...formData, averageSpeed: e.target.value })} className="input-field" placeholder="30.0" min="0" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Current Location</label>
+                {locationOptions && locationOptions.length ? (
+                  <select value={formData.currentLocation} onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })} className="input-field">
+                    <option value="">Select location</option>
+                    {locationOptions.map((loc) => (
+                      <option key={loc.id} value={loc.name || ''}>
+                        {loc.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input type="text" value={formData.currentLocation} onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })} className="input-field" placeholder="Current location" />
+                )}
               </div>
             </div>
 
