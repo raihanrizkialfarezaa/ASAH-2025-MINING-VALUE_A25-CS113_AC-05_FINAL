@@ -800,7 +800,9 @@ const TruckList = () => {
                   <Fuel className="text-orange-600" size={18} />
                   <label className="text-sm font-semibold text-gray-600">Fuel Consumption</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{selectedTruck.fuelConsumption ?? '-'} <span className="text-sm">L/km</span></p>
+                <p className="text-lg font-medium text-gray-900">
+                  {selectedTruck.fuelConsumption ?? '-'} <span className="text-sm">L/km</span>
+                </p>
               </div>
 
               <div className="bg-white p-4 rounded-lg border border-gray-200">
@@ -808,7 +810,9 @@ const TruckList = () => {
                   <Gauge className="text-purple-600" size={18} />
                   <label className="text-sm font-semibold text-gray-600">Average Speed</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{selectedTruck.averageSpeed ?? '-'} <span className="text-sm">km/h</span></p>
+                <p className="text-lg font-medium text-gray-900">
+                  {selectedTruck.averageSpeed ?? '-'} <span className="text-sm">km/h</span>
+                </p>
               </div>
 
               <div className="col-span-2 bg-white p-4 rounded-lg border border-gray-200">
@@ -834,7 +838,9 @@ const TruckList = () => {
                   {selectedTruck.haulingActivities.map((h) => (
                     <div key={h.id} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
                       <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-700 font-medium">{h.loadingPoint?.name || h.loadingPoint?.code || '-' } → {h.dumpingPoint?.name || h.dumpingPoint?.code || '-' }</div>
+                        <div className="text-sm text-gray-700 font-medium">
+                          {h.loadingPoint?.name || h.loadingPoint?.code || '-'} → {h.dumpingPoint?.name || h.dumpingPoint?.code || '-'}
+                        </div>
                         <div className="text-xs text-gray-500">{h.status || '-'}</div>
                       </div>
                       <div className="text-xs text-gray-500 mt-1 flex items-center space-x-3">
