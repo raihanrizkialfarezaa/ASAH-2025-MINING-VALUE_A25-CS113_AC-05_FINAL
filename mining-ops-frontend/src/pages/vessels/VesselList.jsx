@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { vesselService } from '../../services/equipmentService';
+import { dumpingPointService } from '../../services/locationService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
@@ -39,6 +40,8 @@ const VesselList = () => {
     currentLocation: '',
     remarks: '',
   });
+  const [dumpingPoints, setDumpingPoints] = useState([]);
+  const [codeEditable, setCodeEditable] = useState(false);
 
   const applyFiltersAndPagination = useCallback(() => {
     let filtered = [...allVessels];
@@ -97,7 +100,15 @@ const VesselList = () => {
 
   useEffect(() => {
     fetchVessels();
+    fetchDumpingPoints();
   }, []);
+
+  useEffect(() => {
+    if (mode === 'create' && (!formData.currentLocation || formData.currentLocation === '') && dumpingPoints.length) {
+      const first = dumpingPoints[0];
+      setFormData((prev) => ({ ...prev, currentLocation: first.name || first.code || '' }));
+    }
+  }, [dumpingPoints]);
 
   useEffect(() => {
     applyFiltersAndPagination();
@@ -130,6 +141,35 @@ const VesselList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchDumpingPoints = async () => {
+    try {
+      const res = await dumpingPointService.getAll();
+      const dumps = Array.isArray(res?.data) ? res.data : Array.isArray(res?.data?.data) ? res.data.data : [];
+      setDumpingPoints(dumps);
+    } catch (error) {
+      setDumpingPoints([]);
+    }
+  };
+
+  const generateAutoCodeForType = (type) => {
+    const prefix = type === 'MOTHER_VESSEL' ? 'MV' : type === 'TUG_BOAT' ? 'TUG' : 'BRG';
+    const nums = allVessels
+      .map((e) => {
+        if (!e.code?.startsWith(`${prefix}-`)) return null;
+        const m = e.code?.match(/-(\d+)$/);
+        return m ? parseInt(m[1], 10) : null;
+      })
+      .filter(Boolean);
+    const max = nums.length ? Math.max(...nums) : 0;
+    let next = max + 1;
+    let code = `${prefix}-${String(next).padStart(4, '0')}`;
+    while (allVessels.some((e) => e.code === code)) {
+      next += 1;
+      code = `${prefix}-${String(next).padStart(4, '0')}`;
+    }
+    return code;
   };
 
   const handleSort = (field) => {
@@ -180,8 +220,11 @@ const VesselList = () => {
 
   const handleCreate = () => {
     setMode('create');
+    setCodeEditable(false);
+    const defaultCode = generateAutoCodeForType('BARGE');
+    const defaultLocation = dumpingPoints.length ? dumpingPoints[0].name || dumpingPoints[0].code || '' : '';
     setFormData({
-      code: '',
+      code: defaultCode,
       name: '',
       vesselType: 'BARGE',
       capacity: '',
@@ -190,7 +233,7 @@ const VesselList = () => {
       gt: '',
       dwt: '',
       loa: '',
-      currentLocation: '',
+      currentLocation: defaultLocation,
       remarks: '',
     });
     setShowModal(true);
@@ -722,10 +765,37 @@ const VesselList = () => {
 
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Code * <span className="text-xs font-normal text-gray-500">(e.g., MV-0001, BRG-0001)</span>
-                </label>
-                <input type="text" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} className="input-field" required placeholder="MV-0001" disabled={mode === 'edit'} />
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-semibold text-gray-700">Code *</label>
+                  {mode === 'create' ? (
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCodeEditable((s) => !s);
+                          if (codeEditable) {
+                            const auto = generateAutoCodeForType(formData.vesselType || 'BARGE');
+                            setFormData((prev) => ({ ...prev, code: auto }));
+                          }
+                        }}
+                        className="text-xs px-2 py-1 rounded border bg-white text-gray-700 hover:bg-gray-50 transition"
+                      >
+                        {codeEditable ? 'Auto' : 'Edit'}
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-xs font-normal text-gray-500">(e.g., MV-0001, BRG-0001)</span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  className="input-field"
+                  required
+                  placeholder="MV-0001"
+                  disabled={mode === 'edit' || (mode === 'create' && !codeEditable)}
+                />
               </div>
 
               <div>
@@ -735,7 +805,14 @@ const VesselList = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Vessel Type *</label>
-                <select value={formData.vesselType} onChange={(e) => setFormData({ ...formData, vesselType: e.target.value })} className="input-field">
+                <select
+                  value={formData.vesselType}
+                  onChange={(e) => {
+                    const newType = e.target.value;
+                    setFormData((prev) => ({ ...prev, vesselType: newType, code: mode === 'create' && !codeEditable ? generateAutoCodeForType(newType) : prev.code }));
+                  }}
+                  className="input-field"
+                >
                   <option value="MOTHER_VESSEL">Mother Vessel</option>
                   <option value="BARGE">Barge</option>
                   <option value="TUG_BOAT">Tug Boat</option>
@@ -769,7 +846,18 @@ const VesselList = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Current Location</label>
-                <input type="text" value={formData.currentLocation} onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })} className="input-field" placeholder="Muara Pantai" />
+                {dumpingPoints && dumpingPoints.length ? (
+                  <select value={formData.currentLocation} onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })} className="input-field">
+                    <option value="">Select dumping point</option>
+                    {dumpingPoints.map((d) => (
+                      <option key={d.id} value={d.name || d.code || ''}>
+                        {d.name || d.code}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input type="text" value={formData.currentLocation} onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })} className="input-field" placeholder="Muara Pantai" />
+                )}
               </div>
 
               <div className="flex items-center space-x-2">
