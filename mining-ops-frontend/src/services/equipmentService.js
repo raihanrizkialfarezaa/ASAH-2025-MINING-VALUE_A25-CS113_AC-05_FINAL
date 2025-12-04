@@ -142,3 +142,30 @@ export const operatorService = {
     return response.data;
   },
 };
+
+export const supportEquipmentService = {
+  getAll: async (params) => {
+    const response = await apiClient.get('/support-equipment', { params });
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await apiClient.get(`/support-equipment/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await apiClient.post('/support-equipment', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await apiClient.put(`/support-equipment/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await apiClient.delete(`/support-equipment/${id}`);
+    return response.data;
+  },
+};
