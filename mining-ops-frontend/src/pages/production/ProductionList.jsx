@@ -143,6 +143,23 @@ const ProductionList = () => {
               setStrategyFinancials(recommendation.financial_breakdown);
             }
 
+            // Build vessel info for remarks
+            let vesselInfo = '';
+            if (recommendation.vessel_info) {
+              const vi = recommendation.vessel_info;
+              if (vi.name) {
+                vesselInfo = ` | Vessel: ${vi.name}`;
+                if (vi.plannedQuantity) vesselInfo += ` (${vi.plannedQuantity}T)`;
+                if (vi.enforced) vesselInfo += ' [ENFORCED]';
+              }
+            }
+
+            // Build route info for remarks
+            let routeInfo = '';
+            if (recommendation.skenario?.route) {
+              routeInfo = ` | Route: ${recommendation.skenario.route}`;
+            }
+
             setFormData({
               recordDate: new Date().toISOString().split('T')[0],
               shift: shiftValue,
@@ -167,7 +184,7 @@ const ProductionList = () => {
               excavatorsBreakdown: '0',
               utilizationRate: utilizationRate.toFixed(2),
               downtimeHours: '0',
-              remarks: `Auto-filled from AI Strategy #${recommendation.rank || ''} - ${raw.strategy_objective || recommendation.strategy_objective || 'Optimal Configuration'}`,
+              remarks: `AI Strategy #${recommendation.rank || ''} - ${raw.strategy_objective || recommendation.strategy_objective || 'Optimal Configuration'}${vesselInfo}${routeInfo}`,
             });
 
             setModalMode('create');

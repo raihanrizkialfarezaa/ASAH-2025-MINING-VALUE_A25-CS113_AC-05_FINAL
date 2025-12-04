@@ -36,6 +36,29 @@ const renderMarkdown = (text) => {
   });
 };
 
+// Expandable insight component - fix truncation issue
+const InsightExpandable = ({ insight }) => {
+  const [expanded, setExpanded] = useState(false);
+  const maxLength = 150;
+  const isLong = insight && insight.length > maxLength;
+
+  return (
+    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+      <div className="flex items-start">
+        <span className="text-yellow-600 mr-2 flex-shrink-0">💡</span>
+        <div className="flex-1">
+          <p className={`text-sm text-gray-700 ${!expanded && isLong ? 'line-clamp-3' : ''}`}>{insight}</p>
+          {isLong && (
+            <button onClick={() => setExpanded(!expanded)} className="text-yellow-700 hover:text-yellow-900 text-xs font-medium mt-1 underline">
+              {expanded ? 'Show less' : 'Read more...'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
@@ -164,15 +187,8 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
             </div>
           </div>
 
-          {/* AI Insight */}
-          {recommendation.insight && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-              <div className="flex items-start">
-                <span className="text-yellow-600 mr-2">💡</span>
-                <p className="text-sm text-gray-700 line-clamp-3">{recommendation.insight}</p>
-              </div>
-            </div>
-          )}
+          {/* AI Insight - Expandable */}
+          {recommendation.insight && <InsightExpandable insight={recommendation.insight} />}
 
           {/* Select Button */}
           <button onClick={handleSelectClick} className={`w-full py-3 rounded-md font-semibold transition-colors ${isSelected ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}>

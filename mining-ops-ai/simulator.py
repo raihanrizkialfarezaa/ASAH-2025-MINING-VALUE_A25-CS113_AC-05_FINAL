@@ -1168,6 +1168,13 @@ def get_strategic_recommendations(fixed, vars, params):
     if target_schedule and target_schedule in all_schedules and target_schedule not in sample_schedules:
         sample_schedules[0] = target_schedule
     
+    # ENFORCE: If user selected a specific schedule, ONLY use that schedule
+    enforce_schedule = False
+    if target_schedule and target_schedule in all_schedules:
+        sample_schedules = [target_schedule]
+        enforce_schedule = True
+        print(f"   🎯 ENFORCING user-selected schedule: {target_schedule}")
+    
     if all_schedules[0] is None or len(data['schedules']) == 0:
         sample_schedules = [None]
         print(f"   ⚠️ No valid vessel schedules available")
@@ -1231,7 +1238,12 @@ def get_strategic_recommendations(fixed, vars, params):
             for _ in range(combinations_per_config):
                 road_id = random.choice(sample_roads)
                 excavator_id = random.choice(sample_excavators)
-                schedule_id = random.choice(sample_schedules)
+                
+                # ENFORCE: Use target_schedule if user selected one, otherwise random
+                if enforce_schedule and target_schedule:
+                    schedule_id = target_schedule
+                else:
+                    schedule_id = random.choice(sample_schedules)
                 
                 scenario = {
                     'weatherCondition': user_weather,
@@ -1251,6 +1263,26 @@ def get_strategic_recommendations(fixed, vars, params):
                 road_distance = road_data['distance']
                 
                 res['distance_km'] = road_distance
+                
+                # Add vessel info to result for frontend display
+                if schedule_id and not data['schedules'].empty and schedule_id in data['schedules'].index:
+                    schedule_row = data['schedules'].loc[schedule_id]
+                    vessel_id = schedule_row.get('vesselId')
+                    if vessel_id and not data['vessels'].empty and vessel_id in data['vessels'].index:
+                        vessel_row = data['vessels'].loc[vessel_id]
+                        res['vessel_info'] = {
+                            'id': vessel_id,
+                            'name': vessel_row.get('name', 'Unknown'),
+                            'capacity': vessel_row.get('capacity', 0),
+                            'etsLoading': str(schedule_row.get('etsLoading', '')),
+                            'plannedQuantity': schedule_row.get('plannedQuantity', 0),
+                            'status': schedule_row.get('status', 'UNKNOWN'),
+                            'enforced': enforce_schedule
+                        }
+                    else:
+                        res['vessel_info'] = {'enforced': enforce_schedule, 'schedule_id': schedule_id}
+                else:
+                    res['vessel_info'] = {'enforced': False, 'schedule_id': None}
                 res['fuel_per_ton'] = res['total_bbm_liter'] / res['total_tonase'] if res['total_tonase'] > 0 else 999
                 res['cycle_time_hours'] = 8 / res['jumlah_siklus_selesai'] if res['jumlah_siklus_selesai'] > 0 else 999
                 res['production_per_truck'] = res['total_tonase'] / truck_count if truck_count > 0 else 0

@@ -44,6 +44,7 @@ const HaulingList = () => {
   const [trucks, setTrucks] = useState([]);
   const [excavators, setExcavators] = useState([]);
   const [operators, setOperators] = useState([]);
+  const [filteredOperators, setFilteredOperators] = useState([]);
   const [loadingPoints, setLoadingPoints] = useState([]);
   const [dumpingPoints, setDumpingPoints] = useState([]);
   const [roadSegments, setRoadSegments] = useState([]);
@@ -53,6 +54,7 @@ const HaulingList = () => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [sortField, setSortField] = useState('loadingStartTime');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [batchMode, setBatchMode] = useState(false);
   const [filters, setFilters] = useState({
     truckId: '',
     excavatorId: '',
@@ -65,8 +67,11 @@ const HaulingList = () => {
   const [formData, setFormData] = useState({
     activityNumber: '',
     truckId: '',
+    truckIds: [],
     excavatorId: '',
+    excavatorIds: [],
     operatorId: '',
+    operatorIds: [],
     loadingPointId: '',
     dumpingPointId: '',
     roadSegmentId: '',
@@ -165,6 +170,16 @@ const HaulingList = () => {
   useEffect(() => {
     applyFiltersAndPagination();
   }, [applyFiltersAndPagination]);
+
+  // Filter operators by shift selection
+  useEffect(() => {
+    if (formData.shift && operators.length > 0) {
+      const shiftOperators = operators.filter((op) => op.shift === formData.shift);
+      setFilteredOperators(shiftOperators.length > 0 ? shiftOperators : operators);
+    } else {
+      setFilteredOperators(operators);
+    }
+  }, [formData.shift, operators]);
 
   const fetchActivities = async () => {
     setLoading(true);
@@ -285,14 +300,45 @@ const HaulingList = () => {
 
   const handleCreate = () => {
     setModalMode('create');
+    setBatchMode(false);
     const defaultCode = generateAutoActivityNumber();
     const now = new Date();
     const defaultTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
     setFormData({
       activityNumber: defaultCode,
       truckId: '',
+      truckIds: [],
       excavatorId: '',
+      excavatorIds: [],
       operatorId: '',
+      operatorIds: [],
+      loadingPointId: '',
+      dumpingPointId: '',
+      roadSegmentId: '',
+      shift: 'SHIFT_1',
+      loadingStartTime: defaultTime.toISOString().slice(0, 16),
+      loadWeight: '',
+      targetWeight: '',
+      distance: '',
+      status: 'LOADING',
+      remarks: '',
+    });
+    setShowModal(true);
+  };
+
+  const handleBatchCreate = () => {
+    setModalMode('batch');
+    setBatchMode(true);
+    const now = new Date();
+    const defaultTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
+    setFormData({
+      activityNumber: '',
+      truckId: '',
+      truckIds: [],
+      excavatorId: '',
+      excavatorIds: [],
+      operatorId: '',
+      operatorIds: [],
       loadingPointId: '',
       dumpingPointId: '',
       roadSegmentId: '',
@@ -398,6 +444,75 @@ const HaulingList = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Batch creation mode
+      if (modalMode === 'batch') {
+        const truckIds = formData.truckIds;
+        const excavatorIds = formData.excavatorIds.length > 0 ? formData.excavatorIds : [formData.excavatorId].filter(Boolean);
+        const operatorIds = formData.operatorIds.length > 0 ? formData.operatorIds : [formData.operatorId].filter(Boolean);
+
+        if (truckIds.length === 0) {
+          window.alert('Please select at least one truck for batch creation');
+          return;
+        }
+
+        const baseCode = generateAutoActivityNumber();
+        const prefix = baseCode.split('-').slice(0, 2).join('-');
+        const existingCodes = new Set(allActivities.map((a) => a.activityNumber));
+
+        let createdCount = 0;
+        let failedCount = 0;
+
+        for (let i = 0; i < truckIds.length; i++) {
+          const truckId = truckIds[i];
+          const excavatorId = excavatorIds[i % excavatorIds.length] || excavatorIds[0];
+          const operatorId = operatorIds[i % operatorIds.length] || operatorIds[0];
+
+          // Generate unique activity number
+          let actNum = i + 1;
+          let activityNumber = `${prefix}-${String(actNum).padStart(3, '0')}`;
+          while (existingCodes.has(activityNumber)) {
+            actNum++;
+            activityNumber = `${prefix}-${String(actNum).padStart(3, '0')}`;
+          }
+          existingCodes.add(activityNumber);
+
+          const payload = {
+            activityNumber,
+            truckId,
+            excavatorId,
+            operatorId,
+            loadingPointId: formData.loadingPointId,
+            dumpingPointId: formData.dumpingPointId,
+            shift: formData.shift,
+            loadingStartTime: new Date(formData.loadingStartTime).toISOString(),
+            loadWeight: formData.loadWeight === '' ? 0 : parseFloat(formData.loadWeight),
+            targetWeight: formData.targetWeight === '' ? 0 : parseFloat(formData.targetWeight),
+            distance: formData.distance === '' ? 0 : parseFloat(formData.distance),
+          };
+
+          if (formData.roadSegmentId) payload.roadSegmentId = formData.roadSegmentId;
+          if (formData.remarks) payload.remarks = formData.remarks.trim();
+          if (formData.status) payload.status = formData.status;
+
+          try {
+            await haulingService.create(payload);
+            createdCount++;
+          } catch (err) {
+            console.error(`Failed to create hauling for truck ${truckId}:`, err);
+            failedCount++;
+          }
+        }
+
+        if (createdCount > 0) {
+          window.alert(`Batch creation complete: ${createdCount} activities created, ${failedCount} failed`);
+        }
+
+        setShowModal(false);
+        fetchActivities();
+        return;
+      }
+
+      // Single creation/edit mode
       const payload = {
         activityNumber: formData.activityNumber.trim(),
         truckId: formData.truckId,
@@ -468,6 +583,10 @@ const HaulingList = () => {
           <button onClick={fetchActivities} className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border shadow-sm text-gray-700 font-medium transition-colors flex items-center space-x-2">
             <RefreshCw size={18} />
             <span>Refresh</span>
+          </button>
+          <button onClick={handleBatchCreate} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center space-x-2">
+            <Activity size={18} />
+            <span>Batch Create</span>
           </button>
           <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
             <Plus size={20} />
@@ -802,7 +921,14 @@ const HaulingList = () => {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         title={
-          modalMode === 'create' ? (
+          modalMode === 'batch' ? (
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Activity className="text-purple-600" size={24} />
+              </div>
+              <span>Batch Create Hauling Activities</span>
+            </div>
+          ) : modalMode === 'create' ? (
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Plus className="text-blue-600" size={24} />
@@ -1116,6 +1242,209 @@ const HaulingList = () => {
               </div>
             </div>
           </div>
+        ) : modalMode === 'batch' ? (
+          // BATCH CREATE FORM - Multi-select trucks/excavators/operators
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <p className="text-sm text-purple-800">
+                <strong>Batch Mode:</strong> Select multiple trucks, excavators, and operators. Each truck will create a separate hauling activity. Excavators and operators will be assigned round-robin style.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Shift * <span className="text-xs text-purple-600">(Filters operators by shift)</span>
+                </label>
+                <select value={formData.shift} onChange={(e) => setFormData({ ...formData, shift: e.target.value, operatorIds: [] })} className="input-field" required>
+                  <option value="SHIFT_1">Shift 1 (Pagi)</option>
+                  <option value="SHIFT_2">Shift 2 (Siang)</option>
+                  <option value="SHIFT_3">Shift 3 (Malam)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Loading Start Time *</label>
+                <input type="datetime-local" value={formData.loadingStartTime} onChange={(e) => setFormData({ ...formData, loadingStartTime: e.target.value })} className="input-field" required />
+              </div>
+
+              {/* Multi-select Trucks */}
+              <div className="col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Select Trucks * <span className="text-xs text-gray-500">({formData.truckIds.length} selected)</span>
+                </label>
+                <div className="border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto bg-white">
+                  {trucks.map((truck) => (
+                    <label key={truck.id} className="flex items-center space-x-2 p-2 hover:bg-blue-50 rounded cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.truckIds.includes(truck.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({ ...formData, truckIds: [...formData.truckIds, truck.id] });
+                          } else {
+                            setFormData({ ...formData, truckIds: formData.truckIds.filter((id) => id !== truck.id) });
+                          }
+                        }}
+                        className="rounded text-blue-600"
+                      />
+                      <span className="text-sm">
+                        <strong>{truck.code}</strong> - {truck.name} ({truck.brand} {truck.model})
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Each selected truck will create a separate hauling activity</p>
+              </div>
+
+              {/* Multi-select Excavators */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Select Excavators * <span className="text-xs text-gray-500">({formData.excavatorIds.length} selected)</span>
+                </label>
+                <div className="border border-gray-300 rounded-lg p-3 max-h-40 overflow-y-auto bg-white">
+                  {excavators.map((exc) => (
+                    <label key={exc.id} className="flex items-center space-x-2 p-2 hover:bg-orange-50 rounded cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.excavatorIds.includes(exc.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({ ...formData, excavatorIds: [...formData.excavatorIds, exc.id] });
+                          } else {
+                            setFormData({ ...formData, excavatorIds: formData.excavatorIds.filter((id) => id !== exc.id) });
+                          }
+                        }}
+                        className="rounded text-orange-600"
+                      />
+                      <span className="text-sm">
+                        <strong>{exc.code}</strong> - {exc.name}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Round-robin assignment to trucks</p>
+              </div>
+
+              {/* Multi-select Operators - Filtered by Shift */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Select Operators *{' '}
+                  <span className="text-xs text-gray-500">
+                    ({formData.operatorIds.length} selected, {filteredOperators.length} available for {formData.shift})
+                  </span>
+                </label>
+                <div className="border border-gray-300 rounded-lg p-3 max-h-40 overflow-y-auto bg-white">
+                  {filteredOperators.map((op) => (
+                    <label key={op.id} className="flex items-center space-x-2 p-2 hover:bg-green-50 rounded cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.operatorIds.includes(op.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({ ...formData, operatorIds: [...formData.operatorIds, op.id] });
+                          } else {
+                            setFormData({ ...formData, operatorIds: formData.operatorIds.filter((id) => id !== op.id) });
+                          }
+                        }}
+                        className="rounded text-green-600"
+                      />
+                      <span className="text-sm">
+                        <strong>{op.employeeNumber}</strong> - {op.user?.fullName} <span className="text-xs text-gray-400">({op.shift})</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Round-robin assignment to trucks</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Loading Point *</label>
+                <select value={formData.loadingPointId} onChange={(e) => setFormData({ ...formData, loadingPointId: e.target.value })} className="input-field" required>
+                  <option value="">Select Loading Point</option>
+                  {loadingPoints.map((point) => (
+                    <option key={point.id} value={point.id}>
+                      {point.code} - {point.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Dumping Point *</label>
+                <select value={formData.dumpingPointId} onChange={(e) => setFormData({ ...formData, dumpingPointId: e.target.value })} className="input-field" required>
+                  <option value="">Select Dumping Point</option>
+                  {dumpingPoints.map((point) => (
+                    <option key={point.id} value={point.id}>
+                      {point.code} - {point.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Road Segment</label>
+                <select value={formData.roadSegmentId} onChange={(e) => setFormData({ ...formData, roadSegmentId: e.target.value })} className="input-field">
+                  <option value="">Select Road Segment (Optional)</option>
+                  {roadSegments.map((segment) => (
+                    <option key={segment.id} value={segment.id}>
+                      {segment.code} - {segment.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Target Weight (ton)</label>
+                <input type="number" step="0.01" value={formData.targetWeight} onChange={(e) => setFormData({ ...formData, targetWeight: e.target.value })} className="input-field" placeholder="30.0" min="0" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Distance (km)</label>
+                <input type="number" step="0.01" value={formData.distance} onChange={(e) => setFormData({ ...formData, distance: e.target.value })} className="input-field" placeholder="2.5" min="0" />
+              </div>
+
+              <div className="col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Remarks (Applied to all)</label>
+                <textarea value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} className="input-field" rows="2" placeholder="Optional batch remarks..." />
+              </div>
+            </div>
+
+            {/* Preview */}
+            {formData.truckIds.length > 0 && (
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <h4 className="font-semibold text-green-800 mb-2">Preview: {formData.truckIds.length} activities will be created</h4>
+                <div className="text-sm text-green-700 max-h-32 overflow-y-auto">
+                  {formData.truckIds.map((truckId, idx) => {
+                    const truck = trucks.find((t) => t.id === truckId);
+                    const excId = formData.excavatorIds[idx % formData.excavatorIds.length];
+                    const opId = formData.operatorIds[idx % formData.operatorIds.length];
+                    const exc = excavators.find((e) => e.id === excId);
+                    const op = filteredOperators.find((o) => o.id === opId);
+                    return (
+                      <div key={idx} className="py-1 border-b border-green-200 last:border-0">
+                        <span className="font-medium">{truck?.code}</span> → Exc: {exc?.code || 'N/A'}, Op: {op?.employeeNumber || 'N/A'}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-3 pt-4 border-t">
+              <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={formData.truckIds.length === 0 || formData.excavatorIds.length === 0 || formData.operatorIds.length === 0}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                <Activity size={18} />
+                <span>Create {formData.truckIds.length} Activities</span>
+              </button>
+            </div>
+          </form>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -1132,11 +1461,13 @@ const HaulingList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Shift *</label>
-                <select value={formData.shift} onChange={(e) => setFormData({ ...formData, shift: e.target.value })} className="input-field" required>
-                  <option value="SHIFT_1">Shift 1</option>
-                  <option value="SHIFT_2">Shift 2</option>
-                  <option value="SHIFT_3">Shift 3</option>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Shift * <span className="text-xs text-purple-600">(Filters operators by shift)</span>
+                </label>
+                <select value={formData.shift} onChange={(e) => setFormData({ ...formData, shift: e.target.value, operatorId: '' })} className="input-field" required>
+                  <option value="SHIFT_1">Shift 1 (Pagi)</option>
+                  <option value="SHIFT_2">Shift 2 (Siang)</option>
+                  <option value="SHIFT_3">Shift 3 (Malam)</option>
                 </select>
               </div>
 
@@ -1165,12 +1496,17 @@ const HaulingList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Operator *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Operator *{' '}
+                  <span className="text-xs text-gray-500">
+                    ({filteredOperators.length} available for {formData.shift})
+                  </span>
+                </label>
                 <select value={formData.operatorId} onChange={(e) => setFormData({ ...formData, operatorId: e.target.value })} className="input-field" required>
                   <option value="">Select Operator</option>
-                  {operators.map((operator) => (
+                  {filteredOperators.map((operator) => (
                     <option key={operator.id} value={operator.id}>
-                      {operator.employeeNumber} - {operator.user?.fullName}
+                      {operator.employeeNumber} - {operator.user?.fullName} ({operator.shift})
                     </option>
                   ))}
                 </select>
