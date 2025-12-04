@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import aiService from '../../services/aiService';
 
 // Helper to render rich markdown (bold, code, lists, indentation)
 const renderMarkdown = (text) => {
@@ -61,6 +62,8 @@ const InsightExpandable = ({ insight }) => {
 
 const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
   const [showModal, setShowModal] = useState(false);
+  const [showHaulingConfirmModal, setShowHaulingConfirmModal] = useState(false);
+  const [isApplyingHauling, setIsApplyingHauling] = useState(false);
   const navigate = useNavigate();
 
   const getBadgeColor = (rank) => {
@@ -99,7 +102,17 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
   };
 
   const handleImplementStrategy = () => {
-    // Include hauling data if available
+    const hasRecommendedEquipment = recommendation.detailed_equipment && recommendation.detailed_equipment.length > 0;
+    const hasHaulingData = recommendation.hauling_data?.has_hauling_data;
+
+    if (hasRecommendedEquipment || hasHaulingData) {
+      setShowHaulingConfirmModal(true);
+    } else {
+      proceedToProduction();
+    }
+  };
+
+  const proceedToProduction = () => {
     const strategyData = {
       rank: rank,
       recommendation: recommendation,
@@ -112,6 +125,132 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
 
     sessionStorage.setItem('selectedStrategy', JSON.stringify(strategyData));
     navigate('/production');
+  };
+
+  const handleHaulingConfirm = async (action) => {
+    setIsApplyingHauling(true);
+
+    try {
+      const truckEquip = recommendation.detailed_equipment?.filter((e) => e.type === 'Truck') || [];
+      const excavatorEquip = recommendation.detailed_equipment?.filter((e) => e.type === 'Excavator') || [];
+
+      const truckIds = truckEquip.map((e) => e.id);
+      const excavatorIds = excavatorEquip.map((e) => e.id);
+
+      const raw = recommendation.raw_data || {};
+      const haulingData = recommendation.hauling_data?.hauling_analysis || {};
+
+      const operatorIds = haulingData.equipment_allocation?.operator_ids || [];
+
+      const firstHaulingId = recommendation.hauling_data?.hauling_analysis?.hauling_activity_ids?.[0] || null;
+
+      const params = {
+        action: action,
+        existingHaulingId: action === 'update' ? firstHaulingId : null,
+        recommendation: {
+          rank,
+          strategy_objective: raw.strategy_objective || 'AI Recommended Configuration',
+        },
+        truckIds: truckIds.length > 0 ? truckIds : haulingData.equipment_allocation?.truck_ids || [],
+        excavatorIds: excavatorIds.length > 0 ? excavatorIds : haulingData.equipment_allocation?.excavator_ids || [],
+        operatorIds: operatorIds,
+        loadingPointId: haulingData.loading_point_id || null,
+        dumpingPointId: haulingData.dumping_point_id || null,
+        roadSegmentId: raw.target_road_id || null,
+        shift: raw.shift || 'SHIFT_1',
+        loadWeight: haulingData.aggregated?.avg_load_weight || 28.5,
+        targetWeight: 30,
+        distance: raw.distance_km || haulingData.aggregated?.avg_distance || 3,
+      };
+
+      const result = await aiService.applyHaulingRecommendation(params);
+
+      if (result.success) {
+        const alertMessage = action === 'update' ? `Hauling activity updated successfully! Activity: ${result.data.updatedActivity?.activityNumber}` : `${result.data.createdCount} hauling activities created successfully!`;
+
+        window.alert(alertMessage);
+
+        // Calculate robust metrics for production modal
+        const truckCount = params.truckIds?.length || 1;
+        const excavatorCount = params.excavatorIds?.length || 1;
+        const distance = parseFloat(params.distance) || 3;
+        const loadWeight = parseFloat(params.loadWeight) || 28.5;
+
+        // Calculate Total Fuel: Based on distance, fuel consumption rate, and number of trucks
+        // Typical mining truck consumes ~0.5-1.0 L/km loaded, ~0.3-0.5 L/km empty
+        const fuelConsumptionRateLoaded = 0.8; // L/km when loaded
+        const fuelConsumptionRateEmpty = 0.4; // L/km when empty
+        const roundTripDistance = distance * 2;
+        const fuelPerTrip = distance * fuelConsumptionRateLoaded + distance * fuelConsumptionRateEmpty;
+        const totalFuelLiter = fuelPerTrip * truckCount;
+
+        // Calculate Avg Cycle Time: loading + travel loaded + dumping + return
+        // Loading: depends on excavator rate (typically 5-8 minutes for full truck)
+        // Travel: distance / speed (assume 20 km/h loaded, 30 km/h empty average on mine roads)
+        // Dumping: typically 2-3 minutes
+        const loadingTimeMinutes = (loadWeight / 50) * 8; // ~8 min for full load at 50 ton/min excavator rate
+        const travelTimeLoadedMinutes = (distance / 20) * 60; // 20 km/h loaded
+        const dumpingTimeMinutes = 3;
+        const returnTimeMinutes = (distance / 30) * 60; // 30 km/h empty
+        const avgCycleTimeMinutes = loadingTimeMinutes + travelTimeLoadedMinutes + dumpingTimeMinutes + returnTimeMinutes;
+
+        // Calculate utilization rate (operating hours / available hours)
+        const shiftHours = 8;
+        const totalOperatingMinutes = avgCycleTimeMinutes * truckCount;
+        const availableMinutes = shiftHours * 60 * truckCount;
+        const utilizationRate = Math.min((totalOperatingMinutes / availableMinutes) * 100, 100);
+
+        const strategyData = {
+          rank: rank,
+          recommendation: recommendation,
+          implementedAt: new Date().toISOString(),
+          useHaulingData: true,
+          haulingActivityIds: action === 'update' ? [result.data.updatedActivity?.id] : result.data.createdActivities?.map((a) => a.id) || [],
+          haulingAggregated: {
+            total_tonase: loadWeight * truckCount,
+            total_trips: truckCount,
+            total_distance_km: roundTripDistance * truckCount,
+            total_fuel_liter: totalFuelLiter,
+            avg_cycle_time_minutes: avgCycleTimeMinutes,
+            avg_load_weight: loadWeight,
+            trucks_operating: truckCount,
+            excavators_operating: excavatorCount,
+            utilization_rate_percent: utilizationRate,
+            shift: params.shift,
+            // Additional calculation parameters for transparency
+            calculation_params: {
+              fuel_rate_loaded: fuelConsumptionRateLoaded,
+              fuel_rate_empty: fuelConsumptionRateEmpty,
+              speed_loaded_kmh: 20,
+              speed_empty_kmh: 30,
+              loading_time_min: loadingTimeMinutes.toFixed(1),
+              dumping_time_min: dumpingTimeMinutes,
+            },
+          },
+          equipmentAllocation: {
+            truck_ids: params.truckIds,
+            excavator_ids: params.excavatorIds,
+            operator_ids: params.operatorIds,
+          },
+          haulingApplied: true,
+          haulingResult: result.data,
+        };
+
+        sessionStorage.setItem('selectedStrategy', JSON.stringify(strategyData));
+        setShowHaulingConfirmModal(false);
+        navigate('/production');
+      }
+    } catch (error) {
+      console.error('Failed to apply hauling recommendation:', error);
+      window.alert(`Failed to apply hauling recommendation: ${error.message}`);
+    } finally {
+      setIsApplyingHauling(false);
+    }
+  };
+
+  const handleSkipHauling = () => {
+    setShowHaulingConfirmModal(false);
+    proceedToProduction();
   };
 
   return (
@@ -427,6 +566,101 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showHaulingConfirmModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-60 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-t-xl">
+              <h2 className="text-xl font-bold">Hauling Data Configuration</h2>
+              <p className="text-blue-100 mt-1 text-sm">Choose how to apply the AI recommended equipment configuration</p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-800 mb-2">AI Recommended Equipment:</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Trucks:</span>
+                    <span className="font-bold ml-2 text-blue-700">{recommendation.skenario?.alokasi_truk || recommendation.detailed_equipment?.filter((e) => e.type === 'Truck').length || 0} Unit</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Excavators:</span>
+                    <span className="font-bold ml-2 text-orange-700">{recommendation.skenario?.jumlah_excavator || recommendation.detailed_equipment?.filter((e) => e.type === 'Excavator').length || 0} Unit</span>
+                  </div>
+                </div>
+                {recommendation.detailed_equipment && recommendation.detailed_equipment.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-blue-200">
+                    <p className="text-xs text-blue-700 mb-2">Recommended Equipment IDs:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {recommendation.detailed_equipment.slice(0, 10).map((eq, idx) => (
+                        <span key={idx} className={`text-xs px-2 py-1 rounded ${eq.type === 'Truck' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}`}>
+                          {eq.id.slice(0, 12)}...
+                        </span>
+                      ))}
+                      {recommendation.detailed_equipment.length > 10 && <span className="text-xs text-gray-500">+{recommendation.detailed_equipment.length - 10} more</span>}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm text-yellow-800">
+                  <strong>⚠️ Important:</strong> This action will create or update hauling activities in the database with the AI recommended equipment configuration.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <p className="font-medium text-gray-700">Select an action:</p>
+
+                {recommendation.hauling_data?.hauling_analysis?.hauling_activity_ids?.length > 0 && (
+                  <button onClick={() => handleHaulingConfirm('update')} disabled={isApplyingHauling} className="w-full p-4 border-2 border-blue-300 rounded-lg hover:bg-blue-50 transition-colors text-left disabled:opacity-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-blue-800">Update Existing Hauling Activity</h4>
+                        <p className="text-sm text-gray-600 mt-1">Update hauling activity {recommendation.hauling_data?.hauling_analysis?.hauling_activity_ids?.[0]?.slice(0, 12)}... with the recommended configuration</p>
+                      </div>
+                      <span className="text-blue-600">→</span>
+                    </div>
+                  </button>
+                )}
+
+                <button onClick={() => handleHaulingConfirm('create')} disabled={isApplyingHauling} className="w-full p-4 border-2 border-green-300 rounded-lg hover:bg-green-50 transition-colors text-left disabled:opacity-50">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold text-green-800">Create New Hauling Activities</h4>
+                      <p className="text-sm text-gray-600 mt-1">Create {recommendation.skenario?.alokasi_truk || 1} new hauling activities based on AI recommendations</p>
+                    </div>
+                    <span className="text-green-600">→</span>
+                  </div>
+                </button>
+
+                <button onClick={handleSkipHauling} disabled={isApplyingHauling} className="w-full p-4 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left disabled:opacity-50">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold text-gray-700">Skip Hauling Update</h4>
+                      <p className="text-sm text-gray-500 mt-1">Go directly to production creation without modifying hauling data</p>
+                    </div>
+                    <span className="text-gray-400">→</span>
+                  </div>
+                </button>
+              </div>
+
+              {isApplyingHauling && (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-600">Applying hauling recommendation...</span>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-gray-50 px-6 py-4 rounded-b-xl border-t flex justify-end">
+              <button onClick={() => setShowHaulingConfirmModal(false)} disabled={isApplyingHauling} className="px-6 py-2 rounded-lg text-gray-600 hover:bg-gray-200 font-medium transition-colors disabled:opacity-50">
+                Cancel
               </button>
             </div>
           </div>

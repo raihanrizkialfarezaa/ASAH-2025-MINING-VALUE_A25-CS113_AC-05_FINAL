@@ -251,6 +251,222 @@ class AIService {
     }
   }
 
+  async applyHaulingRecommendation(params) {
+    try {
+      const {
+        action,
+        existingHaulingId,
+        truckIds,
+        excavatorIds,
+        operatorIds,
+        loadingPointId,
+        dumpingPointId,
+        roadSegmentId,
+        shift,
+        loadWeight,
+        targetWeight,
+        distance,
+        supervisorId,
+      } = params;
+
+      logger.info('Applying hauling recommendation:', {
+        action,
+        existingHaulingId,
+        truckCount: truckIds?.length,
+        supervisorId,
+      });
+
+      let effectiveSupervisorId = supervisorId;
+      if (!effectiveSupervisorId) {
+        const adminUser = await prisma.user.findFirst({
+          where: {
+            OR: [{ role: 'ADMIN' }, { role: 'SUPERVISOR' }],
+            isActive: true,
+          },
+          orderBy: { createdAt: 'asc' },
+        });
+        if (adminUser) {
+          effectiveSupervisorId = adminUser.id;
+        } else {
+          throw new Error('No supervisor or admin user found. Please provide a supervisorId.');
+        }
+      }
+
+      if (action === 'update' && existingHaulingId) {
+        const existingActivity = await prisma.haulingActivity.findUnique({
+          where: { id: existingHaulingId },
+        });
+
+        if (!existingActivity) {
+          throw new Error(`Hauling activity with ID ${existingHaulingId} not found`);
+        }
+
+        const primaryTruckId =
+          truckIds && truckIds.length > 0 ? truckIds[0] : existingActivity.truckId;
+        const primaryExcavatorId =
+          excavatorIds && excavatorIds.length > 0 ? excavatorIds[0] : existingActivity.excavatorId;
+        const primaryOperatorId =
+          operatorIds && operatorIds.length > 0 ? operatorIds[0] : existingActivity.operatorId;
+
+        const updated = await prisma.haulingActivity.update({
+          where: { id: existingHaulingId },
+          data: {
+            truckId: primaryTruckId,
+            excavatorId: primaryExcavatorId,
+            operatorId: primaryOperatorId,
+            loadingPointId: loadingPointId || existingActivity.loadingPointId,
+            dumpingPointId: dumpingPointId || existingActivity.dumpingPointId,
+            roadSegmentId: roadSegmentId || existingActivity.roadSegmentId,
+            shift: shift || existingActivity.shift,
+            loadWeight:
+              loadWeight !== undefined ? parseFloat(loadWeight) : existingActivity.loadWeight,
+            targetWeight:
+              targetWeight !== undefined ? parseFloat(targetWeight) : existingActivity.targetWeight,
+            distance: distance !== undefined ? parseFloat(distance) : existingActivity.distance,
+            remarks: `Updated by AI Recommendation`,
+          },
+          include: {
+            truck: { select: { id: true, code: true, name: true } },
+            excavator: { select: { id: true, code: true, name: true } },
+            operator: { include: { user: { select: { fullName: true } } } },
+          },
+        });
+
+        return {
+          action: 'update',
+          updatedActivity: updated,
+          multiEquipment: {
+            truckIds,
+            excavatorIds,
+            operatorIds,
+          },
+        };
+      } else {
+        if (!truckIds || truckIds.length === 0) {
+          throw new Error('At least one truck ID is required');
+        }
+        if (!excavatorIds || excavatorIds.length === 0) {
+          throw new Error('At least one excavator ID is required');
+        }
+
+        let effectiveOperatorIds = operatorIds;
+        if (!effectiveOperatorIds || effectiveOperatorIds.length === 0) {
+          const availableOperators = await prisma.operator.findMany({
+            where: {
+              status: 'ACTIVE',
+            },
+            take: Math.max(truckIds.length, 10),
+            orderBy: { createdAt: 'asc' },
+            select: { id: true },
+          });
+          if (availableOperators.length === 0) {
+            throw new Error('No available operators found in database');
+          }
+          effectiveOperatorIds = availableOperators.map((op) => op.id);
+        }
+
+        let effectiveLoadingPointId = loadingPointId;
+        let effectiveDumpingPointId = dumpingPointId;
+
+        if (!effectiveLoadingPointId) {
+          const defaultLoadingPoint = await prisma.loadingPoint.findFirst({
+            where: { isActive: true },
+            orderBy: { createdAt: 'asc' },
+          });
+          if (defaultLoadingPoint) {
+            effectiveLoadingPointId = defaultLoadingPoint.id;
+          } else {
+            throw new Error('No active loading point found');
+          }
+        }
+
+        if (!effectiveDumpingPointId) {
+          const defaultDumpingPoint = await prisma.dumpingPoint.findFirst({
+            where: { isActive: true },
+            orderBy: { createdAt: 'asc' },
+          });
+          if (defaultDumpingPoint) {
+            effectiveDumpingPointId = defaultDumpingPoint.id;
+          } else {
+            throw new Error('No active dumping point found');
+          }
+        }
+
+        const today = new Date();
+        const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+        const lastActivity = await prisma.haulingActivity.findFirst({
+          where: { activityNumber: { startsWith: `HA-${dateStr}` } },
+          orderBy: { activityNumber: 'desc' },
+        });
+
+        let sequence = 1;
+        if (lastActivity) {
+          const parts = lastActivity.activityNumber.split('-');
+          const lastSequence = parseInt(parts[parts.length - 1]);
+          if (!isNaN(lastSequence)) {
+            sequence = lastSequence + 1;
+          }
+        }
+
+        const createdActivities = [];
+
+        for (let i = 0; i < truckIds.length; i++) {
+          const truckId = truckIds[i];
+          const excavatorId = excavatorIds[i % excavatorIds.length];
+          const operatorId = effectiveOperatorIds[i % effectiveOperatorIds.length];
+
+          const activityNumber = `HA-${dateStr}-${(sequence + i).toString().padStart(3, '0')}`;
+
+          const activityData = {
+            activityNumber,
+            truckId,
+            excavatorId,
+            operatorId,
+            supervisorId: effectiveSupervisorId,
+            loadingPointId: effectiveLoadingPointId,
+            dumpingPointId: effectiveDumpingPointId,
+            shift: shift || 'SHIFT_1',
+            loadingStartTime: new Date(),
+            loadWeight: parseFloat(loadWeight) || 28.5,
+            targetWeight: parseFloat(targetWeight) || 30,
+            distance: parseFloat(distance) || 3,
+            status: 'LOADING',
+            remarks: 'Created by AI Recommendation',
+          };
+
+          if (roadSegmentId) {
+            activityData.roadSegmentId = roadSegmentId;
+          }
+
+          const activity = await prisma.haulingActivity.create({
+            data: activityData,
+            include: {
+              truck: { select: { id: true, code: true, name: true } },
+              excavator: { select: { id: true, code: true, name: true } },
+              operator: { include: { user: { select: { fullName: true } } } },
+            },
+          });
+
+          createdActivities.push(activity);
+        }
+
+        return {
+          action: 'create',
+          createdCount: createdActivities.length,
+          createdActivities,
+          multiEquipment: {
+            truckIds,
+            excavatorIds,
+            operatorIds: effectiveOperatorIds,
+          },
+        };
+      }
+    } catch (error) {
+      logger.error('Error applying hauling recommendation:', error);
+      throw error;
+    }
+  }
+
   /**
    * Analyze existing hauling activities for production aggregation
    * Returns aggregated metrics and activity IDs for production creation

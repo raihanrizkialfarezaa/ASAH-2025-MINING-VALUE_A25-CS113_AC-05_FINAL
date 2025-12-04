@@ -31,6 +31,9 @@ router.post('/recommendations-with-hauling', aiController.getRecommendationsWith
 // POST analyze existing hauling activities for production
 router.post('/analyze-hauling', aiController.analyzeHaulingActivities);
 
+// POST apply hauling recommendation (create or update hauling activities based on AI recommendation)
+router.post('/apply-hauling-recommendation', aiController.applyHaulingRecommendation);
+
 // POST save selected recommendation
 router.post('/recommendations/save', aiController.saveRecommendation);
 

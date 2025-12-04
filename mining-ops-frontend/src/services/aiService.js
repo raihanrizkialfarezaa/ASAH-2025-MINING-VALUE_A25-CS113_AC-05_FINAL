@@ -197,6 +197,18 @@ class AIService {
       throw error;
     }
   }
+
+  async applyHaulingRecommendation(params) {
+    try {
+      console.log('[AI Service] Applying hauling recommendation:', params);
+      const response = await api.post('/ai/apply-hauling-recommendation', params);
+      console.log('[AI Service] Hauling recommendation applied:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to apply hauling recommendation:', error);
+      throw error;
+    }
+  }
 }
 
 const aiService = new AIService();

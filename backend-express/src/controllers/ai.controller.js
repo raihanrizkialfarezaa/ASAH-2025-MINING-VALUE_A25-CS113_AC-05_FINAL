@@ -210,6 +210,68 @@ class AIController {
     }
   }
 
+  async applyHaulingRecommendation(req, res) {
+    try {
+      const {
+        action,
+        existingHaulingId,
+        recommendation,
+        truckIds,
+        excavatorIds,
+        operatorIds,
+        loadingPointId,
+        dumpingPointId,
+        roadSegmentId,
+        shift,
+        loadWeight,
+        targetWeight,
+        distance,
+      } = req.body;
+
+      const userId = req.user?.id;
+
+      logger.info('Applying hauling recommendation:', {
+        action,
+        existingHaulingId,
+        truckCount: truckIds?.length,
+      });
+
+      const result = await aiService.applyHaulingRecommendation({
+        action,
+        existingHaulingId,
+        recommendation,
+        truckIds,
+        excavatorIds,
+        operatorIds,
+        loadingPointId,
+        dumpingPointId,
+        roadSegmentId,
+        shift,
+        loadWeight,
+        targetWeight,
+        distance,
+        supervisorId: userId,
+      });
+
+      res.json({
+        success: true,
+        data: result,
+        message:
+          action === 'update'
+            ? 'Hauling activity updated successfully'
+            : 'Hauling activities created successfully',
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      logger.error('Error applying hauling recommendation:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+        error: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      });
+    }
+  }
+
   /**
    * POST /api/ai/chatbot
    * Ask chatbot a question

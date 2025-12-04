@@ -42,6 +42,9 @@ const ProductionList = () => {
   const [excavatorDropdownOpen, setExcavatorDropdownOpen] = useState(false);
   const [strategyFinancials, setStrategyFinancials] = useState(null);
 
+  // Hauling Activity Info State - for displaying details of newly created hauling activities
+  const [haulingActivityInfo, setHaulingActivityInfo] = useState(null);
+
   const [formData, setFormData] = useState({
     recordDate: new Date().toISOString().split('T')[0],
     shift: 'PAGI',
@@ -96,23 +99,78 @@ const ProductionList = () => {
       const strategyData = sessionStorage.getItem('selectedStrategy');
       if (strategyData) {
         try {
-          const { recommendation, useHaulingData, haulingAggregated, equipmentAllocation, haulingActivityIds } = JSON.parse(strategyData);
+          const { recommendation, useHaulingData, haulingAggregated, equipmentAllocation, haulingActivityIds, haulingResult, haulingApplied } = JSON.parse(strategyData);
           const raw = recommendation.raw_data || {};
+
+          // Store hauling activity info for detailed display
+          if (haulingApplied && haulingResult) {
+            setHaulingActivityInfo({
+              createdActivities: haulingResult.createdActivities || [],
+              createdCount: haulingResult.createdCount || 0,
+              action: haulingResult.action || 'create',
+              activityIds: haulingActivityIds || [],
+              equipmentAllocation: equipmentAllocation,
+              aggregatedData: haulingAggregated,
+              strategyRank: recommendation.rank,
+              strategyObjective: raw.strategy_objective || recommendation.strategy_objective || 'AI Recommended',
+            });
+          }
 
           // Check if we should use actual hauling data
           if (useHaulingData && haulingAggregated) {
             console.log('[ProductionList] Using actual hauling data for production creation');
+            console.log('[ProductionList] haulingAggregated:', haulingAggregated);
 
             // Use aggregated data from actual hauling activities
             const totalTonase = parseFloat(haulingAggregated.total_tonase) || 0;
-            const totalTrips = parseInt(haulingAggregated.total_trips) || 0;
+            const totalTrips = parseInt(haulingAggregated.total_trips) || 1;
             const totalDistance = parseFloat(haulingAggregated.total_distance_km) || 0;
-            const totalFuel = parseFloat(haulingAggregated.total_fuel_liter) || 0;
-            const avgCycleTimeMinutes = parseFloat(haulingAggregated.avg_cycle_time_minutes) || 0;
-            const trucksOperating = parseInt(haulingAggregated.trucks_operating) || 0;
-            const excavatorsOperating = parseInt(haulingAggregated.excavators_operating) || 0;
-            const utilizationRate = parseFloat(haulingAggregated.utilization_rate_percent) || 0;
+            const trucksOperating = parseInt(haulingAggregated.trucks_operating) || 1;
+            const excavatorsOperating = parseInt(haulingAggregated.excavators_operating) || 1;
+            const avgLoadWeight = parseFloat(haulingAggregated.avg_load_weight) || 28.5;
             const shiftValue = haulingAggregated.shift || 'SHIFT_1';
+
+            // === ROBUST FUEL CALCULATION ===
+            // If total_fuel_liter is provided and valid, use it
+            // Otherwise, calculate based on distance and fuel consumption rates
+            let totalFuel = parseFloat(haulingAggregated.total_fuel_liter) || 0;
+            if (totalFuel <= 0 && totalDistance > 0) {
+              // Typical mining truck fuel consumption rates
+              const fuelRateLoaded = 0.8; // L/km when loaded
+              const fuelRateEmpty = 0.4; // L/km when empty
+              const oneWayDistance = totalDistance / (totalTrips * 2);
+              const fuelPerTrip = oneWayDistance * fuelRateLoaded + oneWayDistance * fuelRateEmpty;
+              totalFuel = fuelPerTrip * totalTrips;
+              console.log('[ProductionList] Calculated totalFuel from distance:', totalFuel);
+            }
+
+            // === ROBUST CYCLE TIME CALCULATION ===
+            // If avg_cycle_time_minutes is provided and valid, use it
+            // Otherwise, calculate based on loading, travel, and dumping times
+            let avgCycleTimeMinutes = parseFloat(haulingAggregated.avg_cycle_time_minutes) || 0;
+            if (avgCycleTimeMinutes <= 0 && totalDistance > 0) {
+              const oneWayDistance = totalDistance / (totalTrips * 2);
+              // Loading: ~8 min for full load (depends on excavator rate)
+              const loadingTime = (avgLoadWeight / 50) * 8;
+              // Travel loaded: assume 20 km/h average speed on mine roads
+              const travelTimeLoaded = (oneWayDistance / 20) * 60;
+              // Dumping: typically 3 minutes
+              const dumpingTime = 3;
+              // Return empty: assume 30 km/h average speed
+              const returnTime = (oneWayDistance / 30) * 60;
+              avgCycleTimeMinutes = loadingTime + travelTimeLoaded + dumpingTime + returnTime;
+              console.log('[ProductionList] Calculated avgCycleTime from distance:', avgCycleTimeMinutes);
+            }
+
+            // === ROBUST UTILIZATION RATE CALCULATION ===
+            let utilizationRate = parseFloat(haulingAggregated.utilization_rate_percent) || 0;
+            if (utilizationRate <= 0 && avgCycleTimeMinutes > 0) {
+              const shiftHours = 8;
+              const totalOperatingMinutes = avgCycleTimeMinutes * trucksOperating;
+              const availableMinutes = shiftHours * 60;
+              utilizationRate = Math.min((totalOperatingMinutes / availableMinutes) * 100, 100);
+              console.log('[ProductionList] Calculated utilizationRate:', utilizationRate);
+            }
 
             // Get equipment IDs from actual hauling data
             if (equipmentAllocation) {
@@ -369,6 +427,7 @@ const ProductionList = () => {
     setTruckSearch('');
     setExcavatorSearch('');
     setStrategyFinancials(null);
+    setHaulingActivityInfo(null); // Reset hauling info for manual creation
     setFormData({
       recordDate: new Date().toISOString().split('T')[0],
       shift: 'SHIFT_1',
@@ -401,6 +460,7 @@ const ProductionList = () => {
   const handleEdit = (production) => {
     setModalMode('edit');
     setSelectedProduction(production);
+    setHaulingActivityInfo(null); // Reset hauling info for edit mode
     // Note: In a real app, we'd need to fetch the specific equipment allocated to this production
     // For now, we'll just populate the form fields
     setFormData({
@@ -622,6 +682,78 @@ const ProductionList = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Hauling Activity Info Banner - Shows details of created hauling activities */}
+            {haulingActivityInfo && haulingActivityInfo.createdCount > 0 && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-green-800 text-lg flex items-center">
+                    <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">✓</span>
+                    Hauling Activities Created Successfully
+                  </h4>
+                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">{haulingActivityInfo.createdCount} activities</span>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                  <div className="bg-white rounded p-2 border border-green-100">
+                    <span className="text-xs text-gray-500">Strategy</span>
+                    <p className="font-medium text-green-700">#{haulingActivityInfo.strategyRank}</p>
+                  </div>
+                  <div className="bg-white rounded p-2 border border-green-100">
+                    <span className="text-xs text-gray-500">Trucks</span>
+                    <p className="font-medium text-blue-600">{haulingActivityInfo.equipmentAllocation?.truck_ids?.length || 0}</p>
+                  </div>
+                  <div className="bg-white rounded p-2 border border-green-100">
+                    <span className="text-xs text-gray-500">Excavators</span>
+                    <p className="font-medium text-orange-600">{haulingActivityInfo.equipmentAllocation?.excavator_ids?.length || 0}</p>
+                  </div>
+                  <div className="bg-white rounded p-2 border border-green-100">
+                    <span className="text-xs text-gray-500">Operators</span>
+                    <p className="font-medium text-purple-600">{haulingActivityInfo.equipmentAllocation?.operator_ids?.length || 0}</p>
+                  </div>
+                </div>
+
+                {/* Activity Numbers List */}
+                {haulingActivityInfo.createdActivities && haulingActivityInfo.createdActivities.length > 0 && (
+                  <div className="mt-3 border-t border-green-200 pt-3">
+                    <span className="text-xs text-gray-600 font-medium">Activity IDs:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {haulingActivityInfo.createdActivities.slice(0, 10).map((activity, idx) => (
+                        <span key={idx} className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-mono">
+                          {activity.activityNumber || activity.id}
+                        </span>
+                      ))}
+                      {haulingActivityInfo.createdActivities.length > 10 && <span className="text-xs text-gray-500">+{haulingActivityInfo.createdActivities.length - 10} more</span>}
+                    </div>
+                  </div>
+                )}
+
+                {/* Aggregated Data Summary */}
+                {haulingActivityInfo.aggregatedData && (
+                  <div className="mt-3 border-t border-green-200 pt-3">
+                    <span className="text-xs text-gray-600 font-medium mb-2 block">Aggregated Metrics:</span>
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                      <div>
+                        <p className="text-lg font-bold text-blue-600">{parseFloat(haulingActivityInfo.aggregatedData.total_tonase || 0).toFixed(1)}</p>
+                        <span className="text-xs text-gray-500">Tons</span>
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-green-600">{parseFloat(haulingActivityInfo.aggregatedData.total_distance_km || 0).toFixed(1)}</p>
+                        <span className="text-xs text-gray-500">km Distance</span>
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-orange-600">{parseFloat(haulingActivityInfo.aggregatedData.total_fuel_liter || 0).toFixed(1)}</p>
+                        <span className="text-xs text-gray-500">L Fuel</span>
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-purple-600">{parseFloat(haulingActivityInfo.aggregatedData.avg_cycle_time_minutes || 0).toFixed(1)}</p>
+                        <span className="text-xs text-gray-500">min/cycle</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Basic Info */}
             <div className="grid grid-cols-3 gap-4">
               <div>
