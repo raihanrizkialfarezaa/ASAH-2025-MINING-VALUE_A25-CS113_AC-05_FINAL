@@ -109,6 +109,108 @@ class AIController {
   }
 
   /**
+   * POST /api/ai/recommendations-with-hauling
+   * Get strategic recommendations WITH hauling activity data integration
+   * This enables production creation from REAL hauling data
+   */
+  async getRecommendationsWithHauling(req, res) {
+    try {
+      const {
+        weatherCondition,
+        roadCondition,
+        shift,
+        targetRoadId,
+        targetExcavatorId,
+        targetScheduleId,
+        minTrucks,
+        maxTrucks,
+        minExcavators,
+        maxExcavators,
+        financialParams,
+        totalProductionTarget,
+        miningSiteId,
+        simulationDate,
+      } = req.body;
+
+      const aiParams = {
+        fixed_conditions: {
+          weatherCondition: weatherCondition || 'Cerah',
+          roadCondition: roadCondition || 'GOOD',
+          shift: shift || 'SHIFT_1',
+          target_road_id: targetRoadId || null,
+          target_excavator_id: targetExcavatorId || null,
+          target_schedule_id: targetScheduleId || null,
+          simulation_start_date: simulationDate || new Date().toISOString(),
+          totalProductionTarget: totalProductionTarget || 0,
+          miningSiteId: miningSiteId || null,
+        },
+        decision_variables: {
+          min_trucks: minTrucks || 5,
+          max_trucks: maxTrucks || 15,
+          min_excavators: minExcavators || 1,
+          max_excavators: maxExcavators || 3,
+        },
+      };
+
+      if (financialParams) {
+        aiParams.financial_params = financialParams;
+      }
+
+      logger.info('Requesting AI recommendations WITH hauling integration:', aiParams);
+
+      const recommendations = await aiService.getStrategicRecommendationsWithHauling(aiParams);
+
+      res.json({
+        success: true,
+        data: recommendations,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      logger.error('Error getting AI recommendations with hauling:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+        error: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      });
+    }
+  }
+
+  /**
+   * POST /api/ai/analyze-hauling
+   * Analyze existing hauling activities for production aggregation
+   */
+  async analyzeHaulingActivities(req, res) {
+    try {
+      const { weatherCondition, roadCondition, shift, simulationDate, miningSiteId } = req.body;
+
+      const conditions = {
+        weatherCondition: weatherCondition || 'Cerah',
+        roadCondition: roadCondition || 'GOOD',
+        shift: shift || 'SHIFT_1',
+        simulation_start_date: simulationDate || new Date().toISOString(),
+        miningSiteId: miningSiteId || null,
+      };
+
+      logger.info('Analyzing hauling activities with conditions:', conditions);
+
+      const analysis = await aiService.analyzeHaulingActivities(conditions);
+
+      res.json({
+        success: true,
+        data: analysis,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      logger.error('Error analyzing hauling activities:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+        error: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      });
+    }
+  }
+
+  /**
    * POST /api/ai/chatbot
    * Ask chatbot a question
    */

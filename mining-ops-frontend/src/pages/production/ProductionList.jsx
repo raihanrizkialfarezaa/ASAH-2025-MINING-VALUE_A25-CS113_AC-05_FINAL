@@ -96,9 +96,88 @@ const ProductionList = () => {
       const strategyData = sessionStorage.getItem('selectedStrategy');
       if (strategyData) {
         try {
-          const { recommendation } = JSON.parse(strategyData);
+          const { recommendation, useHaulingData, haulingAggregated, equipmentAllocation, haulingActivityIds } = JSON.parse(strategyData);
           const raw = recommendation.raw_data || {};
 
+          // Check if we should use actual hauling data
+          if (useHaulingData && haulingAggregated) {
+            console.log('[ProductionList] Using actual hauling data for production creation');
+
+            // Use aggregated data from actual hauling activities
+            const totalTonase = parseFloat(haulingAggregated.total_tonase) || 0;
+            const totalTrips = parseInt(haulingAggregated.total_trips) || 0;
+            const totalDistance = parseFloat(haulingAggregated.total_distance_km) || 0;
+            const totalFuel = parseFloat(haulingAggregated.total_fuel_liter) || 0;
+            const avgCycleTimeMinutes = parseFloat(haulingAggregated.avg_cycle_time_minutes) || 0;
+            const trucksOperating = parseInt(haulingAggregated.trucks_operating) || 0;
+            const excavatorsOperating = parseInt(haulingAggregated.excavators_operating) || 0;
+            const utilizationRate = parseFloat(haulingAggregated.utilization_rate_percent) || 0;
+            const shiftValue = haulingAggregated.shift || 'SHIFT_1';
+
+            // Get equipment IDs from actual hauling data
+            if (equipmentAllocation) {
+              const truckIds = equipmentAllocation.truck_ids || [];
+              const excavatorIds = equipmentAllocation.excavator_ids || [];
+
+              // Filter to match available equipment in state
+              const matchingTrucks = trucks.filter((t) => truckIds.includes(t.id));
+              const matchingExcavators = excavators.filter((e) => excavatorIds.includes(e.id));
+
+              setSelectedTruckIds(matchingTrucks.length > 0 ? matchingTrucks.map((t) => t.id) : truckIds.slice(0, trucksOperating));
+              setSelectedExcavatorIds(matchingExcavators.length > 0 ? matchingExcavators.map((e) => e.id) : excavatorIds.slice(0, excavatorsOperating));
+            }
+
+            const roadDistance = totalTrips > 0 ? totalDistance / totalTrips / 2 : 0;
+
+            isAiPopulated.current = true;
+
+            // Store financial breakdown for preview
+            if (recommendation.financial_breakdown) {
+              setStrategyFinancials(recommendation.financial_breakdown);
+            }
+
+            // Build remarks with hauling data source info
+            let remarks = `AI Strategy #${recommendation.rank || ''} - ${raw.strategy_objective || recommendation.strategy_objective || 'From Hauling Data'}`;
+            remarks += ` | Source: ${haulingActivityIds?.length || totalTrips} hauling activities`;
+            if (recommendation.vessel_info?.name) {
+              remarks += ` | Vessel: ${recommendation.vessel_info.name}`;
+            }
+
+            setFormData({
+              recordDate: new Date().toISOString().split('T')[0],
+              shift: shiftValue,
+              miningSiteId: raw.miningSiteId && miningSites.find((s) => s.id === raw.miningSiteId) ? raw.miningSiteId : miningSites[0]?.id || '',
+              targetProduction: totalTonase.toFixed(2),
+              actualProduction: totalTonase.toFixed(2),
+              haulDistance: roadDistance.toFixed(2),
+              weatherCondition: haulingAggregated.weatherCondition || 'CERAH',
+              roadCondition: haulingAggregated.roadCondition || 'GOOD',
+              riskLevel: raw.delay_risk_level || 'LOW',
+              avgCalori: '',
+              avgAshContent: '',
+              avgSulfur: '',
+              avgMoisture: '',
+              totalTrips: totalTrips.toString(),
+              totalDistance: totalDistance.toFixed(2),
+              totalFuel: totalFuel.toFixed(2),
+              avgCycleTime: avgCycleTimeMinutes.toFixed(2),
+              trucksOperating: trucksOperating.toString(),
+              trucksBreakdown: '0',
+              excavatorsOperating: excavatorsOperating.toString(),
+              excavatorsBreakdown: '0',
+              utilizationRate: utilizationRate.toFixed(2),
+              downtimeHours: '0',
+              remarks: remarks,
+            });
+
+            setModalMode('create');
+            setShowModal(true);
+
+            sessionStorage.removeItem('selectedStrategy');
+            return; // Exit early, we've handled hauling-based creation
+          }
+
+          // Fallback to simulation-based creation (existing logic)
           const truckCount = parseInt(raw.alokasi_truk) || parseInt(recommendation.skenario?.alokasi_truk) || 0;
           const excavatorCount = parseInt(raw.jumlah_excavator) || parseInt(recommendation.skenario?.jumlah_excavator) || 0;
           const weatherCondition = raw.weatherCondition || recommendation.skenario?.weatherCondition || 'CERAH';
@@ -184,7 +263,7 @@ const ProductionList = () => {
               excavatorsBreakdown: '0',
               utilizationRate: utilizationRate.toFixed(2),
               downtimeHours: '0',
-              remarks: `AI Strategy #${recommendation.rank || ''} - ${raw.strategy_objective || recommendation.strategy_objective || 'Optimal Configuration'}${vesselInfo}${routeInfo}`,
+              remarks: `AI Strategy #${recommendation.rank || ''} - ${raw.strategy_objective || recommendation.strategy_objective || 'Optimal Configuration'} (Simulated)${vesselInfo}${routeInfo}`,
             });
 
             setModalMode('create');
@@ -391,6 +470,17 @@ const ProductionList = () => {
           payload[field] = field === 'remarks' ? formData[field] : parseFloat(formData[field]);
         }
       });
+
+      // Add equipment allocation with selected truck and excavator IDs
+      if (selectedTruckIds.length > 0 || selectedExcavatorIds.length > 0) {
+        payload.equipmentAllocation = {
+          truck_ids: selectedTruckIds,
+          excavator_ids: selectedExcavatorIds,
+          truck_count: selectedTruckIds.length,
+          excavator_count: selectedExcavatorIds.length,
+          created_from: formData.remarks?.includes('hauling activities') ? 'hauling_data' : 'ai_simulation',
+        };
+      }
 
       if (modalMode === 'create') {
         await productionService.create(payload);

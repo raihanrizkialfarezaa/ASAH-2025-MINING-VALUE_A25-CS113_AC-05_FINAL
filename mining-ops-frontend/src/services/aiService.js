@@ -52,6 +52,51 @@ class AIService {
   }
 
   /**
+   * Get AI recommendations WITH hauling activity data integration
+   * This enables production creation from real hauling data
+   * @param {Object} params - Recommendation parameters
+   */
+  async getRecommendationsWithHauling(params) {
+    try {
+      const requestPayload = {
+        ...params,
+        _timestamp: Date.now(),
+        _requestId: Math.random().toString(36).substring(7),
+      };
+
+      console.log('[AI Service] Sending hauling-integrated request:', requestPayload);
+
+      const response = await api.post('/ai/recommendations-with-hauling', requestPayload);
+
+      console.log('[AI Service] Received hauling-integrated response:', response.data);
+
+      return response.data;
+    } catch (error) {
+      console.error('Failed to get recommendations with hauling:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Analyze existing hauling activities for production aggregation
+   * @param {Object} conditions - Filter conditions (shift, weather, road, date)
+   */
+  async analyzeHaulingActivities(conditions) {
+    try {
+      console.log('[AI Service] Analyzing hauling activities:', conditions);
+
+      const response = await api.post('/ai/analyze-hauling', conditions);
+
+      console.log('[AI Service] Hauling analysis response:', response.data);
+
+      return response.data;
+    } catch (error) {
+      console.error('Failed to analyze hauling activities:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Save selected recommendation
    * @param {Object} data - Recommendation data to save
    */

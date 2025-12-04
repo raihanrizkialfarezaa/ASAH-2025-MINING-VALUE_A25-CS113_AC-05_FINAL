@@ -206,6 +206,93 @@ class AIService {
   }
 
   /**
+   * Get strategic recommendations WITH hauling activity data integration
+   * Returns AI strategies combined with matching existing hauling activities
+   */
+  async getStrategicRecommendationsWithHauling(params) {
+    try {
+      logger.info('Requesting strategic recommendations WITH hauling integration from AI service');
+
+      // Validasi dan enrichment parameters
+      const enrichedParams = await this.enrichParameters(params);
+
+      // Call enhanced AI service endpoint
+      const response = await axios.post(
+        `${AI_SERVICE_URL}/get_strategies_with_hauling`,
+        enrichedParams,
+        {
+          timeout: AI_SERVICE_TIMEOUT,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      // Save prediction log
+      await this.savePredictionLog({
+        type: 'STRATEGIC_RECOMMENDATION_WITH_HAULING',
+        input: enrichedParams,
+        output: response.data,
+        executionTime: response.headers['x-execution-time'],
+      });
+
+      logger.info('Strategic recommendations with hauling received successfully');
+      return response.data;
+    } catch (error) {
+      logger.error('Error getting strategic recommendations with hauling:', error.message);
+
+      if (error.code === 'ECONNREFUSED') {
+        throw new Error('AI Service is not available. Please ensure the AI service is running.');
+      } else if (error.code === 'ETIMEDOUT') {
+        throw new Error('AI Service request timed out. The simulation may be taking too long.');
+      }
+
+      throw new Error(`AI Service Error: ${error.message}`);
+    }
+  }
+
+  /**
+   * Analyze existing hauling activities for production aggregation
+   * Returns aggregated metrics and activity IDs for production creation
+   */
+  async analyzeHaulingActivities(conditions) {
+    try {
+      logger.info('Requesting hauling activity analysis from AI service');
+
+      // Call AI service analyze endpoint
+      const response = await axios.post(
+        `${AI_SERVICE_URL}/analyze_hauling_activities`,
+        conditions,
+        {
+          timeout: AI_SERVICE_TIMEOUT,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      // Save prediction log
+      await this.savePredictionLog({
+        type: 'HAULING_ANALYSIS',
+        input: conditions,
+        output: response.data,
+        executionTime: response.headers['x-execution-time'],
+      });
+
+      logger.info('Hauling analysis received successfully');
+      return response.data;
+    } catch (error) {
+      logger.error('Error analyzing hauling activities:', error.message);
+
+      if (error.code === 'ECONNREFUSED') {
+        throw new Error('AI Service is not available. Please ensure the AI service is running.');
+      }
+
+      throw new Error(`AI Service Error: ${error.message}`);
+    }
+  }
+
+  /**
    * Enrich parameters with real-time data from database
    */
   async enrichParameters(params) {

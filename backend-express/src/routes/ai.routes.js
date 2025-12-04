@@ -25,6 +25,12 @@ router.get('/realtime-conditions', aiController.getRealtimeConditions);
 // POST get AI strategic recommendations
 router.post('/recommendations', aiController.getRecommendations);
 
+// POST get AI recommendations WITH hauling data integration
+router.post('/recommendations-with-hauling', aiController.getRecommendationsWithHauling);
+
+// POST analyze existing hauling activities for production
+router.post('/analyze-hauling', aiController.analyzeHaulingActivities);
+
 // POST save selected recommendation
 router.post('/recommendations/save', aiController.saveRecommendation);
 

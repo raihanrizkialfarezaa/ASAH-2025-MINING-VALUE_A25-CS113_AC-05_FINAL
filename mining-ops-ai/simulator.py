@@ -1370,6 +1370,293 @@ def run_follow_up_chat(top_3, data):
         print(f"\n{res['message']['content']}\n")
     except: pass
 
+def analyze_hauling_for_production(fixed, data):
+    """
+    Analyze existing hauling activities and recommend specific ones to aggregate 
+    into a production record. This enables production creation from REAL hauling data
+    instead of purely simulated configurations.
+    
+    Args:
+        fixed: Dict with weatherCondition, roadCondition, shift, target_schedule_id, etc.
+        data: Fresh database data
+    
+    Returns:
+        Dict with recommended hauling activities and aggregated metrics
+    """
+    print(f"\n--- [Hauling-Based Production Analysis] ---")
+    
+    hauling_df = data.get('hauling_activities')
+    if hauling_df is None or hauling_df.empty:
+        print("   ⚠️ No hauling activities found in database")
+        return {"status": "NO_DATA", "hauling_activities": [], "aggregated": {}}
+    
+    # Ensure datetime columns
+    date_columns = ['loadingStartTime', 'loadingEndTime', 'dumpingStartTime', 'dumpingEndTime']
+    for col in date_columns:
+        if col in hauling_df.columns:
+            hauling_df[col] = pd.to_datetime(hauling_df[col], errors='coerce')
+    
+    # Filter by conditions
+    user_shift = fixed.get('shift', 'SHIFT_1')
+    user_weather = fixed.get('weatherCondition', 'Cerah')
+    user_road = fixed.get('roadCondition', 'GOOD')
+    target_date = fixed.get('simulation_start_date')
+    target_mining_site = fixed.get('miningSiteId')
+    
+    filtered = hauling_df.copy()
+    
+    # Filter by shift
+    if 'shift' in filtered.columns and user_shift:
+        shift_match = filtered[filtered['shift'] == user_shift]
+        if not shift_match.empty:
+            filtered = shift_match
+            print(f"   > Filtered by shift {user_shift}: {len(filtered)} activities")
+    
+    # Filter by date if provided (same day)
+    if target_date and 'loadingStartTime' in filtered.columns:
+        try:
+            target_dt = pd.to_datetime(target_date)
+            target_date_only = target_dt.date()
+            
+            filtered_valid = filtered[filtered['loadingStartTime'].notna()].copy()
+            if not filtered_valid.empty:
+                date_match = filtered_valid[
+                    filtered_valid['loadingStartTime'].dt.date == target_date_only
+                ]
+                if not date_match.empty:
+                    filtered = date_match
+                    print(f"   > Filtered by date {target_date_only}: {len(filtered)} activities")
+        except Exception as e:
+            print(f"   ⚠️ Date filter error: {e}")
+    
+    # Filter by weather condition if available
+    if 'weatherCondition' in filtered.columns and user_weather:
+        weather_match = filtered[filtered['weatherCondition'] == user_weather]
+        if not weather_match.empty:
+            filtered = weather_match
+            print(f"   > Filtered by weather {user_weather}: {len(filtered)} activities")
+    
+    # Filter by road condition if available
+    if 'roadCondition' in filtered.columns and user_road:
+        road_match = filtered[filtered['roadCondition'] == user_road]
+        if not road_match.empty:
+            filtered = road_match
+            print(f"   > Filtered by road condition {user_road}: {len(filtered)} activities")
+    
+    # Filter completed activities only
+    if 'status' in filtered.columns:
+        completed = filtered[filtered['status'] == 'COMPLETED']
+        if not completed.empty:
+            filtered = completed
+            print(f"   > Filtered COMPLETED only: {len(filtered)} activities")
+    
+    if filtered.empty:
+        print("   ⚠️ No matching hauling activities after filtering")
+        # Fallback to all completed activities
+        if 'status' in hauling_df.columns:
+            filtered = hauling_df[hauling_df['status'] == 'COMPLETED']
+        else:
+            filtered = hauling_df
+        print(f"   > Fallback to all activities: {len(filtered)}")
+    
+    if filtered.empty:
+        return {"status": "NO_DATA", "hauling_activities": [], "aggregated": {}}
+    
+    # Aggregate metrics from filtered hauling activities
+    total_tonase = filtered['loadWeight'].sum() if 'loadWeight' in filtered.columns else 0
+    total_trips = len(filtered)
+    total_distance = (filtered['distance'].sum() * 2) if 'distance' in filtered.columns else 0
+    total_fuel = filtered['fuelConsumed'].sum() if 'fuelConsumed' in filtered.columns else 0
+    
+    # Calculate average cycle time (in minutes)
+    if 'totalCycleTime' in filtered.columns:
+        avg_cycle_time = filtered['totalCycleTime'].mean()
+    elif 'loadingDuration' in filtered.columns and 'haulingDuration' in filtered.columns:
+        avg_cycle_time = (
+            filtered['loadingDuration'].fillna(0) + 
+            filtered['haulingDuration'].fillna(0) + 
+            filtered['dumpingDuration'].fillna(0) + 
+            filtered['returnDuration'].fillna(0)
+        ).mean()
+    else:
+        avg_cycle_time = 0
+    
+    # Get unique equipment used
+    unique_trucks = filtered['truckId'].nunique() if 'truckId' in filtered.columns else 0
+    unique_excavators = filtered['excavatorId'].nunique() if 'excavatorId' in filtered.columns else 0
+    unique_operators = filtered['operatorId'].nunique() if 'operatorId' in filtered.columns else 0
+    
+    # Build equipment details
+    truck_ids = filtered['truckId'].unique().tolist() if 'truckId' in filtered.columns else []
+    excavator_ids = filtered['excavatorId'].unique().tolist() if 'excavatorId' in filtered.columns else []
+    operator_ids = filtered['operatorId'].unique().tolist() if 'operatorId' in filtered.columns else []
+    road_segment_ids = filtered['roadSegmentId'].dropna().unique().tolist() if 'roadSegmentId' in filtered.columns else []
+    
+    # Get detailed equipment info
+    truck_details = []
+    for t_id in truck_ids[:10]:  # Limit to first 10
+        if not data['trucks'].empty and t_id in data['trucks'].index:
+            t_data = data['trucks'].loc[t_id]
+            truck_details.append({
+                'id': t_id,
+                'code': t_data.get('code', ''),
+                'name': t_data.get('name', ''),
+                'capacity': float(t_data.get('capacity', 0))
+            })
+    
+    excavator_details = []
+    for e_id in excavator_ids[:5]:
+        if not data['excavators'].empty and e_id in data['excavators'].index:
+            e_data = data['excavators'].loc[e_id]
+            excavator_details.append({
+                'id': e_id,
+                'code': e_data.get('code', ''),
+                'name': e_data.get('name', ''),
+                'bucketCapacity': float(e_data.get('bucketCapacity', 0))
+            })
+    
+    operator_details = []
+    for o_id in operator_ids[:10]:
+        if not data['operators'].empty and o_id in data['operators'].index:
+            o_data = data['operators'].loc[o_id]
+            operator_details.append({
+                'id': o_id,
+                'employeeNumber': o_data.get('employeeNumber', ''),
+                'rating': float(o_data.get('rating', 0))
+            })
+    
+    road_details = []
+    for r_id in road_segment_ids[:5]:
+        if not data['roads'].empty and r_id in data['roads'].index:
+            r_data = data['roads'].loc[r_id]
+            road_details.append({
+                'id': r_id,
+                'code': r_data.get('code', ''),
+                'name': r_data.get('name', ''),
+                'distance': float(r_data.get('distance', 0))
+            })
+    
+    # Build hauling activity list with key info
+    hauling_list = []
+    for _, row in filtered.head(50).iterrows():  # Limit to first 50
+        activity = {
+            'id': row.get('id', ''),
+            'activityNumber': row.get('activityNumber', ''),
+            'truckId': row.get('truckId', ''),
+            'excavatorId': row.get('excavatorId', ''),
+            'operatorId': row.get('operatorId', ''),
+            'roadSegmentId': row.get('roadSegmentId'),
+            'loadWeight': float(row.get('loadWeight', 0)),
+            'distance': float(row.get('distance', 0)),
+            'fuelConsumed': float(row.get('fuelConsumed', 0)) if pd.notna(row.get('fuelConsumed')) else 0,
+            'totalCycleTime': float(row.get('totalCycleTime', 0)) if pd.notna(row.get('totalCycleTime')) else 0,
+            'shift': row.get('shift', ''),
+            'status': row.get('status', ''),
+            'loadingStartTime': str(row.get('loadingStartTime', '')) if pd.notna(row.get('loadingStartTime')) else None
+        }
+        hauling_list.append(activity)
+    
+    # Calculate fuel efficiency
+    fuel_efficiency = total_fuel / total_tonase if total_tonase > 0 else 0
+    
+    # Calculate utilization rate (assuming 8-hour shift = 480 minutes)
+    total_cycle_minutes = avg_cycle_time * total_trips
+    utilization_rate = (total_cycle_minutes / 480) * 100 if total_cycle_minutes > 0 else 0
+    
+    aggregated = {
+        'total_tonase': float(total_tonase),
+        'total_trips': int(total_trips),
+        'total_distance_km': float(total_distance),
+        'total_fuel_liter': float(total_fuel),
+        'avg_cycle_time_minutes': float(avg_cycle_time),
+        'fuel_efficiency_liter_per_ton': float(fuel_efficiency),
+        'utilization_rate_percent': min(float(utilization_rate), 100.0),
+        'trucks_operating': unique_trucks,
+        'excavators_operating': unique_excavators,
+        'operators_assigned': unique_operators,
+        'shift': user_shift,
+        'weatherCondition': user_weather,
+        'roadCondition': user_road
+    }
+    
+    equipment_allocation = {
+        'truck_ids': truck_ids,
+        'excavator_ids': excavator_ids,
+        'operator_ids': operator_ids,
+        'road_segment_ids': road_segment_ids,
+        'truck_details': truck_details,
+        'excavator_details': excavator_details,
+        'operator_details': operator_details,
+        'road_details': road_details
+    }
+    
+    print(f"   ✅ Analyzed {total_trips} hauling activities")
+    print(f"      Total Tonase: {total_tonase:,.0f} ton")
+    print(f"      Trucks Used: {unique_trucks}, Excavators: {unique_excavators}")
+    print(f"      Avg Cycle Time: {avg_cycle_time:.1f} min")
+    
+    return {
+        "status": "SUCCESS",
+        "hauling_activities": hauling_list,
+        "hauling_activity_ids": [h['id'] for h in hauling_list],
+        "aggregated": aggregated,
+        "equipment_allocation": equipment_allocation,
+        "filter_criteria": {
+            "shift": user_shift,
+            "weatherCondition": user_weather,
+            "roadCondition": user_road,
+            "date": target_date
+        }
+    }
+
+
+def get_hauling_based_recommendations(fixed, vars, params):
+    """
+    Enhanced recommendation function that combines ML predictions with actual hauling data.
+    Returns both simulated strategies AND matching hauling activities that can be used
+    to create production records.
+    """
+    print(f"\n--- [Hauling-Integrated Recommendation Engine] ---")
+    
+    # Get fresh data
+    data = load_fresh_data()
+    
+    # 1. Get ML-based strategic recommendations (existing logic)
+    strategies = get_strategic_recommendations(fixed, vars, params)
+    
+    # 2. Analyze existing hauling activities
+    hauling_analysis = analyze_hauling_for_production(fixed, data)
+    
+    # 3. Enrich each strategy with matching hauling data
+    for strategy in strategies:
+        strategy['hauling_analysis'] = hauling_analysis
+        
+        # Add flag indicating if hauling data is available
+        strategy['has_hauling_data'] = hauling_analysis.get('status') == 'SUCCESS'
+        strategy['hauling_activity_count'] = len(hauling_analysis.get('hauling_activities', []))
+        
+        # If hauling data exists, compare with simulated predictions
+        if hauling_analysis.get('status') == 'SUCCESS':
+            agg = hauling_analysis.get('aggregated', {})
+            
+            # Calculate variance between simulated and actual
+            sim_tonase = strategy.get('total_tonase', 0)
+            actual_tonase = agg.get('total_tonase', 0)
+            
+            if sim_tonase > 0 and actual_tonase > 0:
+                variance_pct = ((actual_tonase - sim_tonase) / sim_tonase) * 100
+                strategy['production_variance_percent'] = variance_pct
+                strategy['actual_vs_predicted'] = {
+                    'simulated_tonase': sim_tonase,
+                    'actual_tonase': actual_tonase,
+                    'variance_percent': variance_pct
+                }
+    
+    print(f"   ✅ Generated {len(strategies)} strategies with hauling integration")
+    
+    return strategies
+
+
 if __name__ == "__main__":
     if LLM_PROVIDER:
         data = load_fresh_data()

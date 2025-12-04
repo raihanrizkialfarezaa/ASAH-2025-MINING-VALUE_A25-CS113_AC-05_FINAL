@@ -99,14 +99,18 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
   };
 
   const handleImplementStrategy = () => {
-    sessionStorage.setItem(
-      'selectedStrategy',
-      JSON.stringify({
-        rank: rank,
-        recommendation: recommendation,
-        implementedAt: new Date().toISOString(),
-      })
-    );
+    // Include hauling data if available
+    const strategyData = {
+      rank: rank,
+      recommendation: recommendation,
+      implementedAt: new Date().toISOString(),
+      useHaulingData: recommendation.hauling_data?.has_hauling_data || false,
+      haulingActivityIds: recommendation.hauling_data?.hauling_analysis?.hauling_activity_ids || [],
+      haulingAggregated: recommendation.hauling_data?.hauling_analysis?.aggregated || null,
+      equipmentAllocation: recommendation.hauling_data?.hauling_analysis?.equipment_allocation || null,
+    };
+
+    sessionStorage.setItem('selectedStrategy', JSON.stringify(strategyData));
     navigate('/production');
   };
 
@@ -324,7 +328,77 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
                 </div>
               </section>
 
-              {/* 6. Safety Guidelines (SOP) */}
+              {/* 6. Hauling Activities Integration - NEW */}
+              {recommendation.hauling_data && recommendation.hauling_data.has_hauling_data && (
+                <section>
+                  <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <span className="bg-green-200 p-1 rounded mr-2">📦</span> Matching Hauling Activities
+                    <span className="ml-2 text-sm font-normal text-green-600 bg-green-100 px-2 py-1 rounded-full">{recommendation.hauling_data.hauling_activity_count} activities found</span>
+                  </h3>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-4">
+                    {/* Aggregated Metrics from Hauling Data */}
+                    {recommendation.hauling_data.hauling_analysis?.aggregated && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-white p-3 rounded-lg border border-green-200">
+                          <p className="text-xs text-gray-500">Actual Tonase</p>
+                          <p className="text-lg font-bold text-green-600">{recommendation.hauling_data.hauling_analysis.aggregated.total_tonase?.toFixed(0) || 0} ton</p>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-green-200">
+                          <p className="text-xs text-gray-500">Total Trips</p>
+                          <p className="text-lg font-bold text-blue-600">{recommendation.hauling_data.hauling_analysis.aggregated.total_trips || 0}</p>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-green-200">
+                          <p className="text-xs text-gray-500">Fuel Used</p>
+                          <p className="text-lg font-bold text-orange-600">{recommendation.hauling_data.hauling_analysis.aggregated.total_fuel_liter?.toFixed(0) || 0} L</p>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-green-200">
+                          <p className="text-xs text-gray-500">Avg Cycle Time</p>
+                          <p className="text-lg font-bold text-purple-600">{recommendation.hauling_data.hauling_analysis.aggregated.avg_cycle_time_minutes?.toFixed(1) || 0} min</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Equipment Used from Hauling */}
+                    {recommendation.hauling_data.hauling_analysis?.equipment_allocation && (
+                      <div className="bg-white p-4 rounded-lg border border-green-200">
+                        <h4 className="font-semibold text-gray-700 mb-3">Equipment from Actual Hauling Data</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-2">Trucks ({recommendation.hauling_data.hauling_analysis.equipment_allocation.truck_ids?.length || 0})</p>
+                            <div className="flex flex-wrap gap-1">
+                              {recommendation.hauling_data.hauling_analysis.equipment_allocation.truck_details?.slice(0, 5).map((truck, idx) => (
+                                <span key={idx} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                                  {truck.code || truck.id.slice(0, 8)}
+                                </span>
+                              ))}
+                              {(recommendation.hauling_data.hauling_analysis.equipment_allocation.truck_ids?.length || 0) > 5 && (
+                                <span className="text-gray-500 text-xs">+{(recommendation.hauling_data.hauling_analysis.equipment_allocation.truck_ids?.length || 0) - 5} more</span>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-2">Excavators ({recommendation.hauling_data.hauling_analysis.equipment_allocation.excavator_ids?.length || 0})</p>
+                            <div className="flex flex-wrap gap-1">
+                              {recommendation.hauling_data.hauling_analysis.equipment_allocation.excavator_details?.slice(0, 5).map((exc, idx) => (
+                                <span key={idx} className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">
+                                  {exc.code || exc.id.slice(0, 8)}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="text-sm text-green-700 bg-green-100 p-3 rounded-lg">
+                      <strong>💡 Note:</strong> This strategy includes {recommendation.hauling_data.hauling_activity_count} real hauling activities that match your criteria. When you implement this strategy, the production record will be
+                      created from actual hauling data instead of simulated estimates.
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* 7. Safety Guidelines (SOP) */}
               <section>
                 <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
                   <span className="bg-gray-200 p-1 rounded mr-2">🛡️</span> Safety Guidelines (SOP)

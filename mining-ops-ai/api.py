@@ -19,7 +19,9 @@ try:
         format_konteks_for_llm,
         LLM_PROVIDER,
         OLLAMA_MODEL,
-        load_fresh_data
+        load_fresh_data,
+        analyze_hauling_for_production,
+        get_hauling_based_recommendations
     )
     print("✅ Berhasil mengimpor 'otak' dari simulator.py")
 except ImportError as e:
@@ -145,6 +147,72 @@ async def dapatkan_rekomendasi_strategis(request: RecommendationRequest):
             
     except Exception as e:
         print(f"❌ Error di /get_top_3_strategies: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+
+@app.post("/get_strategies_with_hauling")
+async def dapatkan_strategi_dengan_hauling(request: RecommendationRequest):
+    """
+    ENDPOINT ENHANCED: Get AI strategies WITH matching hauling activity data.
+    This enables production creation from REAL hauling data instead of simulations only.
+    """
+    try:
+        print(f"📡 Menerima request strategi dengan integrasi hauling...")
+        
+        active_financial_params = {}
+        if request.financial_params:
+            active_financial_params = request.financial_params.dict()
+        else:
+            active_financial_params = CONFIG['financial_params']
+        
+        # Use enhanced function that includes hauling analysis
+        top_3_list = get_hauling_based_recommendations(
+            request.fixed_conditions.dict(),
+            request.decision_variables.dict(),
+            active_financial_params 
+        )
+        
+        if top_3_list:
+            data = load_fresh_data()
+            formatted_json_str = format_konteks_for_llm(top_3_list, data)
+            formatted_data = json.loads(formatted_json_str)
+            
+            # Add hauling analysis to each strategy in the response
+            for i, strategy in enumerate(formatted_data):
+                key = f"OPSI_{i+1}"
+                if key in strategy and i < len(top_3_list):
+                    raw_strategy = top_3_list[i]
+                    strategy[key]['HAULING_DATA'] = {
+                        'has_hauling_data': raw_strategy.get('has_hauling_data', False),
+                        'hauling_activity_count': raw_strategy.get('hauling_activity_count', 0),
+                        'hauling_analysis': raw_strategy.get('hauling_analysis', {})
+                    }
+            
+            return {"top_3_strategies": formatted_data}
+        else:
+            raise HTTPException(status_code=500, detail="Simulasi selesai tapi tidak menghasilkan rekomendasi valid.")
+            
+    except Exception as e:
+        print(f"❌ Error di /get_strategies_with_hauling: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+
+@app.post("/analyze_hauling_activities")
+async def analyze_hauling(request: FixedConditions):
+    """
+    ENDPOINT: Analyze existing hauling activities without running full simulation.
+    Returns aggregated metrics and activity IDs that can be used for production creation.
+    """
+    try:
+        print(f"📡 Analyzing hauling activities for production...")
+        
+        data = load_fresh_data()
+        analysis = analyze_hauling_for_production(request.dict(), data)
+        
+        return analysis
+        
+    except Exception as e:
+        print(f"❌ Error di /analyze_hauling_activities: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 
