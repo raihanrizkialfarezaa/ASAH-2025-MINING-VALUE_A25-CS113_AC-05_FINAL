@@ -6,31 +6,31 @@ import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
 import StatusBadge from '../../components/common/StatusBadge';
 import { authService } from '../../services/authService';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Cloud, 
-  CloudRain, 
-  Wind, 
-  Droplets, 
-  Thermometer, 
-  Eye as EyeIcon, 
-  AlertTriangle, 
-  CheckCircle, 
-  X, 
-  Search, 
-  Filter, 
-  SortAsc, 
-  SortDesc, 
-  RefreshCw, 
-  ChevronDown, 
-  MapPin, 
-  Activity, 
-  Waves, 
-  Umbrella, 
-  Navigation 
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  Cloud,
+  CloudRain,
+  Wind,
+  Droplets,
+  Thermometer,
+  Eye as EyeIcon,
+  AlertTriangle,
+  CheckCircle,
+  X,
+  Search,
+  Filter,
+  SortAsc,
+  SortDesc,
+  RefreshCw,
+  ChevronDown,
+  MapPin,
+  Activity,
+  Waves,
+  Umbrella,
+  Navigation,
 } from 'lucide-react';
 
 const WeatherList = () => {
@@ -83,10 +83,7 @@ const WeatherList = () => {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (weather) =>
-          weather.miningSite?.code?.toLowerCase().includes(query) ||
-          weather.miningSite?.name?.toLowerCase().includes(query) ||
-          weather.condition?.toLowerCase().includes(query) ||
-          weather.windDirection?.toLowerCase().includes(query)
+          weather.miningSite?.code?.toLowerCase().includes(query) || weather.miningSite?.name?.toLowerCase().includes(query) || weather.condition?.toLowerCase().includes(query) || weather.windDirection?.toLowerCase().includes(query)
       );
     }
 
@@ -365,18 +362,9 @@ const WeatherList = () => {
     return <LoadingSpinner fullScreen />;
   }
 
-  const activeFiltersCount = [
-    searchQuery,
-    conditionFilter,
-    riskLevelFilter,
-    filters.miningSiteId,
-    filters.visibility,
-    filters.isOperational,
-    filters.minTemperature,
-    filters.maxTemperature,
-    filters.minRainfall,
-    filters.maxRainfall,
-  ].filter(Boolean).length;
+  const activeFiltersCount = [searchQuery, conditionFilter, riskLevelFilter, filters.miningSiteId, filters.visibility, filters.isOperational, filters.minTemperature, filters.maxTemperature, filters.minRainfall, filters.maxRainfall].filter(
+    Boolean
+  ).length;
 
   const getConditionIcon = (condition) => {
     const option = conditionOptions.find((opt) => opt.value === condition);
@@ -399,10 +387,7 @@ const WeatherList = () => {
           <p className="text-sm text-gray-500 mt-1">Real-time weather tracking and operational safety assessment</p>
         </div>
         <div className="flex space-x-3">
-          <button 
-            onClick={fetchWeathers} 
-            className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border shadow-sm text-gray-700 font-medium transition-colors flex items-center space-x-2"
-          >
+          <button onClick={fetchWeathers} className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border shadow-sm text-gray-700 font-medium transition-colors flex items-center space-x-2">
             <RefreshCw size={18} />
             <span>Refresh</span>
           </button>
@@ -431,9 +416,7 @@ const WeatherList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Operational</p>
-              <p className="text-3xl font-bold text-green-600">
-                {allWeathers.filter((w) => w.isOperational).length}
-              </p>
+              <p className="text-3xl font-bold text-green-600">{allWeathers.filter((w) => w.isOperational).length}</p>
             </div>
             <div className="p-3 bg-green-100 rounded-xl">
               <CheckCircle className="text-green-600" size={28} />
@@ -444,9 +427,7 @@ const WeatherList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Non-Operational</p>
-              <p className="text-3xl font-bold text-red-600">
-                {allWeathers.filter((w) => !w.isOperational).length}
-              </p>
+              <p className="text-3xl font-bold text-red-600">{allWeathers.filter((w) => !w.isOperational).length}</p>
             </div>
             <div className="p-3 bg-red-100 rounded-xl">
               <AlertTriangle className="text-red-600" size={28} />
@@ -457,9 +438,7 @@ const WeatherList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">High Risk</p>
-              <p className="text-3xl font-bold text-orange-600">
-                {allWeathers.filter((w) => w.riskLevel === 'HIGH' || w.riskLevel === 'CRITICAL').length}
-              </p>
+              <p className="text-3xl font-bold text-orange-600">{allWeathers.filter((w) => w.riskLevel === 'HIGH' || w.riskLevel === 'CRITICAL').length}</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-xl">
               <AlertTriangle className="text-orange-600" size={28} />
@@ -470,9 +449,7 @@ const WeatherList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Rainy Conditions</p>
-              <p className="text-3xl font-bold text-blue-600">
-                {allWeathers.filter((w) => ['HUJAN_RINGAN', 'HUJAN_SEDANG', 'HUJAN_LEBAT'].includes(w.condition)).length}
-              </p>
+              <p className="text-3xl font-bold text-blue-600">{allWeathers.filter((w) => ['HUJAN_RINGAN', 'HUJAN_SEDANG', 'HUJAN_LEBAT'].includes(w.condition)).length}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-xl">
               <CloudRain className="text-blue-600" size={28} />
@@ -673,9 +650,7 @@ const WeatherList = () => {
                   return (
                     <tr key={weather.id} className="hover:bg-blue-50 transition-colors">
                       <td className="table-cell">
-                        <span className="text-sm font-medium text-gray-900">
-                          {new Date(weather.timestamp).toLocaleDateString()}
-                        </span>
+                        <span className="text-sm font-medium text-gray-900">{new Date(weather.timestamp).toLocaleDateString()}</span>
                         <p className="text-xs text-gray-500">{new Date(weather.timestamp).toLocaleTimeString()}</p>
                       </td>
                       <td className="table-cell">
@@ -685,9 +660,7 @@ const WeatherList = () => {
                       <td className="table-cell">
                         <div className="flex items-center space-x-2">
                           <ConditionIcon size={18} className={`text-${getConditionColor(weather.condition)}-600`} />
-                          <span className={`text-${getConditionColor(weather.condition)}-700 font-medium`}>
-                            {conditionOptions.find((opt) => opt.value === weather.condition)?.label || weather.condition}
-                          </span>
+                          <span className={`text-${getConditionColor(weather.condition)}-700 font-medium`}>{conditionOptions.find((opt) => opt.value === weather.condition)?.label || weather.condition}</span>
                         </div>
                       </td>
                       <td className="table-cell">
@@ -703,9 +676,7 @@ const WeatherList = () => {
                         <StatusBadge status={weather.riskLevel} />
                       </td>
                       <td className="table-cell">
-                        <span className={`badge ${weather.isOperational ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                          {weather.isOperational ? 'Yes' : 'No'}
-                        </span>
+                        <span className={`badge ${weather.isOperational ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{weather.isOperational ? 'Yes' : 'No'}</span>
                       </td>
                       <td className="table-cell">
                         <div className="flex space-x-1">
@@ -784,9 +755,9 @@ const WeatherList = () => {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-                    {React.createElement(getConditionIcon(selectedWeather.condition), { 
-                      size: 32, 
-                      className: `text-${getConditionColor(selectedWeather.condition)}-600` 
+                    {React.createElement(getConditionIcon(selectedWeather.condition), {
+                      size: 32,
+                      className: `text-${getConditionColor(selectedWeather.condition)}-600`,
                     })}
                     <span>{conditionOptions.find((opt) => opt.value === selectedWeather.condition)?.label || selectedWeather.condition}</span>
                   </h3>
@@ -802,9 +773,7 @@ const WeatherList = () => {
                     <Activity className="text-sky-600" size={16} />
                     <label className="text-xs font-semibold text-gray-600">Operational Status</label>
                   </div>
-                  <p className={`text-lg font-medium ${selectedWeather.isOperational ? 'text-green-600' : 'text-red-600'}`}>
-                    {selectedWeather.isOperational ? 'Operational' : 'Non-Operational'}
-                  </p>
+                  <p className={`text-lg font-medium ${selectedWeather.isOperational ? 'text-green-600' : 'text-red-600'}`}>{selectedWeather.isOperational ? 'Operational' : 'Non-Operational'}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-sky-100">
                   <div className="flex items-center space-x-2 mb-1">
@@ -965,16 +934,7 @@ const WeatherList = () => {
                   <Thermometer size={16} className="text-gray-500" />
                   <span>Temperature (°C)</span>
                 </label>
-                <input 
-                  type="number" 
-                  step="0.1" 
-                  value={formData.temperature} 
-                  onChange={(e) => setFormData({ ...formData, temperature: e.target.value })} 
-                  className="input-field" 
-                  placeholder="e.g., 28.5"
-                  min="-10"
-                  max="60"
-                />
+                <input type="number" step="0.1" value={formData.temperature} onChange={(e) => setFormData({ ...formData, temperature: e.target.value })} className="input-field" placeholder="e.g., 28.5" min="-10" max="60" />
               </div>
 
               <div>
@@ -982,16 +942,7 @@ const WeatherList = () => {
                   <Droplets size={16} className="text-gray-500" />
                   <span>Humidity (%)</span>
                 </label>
-                <input 
-                  type="number" 
-                  step="0.1" 
-                  value={formData.humidity} 
-                  onChange={(e) => setFormData({ ...formData, humidity: e.target.value })} 
-                  className="input-field" 
-                  placeholder="e.g., 75.5"
-                  min="0"
-                  max="100"
-                />
+                <input type="number" step="0.1" value={formData.humidity} onChange={(e) => setFormData({ ...formData, humidity: e.target.value })} className="input-field" placeholder="e.g., 75.5" min="0" max="100" />
               </div>
 
               <div>
@@ -999,16 +950,7 @@ const WeatherList = () => {
                   <Wind size={16} className="text-gray-500" />
                   <span>Wind Speed (km/h)</span>
                 </label>
-                <input 
-                  type="number" 
-                  step="0.1" 
-                  value={formData.windSpeed} 
-                  onChange={(e) => setFormData({ ...formData, windSpeed: e.target.value })} 
-                  className="input-field" 
-                  placeholder="e.g., 15.2"
-                  min="0"
-                  max="200"
-                />
+                <input type="number" step="0.1" value={formData.windSpeed} onChange={(e) => setFormData({ ...formData, windSpeed: e.target.value })} className="input-field" placeholder="e.g., 15.2" min="0" max="200" />
               </div>
 
               <div>
@@ -1016,14 +958,7 @@ const WeatherList = () => {
                   <Navigation size={16} className="text-gray-500" />
                   <span>Wind Direction</span>
                 </label>
-                <input 
-                  type="text" 
-                  value={formData.windDirection} 
-                  onChange={(e) => setFormData({ ...formData, windDirection: e.target.value })} 
-                  className="input-field" 
-                  placeholder="e.g., N, NE, E, SE, S, SW, W, NW"
-                  maxLength="10"
-                />
+                <input type="text" value={formData.windDirection} onChange={(e) => setFormData({ ...formData, windDirection: e.target.value })} className="input-field" placeholder="e.g., N, NE, E, SE, S, SW, W, NW" maxLength="10" />
               </div>
 
               <div>
@@ -1031,16 +966,7 @@ const WeatherList = () => {
                   <Umbrella size={16} className="text-gray-500" />
                   <span>Rainfall (mm)</span>
                 </label>
-                <input 
-                  type="number" 
-                  step="0.1" 
-                  value={formData.rainfall} 
-                  onChange={(e) => setFormData({ ...formData, rainfall: e.target.value })} 
-                  className="input-field" 
-                  placeholder="e.g., 10.5"
-                  min="0"
-                  max="10000"
-                />
+                <input type="number" step="0.1" value={formData.rainfall} onChange={(e) => setFormData({ ...formData, rainfall: e.target.value })} className="input-field" placeholder="e.g., 10.5" min="0" max="10000" />
               </div>
 
               <div>
@@ -1062,28 +988,12 @@ const WeatherList = () => {
                   <Waves size={16} className="text-gray-500" />
                   <span>Wave Height (m)</span>
                 </label>
-                <input 
-                  type="number" 
-                  step="0.1" 
-                  value={formData.waveHeight} 
-                  onChange={(e) => setFormData({ ...formData, waveHeight: e.target.value })} 
-                  className="input-field" 
-                  placeholder="e.g., 2.5"
-                  min="0"
-                  max="50"
-                />
+                <input type="number" step="0.1" value={formData.waveHeight} onChange={(e) => setFormData({ ...formData, waveHeight: e.target.value })} className="input-field" placeholder="e.g., 2.5" min="0" max="50" />
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Sea Condition</label>
-                <input 
-                  type="text" 
-                  value={formData.seaCondition} 
-                  onChange={(e) => setFormData({ ...formData, seaCondition: e.target.value })} 
-                  className="input-field" 
-                  placeholder="e.g., Calm, Moderate, Rough"
-                  maxLength="100"
-                />
+                <input type="text" value={formData.seaCondition} onChange={(e) => setFormData({ ...formData, seaCondition: e.target.value })} className="input-field" placeholder="e.g., Calm, Moderate, Rough" maxLength="100" />
               </div>
 
               <div>
@@ -1105,12 +1015,7 @@ const WeatherList = () => {
                   <Activity size={16} className="text-gray-500" />
                   <span>Operational Status *</span>
                 </label>
-                <select 
-                  value={formData.isOperational} 
-                  onChange={(e) => setFormData({ ...formData, isOperational: e.target.value === 'true' })} 
-                  className="input-field" 
-                  required
-                >
+                <select value={formData.isOperational} onChange={(e) => setFormData({ ...formData, isOperational: e.target.value === 'true' })} className="input-field" required>
                   <option value="true">Operational</option>
                   <option value="false">Non-Operational</option>
                 </select>
@@ -1118,14 +1023,7 @@ const WeatherList = () => {
 
               <div className="col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Remarks</label>
-                <textarea 
-                  value={formData.remarks} 
-                  onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} 
-                  className="input-field" 
-                  rows="3" 
-                  placeholder="Optional notes or additional observations..."
-                  maxLength="10000"
-                />
+                <textarea value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} className="input-field" rows="3" placeholder="Optional notes or additional observations..." maxLength="10000" />
               </div>
             </div>
 

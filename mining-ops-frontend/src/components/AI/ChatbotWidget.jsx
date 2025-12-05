@@ -111,7 +111,8 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
     setLoading(true);
 
     try {
-      const response = await aiService.askChatbot(input, context);
+      const safeContext = Array.isArray(context) ? context : [];
+      const response = await aiService.askChatbot(input, safeContext);
       console.log('Chatbot response:', response);
 
       const answer = response.data?.jawaban_ai || response.data?.answer || response.jawaban_ai || 'I apologize, but I could not generate a response.';

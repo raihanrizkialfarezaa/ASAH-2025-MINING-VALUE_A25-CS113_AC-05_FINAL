@@ -291,7 +291,12 @@ class AIController {
 
       logger.info('Chatbot question from user:', userId, question);
 
-      const response = await aiService.askChatbot(question, context || [], userId);
+      let safeContext = [];
+      if (Array.isArray(context)) {
+        safeContext = context;
+      }
+
+      const response = await aiService.askChatbot(question, safeContext, userId);
 
       res.json({
         success: true,

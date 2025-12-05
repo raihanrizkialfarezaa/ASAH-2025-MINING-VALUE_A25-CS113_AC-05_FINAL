@@ -642,11 +642,18 @@ class AIService {
 
       const startTime = Date.now();
 
+      let strategiesContext = [];
+      if (Array.isArray(context)) {
+        strategiesContext = context;
+      } else if (context && typeof context === 'object') {
+        strategiesContext = [];
+      }
+
       const response = await axios.post(
         `${AI_SERVICE_URL}/ask_chatbot`,
         {
           pertanyaan_user: question,
-          top_3_strategies_context: context,
+          top_3_strategies_context: strategiesContext,
         },
         {
           timeout: 180000,
