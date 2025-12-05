@@ -9,6 +9,7 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
     md: 'max-w-2xl',
     lg: 'max-w-4xl',
     xl: 'max-w-6xl',
+    '2xl': 'max-w-5xl',
   };
 
   return (
