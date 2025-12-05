@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import aiService from '../../services/aiService';
 import RecommendationCard from '../../components/AI/RecommendationCard';
 import ParameterForm from '../../components/AI/ParameterForm';
-import ChatbotWidget from '../../components/AI/ChatbotWidget';
 import RealtimeStatus from '../../components/AI/RealtimeStatus';
 import { toast } from 'react-toastify';
 
@@ -261,9 +260,6 @@ const AIRecommendations = () => {
           </div>
         </div>
       )}
-
-      {/* Chatbot Widget - Always visible */}
-      <ChatbotWidget context={recommendations} aiServiceStatus={aiServiceHealth?.status} />
     </div>
   );
 };

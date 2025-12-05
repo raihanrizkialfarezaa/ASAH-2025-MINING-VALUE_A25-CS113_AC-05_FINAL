@@ -144,6 +144,9 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
 
       const firstHaulingId = recommendation.hauling_data?.hauling_analysis?.hauling_activity_ids?.[0] || null;
 
+      // Get Production Target from recommendation
+      const productionTarget = parseFloat(raw.total_tonase) || parseFloat(recommendation.total_tonase) || 270; // Default 270 ton
+
       const params = {
         action: action,
         existingHaulingId: action === 'update' ? firstHaulingId : null,
@@ -158,47 +161,46 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
         dumpingPointId: haulingData.dumping_point_id || null,
         roadSegmentId: raw.target_road_id || null,
         shift: raw.shift || 'SHIFT_1',
-        loadWeight: haulingData.aggregated?.avg_load_weight || 28.5,
-        targetWeight: 30,
+        loadWeight: null, // Kosongkan untuk admin mengisi
+        targetWeight: 30, // Fallback, akan dihitung di backend dari totalProductionTarget
+        totalProductionTarget: productionTarget, // Production Target untuk dibagi ke setiap hauling
         distance: raw.distance_km || haulingData.aggregated?.avg_distance || 3,
       };
 
       const result = await aiService.applyHaulingRecommendation(params);
 
       if (result.success) {
-        const alertMessage = action === 'update' ? `Hauling activity updated successfully! Activity: ${result.data.updatedActivity?.activityNumber}` : `${result.data.createdCount} hauling activities created successfully!`;
+        const alertMessage =
+          action === 'update'
+            ? `Hauling activity updated successfully! Activity: ${result.data.updatedActivity?.activityNumber}`
+            : `${result.data.createdCount} hauling activities created successfully! Target Weight per hauling: ${result.data.targetWeightPerHauling?.toFixed(2)} ton`;
 
         window.alert(alertMessage);
 
-        // Calculate robust metrics for production modal
+        // Get values from backend result (calculated with actual equipment fuel consumption)
         const truckCount = params.truckIds?.length || 1;
         const excavatorCount = params.excavatorIds?.length || 1;
         const distance = parseFloat(params.distance) || 3;
-        const loadWeight = parseFloat(params.loadWeight) || 28.5;
+        const targetWeightPerHauling = result.data.targetWeightPerHauling || params.totalProductionTarget / truckCount;
 
-        // Calculate Total Fuel: Based on distance, fuel consumption rate, and number of trucks
-        // Typical mining truck consumes ~0.5-1.0 L/km loaded, ~0.3-0.5 L/km empty
-        const fuelConsumptionRateLoaded = 0.8; // L/km when loaded
-        const fuelConsumptionRateEmpty = 0.4; // L/km when empty
-        const roundTripDistance = distance * 2;
-        const fuelPerTrip = distance * fuelConsumptionRateLoaded + distance * fuelConsumptionRateEmpty;
-        const totalFuelLiter = fuelPerTrip * truckCount;
+        // Use total fuel calculated by backend using actual equipment fuelConsumption data
+        const totalFuelLiter = result.data.totalCalculatedFuel || 0;
 
-        // Calculate Avg Cycle Time: loading + travel loaded + dumping + return
-        // Loading: depends on excavator rate (typically 5-8 minutes for full truck)
-        // Travel: distance / speed (assume 20 km/h loaded, 30 km/h empty average on mine roads)
-        // Dumping: typically 2-3 minutes
-        const loadingTimeMinutes = (loadWeight / 50) * 8; // ~8 min for full load at 50 ton/min excavator rate
-        const travelTimeLoadedMinutes = (distance / 20) * 60; // 20 km/h loaded
-        const dumpingTimeMinutes = 3;
-        const returnTimeMinutes = (distance / 30) * 60; // 30 km/h empty
-        const avgCycleTimeMinutes = loadingTimeMinutes + travelTimeLoadedMinutes + dumpingTimeMinutes + returnTimeMinutes;
+        // Calculate Avg Cycle Time from hauling activities
+        const avgCycleTimeMinutes = result.data.createdActivities?.[0]?.truck?.averageSpeed
+          ? ((distance * 2) / result.data.createdActivities[0].truck.averageSpeed) * 60 + 8 // travel + loading time
+          : 15; // default
 
         // Calculate utilization rate (operating hours / available hours)
         const shiftHours = 8;
         const totalOperatingMinutes = avgCycleTimeMinutes * truckCount;
-        const availableMinutes = shiftHours * 60 * truckCount;
+        const availableMinutes = shiftHours * 60;
         const utilizationRate = Math.min((totalOperatingMinutes / availableMinutes) * 100, 100);
+
+        // Get equipment fuel rates from created activities for reference
+        const firstActivity = result.data.createdActivities?.[0];
+        const truckFuelRate = firstActivity?.truck?.fuelConsumption || 1.0;
+        const excavatorFuelRate = firstActivity?.excavator?.fuelConsumption || 50;
 
         const strategyData = {
           rank: rank,
@@ -207,24 +209,25 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
           useHaulingData: true,
           haulingActivityIds: action === 'update' ? [result.data.updatedActivity?.id] : result.data.createdActivities?.map((a) => a.id) || [],
           haulingAggregated: {
-            total_tonase: loadWeight * truckCount,
+            total_tonase: params.totalProductionTarget,
             total_trips: truckCount,
-            total_distance_km: roundTripDistance * truckCount,
-            total_fuel_liter: totalFuelLiter,
+            total_distance_km: distance * 2 * truckCount,
+            total_fuel_liter: totalFuelLiter, // Using backend-calculated value
             avg_cycle_time_minutes: avgCycleTimeMinutes,
-            avg_load_weight: loadWeight,
+            avg_load_weight: 0, // Load weight kosong, admin akan mengisi
+            target_weight_per_hauling: targetWeightPerHauling,
             trucks_operating: truckCount,
             excavators_operating: excavatorCount,
             utilization_rate_percent: utilizationRate,
             shift: params.shift,
-            // Additional calculation parameters for transparency
+            // Actual equipment fuel consumption rates used
             calculation_params: {
-              fuel_rate_loaded: fuelConsumptionRateLoaded,
-              fuel_rate_empty: fuelConsumptionRateEmpty,
-              speed_loaded_kmh: 20,
+              truck_fuel_rate_lkm: truckFuelRate, // From actual truck data (L/km)
+              excavator_fuel_rate_lhr: excavatorFuelRate, // From actual excavator data (L/hr)
+              speed_loaded_kmh: firstActivity?.truck?.averageSpeed || 20,
               speed_empty_kmh: 30,
-              loading_time_min: loadingTimeMinutes.toFixed(1),
-              dumping_time_min: dumpingTimeMinutes,
+              production_target: params.totalProductionTarget,
+              target_per_hauling: targetWeightPerHauling,
             },
           },
           equipmentAllocation: {
@@ -303,7 +306,7 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
             </div>
 
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Total Production</span>
+              <span className="text-gray-600">Production Target</span>
               <span className="font-semibold">{recommendation.total_tonase_display}</span>
             </div>
 

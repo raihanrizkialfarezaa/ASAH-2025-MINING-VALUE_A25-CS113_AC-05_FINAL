@@ -267,6 +267,7 @@ class AIService {
         targetWeight,
         distance,
         supervisorId,
+        totalProductionTarget, // New: untuk membagi target ke setiap hauling
       } = params;
 
       logger.info('Applying hauling recommendation:', {
@@ -408,7 +409,42 @@ class AIService {
           }
         }
 
+        // Fetch truck and excavator data with fuel consumption for accurate calculation
+        const trucksData = await prisma.truck.findMany({
+          where: { id: { in: truckIds } },
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            fuelConsumption: true,
+            capacity: true,
+            averageSpeed: true,
+          },
+        });
+
+        const excavatorsData = await prisma.excavator.findMany({
+          where: { id: { in: excavatorIds } },
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            fuelConsumption: true,
+            productionRate: true,
+          },
+        });
+
+        // Create a map for quick lookup
+        const truckMap = new Map(trucksData.map((t) => [t.id, t]));
+        const excavatorMap = new Map(excavatorsData.map((e) => [e.id, e]));
+
+        // Calculate target weight per hauling (divided evenly from totalProductionTarget)
+        const numHaulingActivities = truckIds.length;
+        const targetWeightPerHauling = totalProductionTarget
+          ? parseFloat(totalProductionTarget) / numHaulingActivities
+          : parseFloat(targetWeight) || 30;
+
         const createdActivities = [];
+        let totalCalculatedFuel = 0;
 
         for (let i = 0; i < truckIds.length; i++) {
           const truckId = truckIds[i];
@@ -416,6 +452,32 @@ class AIService {
           const operatorId = effectiveOperatorIds[i % effectiveOperatorIds.length];
 
           const activityNumber = `HA-${dateStr}-${(sequence + i).toString().padStart(3, '0')}`;
+
+          // Get actual fuel consumption from equipment data
+          const truckData = truckMap.get(truckId);
+          const excavatorData = excavatorMap.get(excavatorId);
+
+          // Truck fuel consumption (L/km) - use actual data or default
+          const truckFuelConsumptionPerKm = truckData?.fuelConsumption || 1.0;
+
+          // Excavator fuel consumption (L/hr) - use actual data or default
+          const excavatorFuelConsumptionPerHr = excavatorData?.fuelConsumption || 50;
+
+          // Calculate estimated loading time (hours) based on excavator production rate
+          const excavatorProductionRate = excavatorData?.productionRate || 5; // ton/min
+          const estimatedLoadingTimeHours = targetWeightPerHauling / excavatorProductionRate / 60;
+
+          // Calculate fuel consumed
+          // Truck: distance * fuel rate (round trip = distance * 2)
+          const actualDistance = parseFloat(distance) || 3;
+          const truckFuel = actualDistance * 2 * truckFuelConsumptionPerKm;
+
+          // Excavator: loading time * fuel rate per hour
+          const excavatorFuel = estimatedLoadingTimeHours * excavatorFuelConsumptionPerHr;
+
+          // Total fuel consumed for this hauling activity
+          const fuelConsumed = parseFloat((truckFuel + excavatorFuel).toFixed(2));
+          totalCalculatedFuel += fuelConsumed;
 
           const activityData = {
             activityNumber,
@@ -427,11 +489,12 @@ class AIService {
             dumpingPointId: effectiveDumpingPointId,
             shift: shift || 'SHIFT_1',
             loadingStartTime: new Date(),
-            loadWeight: parseFloat(loadWeight) || 28.5,
-            targetWeight: parseFloat(targetWeight) || 30,
-            distance: parseFloat(distance) || 3,
+            loadWeight: null, // Kosongkan, admin akan mengisi
+            targetWeight: parseFloat(targetWeightPerHauling.toFixed(2)), // Dibagi rata dari Production Target
+            distance: actualDistance,
+            fuelConsumed: fuelConsumed, // Calculated from actual equipment fuel consumption
             status: 'LOADING',
-            remarks: 'Created by AI Recommendation',
+            remarks: `Created by AI Recommendation | Truck Fuel: ${truckFuelConsumptionPerKm} L/km | Excavator Fuel: ${excavatorFuelConsumptionPerHr} L/hr`,
           };
 
           if (roadSegmentId) {
@@ -441,8 +504,18 @@ class AIService {
           const activity = await prisma.haulingActivity.create({
             data: activityData,
             include: {
-              truck: { select: { id: true, code: true, name: true } },
-              excavator: { select: { id: true, code: true, name: true } },
+              truck: {
+                select: { id: true, code: true, name: true, fuelConsumption: true, capacity: true },
+              },
+              excavator: {
+                select: {
+                  id: true,
+                  code: true,
+                  name: true,
+                  fuelConsumption: true,
+                  productionRate: true,
+                },
+              },
               operator: { include: { user: { select: { fullName: true } } } },
             },
           });
@@ -454,6 +527,8 @@ class AIService {
           action: 'create',
           createdCount: createdActivities.length,
           createdActivities,
+          totalCalculatedFuel, // Return total fuel for use in frontend
+          targetWeightPerHauling, // Return divided target weight
           multiEquipment: {
             truckIds,
             excavatorIds,

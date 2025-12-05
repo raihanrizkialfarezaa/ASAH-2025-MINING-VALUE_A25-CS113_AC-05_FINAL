@@ -1,13 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Truck, Construction, Users, MapPin, Package, Wrench, CloudRain, BarChart3, Settings, LogOut, Menu, X, Bot } from 'lucide-react';
 import { authService } from '../../services/authService';
+import aiService from '../../services/aiService';
+import ChatbotWidget from '../AI/ChatbotWidget';
 
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [aiServiceStatus, setAiServiceStatus] = useState('checking');
   const location = useLocation();
   const navigate = useNavigate();
   const user = authService.getCurrentUser();
+
+  // Check AI service status
+  useEffect(() => {
+    const checkAIStatus = async () => {
+      try {
+        const result = await aiService.healthCheck();
+        setAiServiceStatus(result.success ? 'online' : 'offline');
+      } catch (error) {
+        setAiServiceStatus('offline');
+      }
+    };
+
+    checkAIStatus();
+    // Re-check every 30 seconds
+    const interval = setInterval(checkAIStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Build context based on current page
+  const getChatbotContext = () => {
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    const currentPage = pathParts[0] || 'dashboard';
+
+    return {
+      current_page: currentPage,
+      page_path: location.pathname,
+      user_role: user?.role,
+      available_data: {
+        trucks: currentPage === 'trucks',
+        excavators: currentPage === 'excavators',
+        operators: currentPage === 'operators',
+        hauling: currentPage === 'hauling',
+        production: currentPage === 'production',
+        vessels: currentPage === 'vessels',
+        maintenance: currentPage === 'maintenance',
+        weather: currentPage === 'weather',
+        ai_recommendations: currentPage === 'ai-recommendations',
+      },
+    };
+  };
 
   const menuItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -73,6 +116,9 @@ const Layout = ({ children }) => {
       <main className="flex-1 overflow-y-auto">
         <div className="p-6">{children}</div>
       </main>
+
+      {/* Global AI Chatbot Widget */}
+      <ChatbotWidget context={getChatbotContext()} aiServiceStatus={aiServiceStatus} />
     </div>
   );
 };

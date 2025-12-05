@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import aiService from '../../services/aiService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { MessageCircle, Bot, X, Trash2, Send, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Cpu, Loader2 } from 'lucide-react';
 
 const ThinkingIndicator = () => {
   const [text, setText] = useState('Menganalisis pertanyaan...');
@@ -34,8 +35,11 @@ const ThinkingProcess = ({ steps }) => {
   return (
     <div className="mb-3 border border-blue-100 rounded-lg overflow-hidden bg-blue-50/50">
       <button onClick={() => setExpanded(!expanded)} className="w-full px-3 py-2 text-xs text-blue-600 flex items-center justify-between hover:bg-blue-100/50 transition-colors">
-        <span className="flex items-center gap-2 font-medium">🤖 Thinking Process</span>
-        <span>{expanded ? '▼' : '▶'}</span>
+        <span className="flex items-center gap-2 font-medium">
+          <Cpu className="w-3 h-3" />
+          Thinking Process
+        </span>
+        <span>{expanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}</span>
       </button>
 
       {expanded && (
@@ -47,7 +51,7 @@ const ThinkingProcess = ({ steps }) => {
                   step.status === 'error' ? 'bg-red-100 text-red-600' : step.status === 'blocked' ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'
                 }`}
               >
-                {step.status === 'error' || step.status === 'blocked' ? '!' : '✓'}
+                {step.status === 'error' || step.status === 'blocked' ? <AlertCircle className="w-2.5 h-2.5" /> : <CheckCircle className="w-2.5 h-2.5" />}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-gray-700">{step.message}</div>
@@ -169,8 +173,11 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
     <div className="fixed bottom-6 right-6 z-50">
       {/* Toggle Button */}
       {!isOpen && (
-        <button onClick={() => setIsOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-all transform hover:scale-110 flex items-center space-x-2">
-          <span className="text-2xl">💬</span>
+        <button
+          onClick={() => setIsOpen(true)}
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-full p-4 shadow-lg transition-all transform hover:scale-110 flex items-center space-x-2 group"
+        >
+          <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
           <span className="font-semibold">AI Assistant</span>
           {aiServiceStatus === 'offline' && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>}
         </button>
@@ -178,19 +185,27 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="bg-white rounded-lg shadow-2xl w-96 h-[600px] flex flex-col">
+        <div className="bg-white rounded-xl shadow-2xl w-96 h-[600px] flex flex-col border border-gray-100 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-t-lg flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-lg">Mining Operations AI</h3>
-              <p className="text-xs text-blue-100">{aiServiceStatus === 'online' ? '🟢 Online' : '🔴 Offline'}</p>
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <Bot className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Mining AI</h3>
+                <p className="text-xs text-blue-100 flex items-center gap-1">
+                  <span className={`w-2 h-2 rounded-full ${aiServiceStatus === 'online' ? 'bg-green-400' : 'bg-red-400'}`}></span>
+                  {aiServiceStatus === 'online' ? 'Online' : 'Offline'}
+                </p>
+              </div>
             </div>
             <div className="flex space-x-2">
-              <button onClick={clearChat} className="text-white hover:text-blue-200 transition-colors" title="Clear chat">
-                🗑️
+              <button onClick={clearChat} className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-all" title="Clear chat">
+                <Trash2 className="w-4 h-4" />
               </button>
-              <button onClick={() => setIsOpen(false)} className="text-white hover:text-blue-200 transition-colors text-xl">
-                ×
+              <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-all" title="Close">
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -231,7 +246,11 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
               <p className="text-xs text-gray-600 mb-2">Suggested questions:</p>
               <div className="space-y-1">
                 {suggestedQuestions.slice(0, 3).map((question, index) => (
-                  <button key={index} onClick={() => handleSuggestedQuestion(question)} className="w-full text-left text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors">
+                  <button
+                    key={index}
+                    onClick={() => handleSuggestedQuestion(question)}
+                    className="w-full text-left text-xs bg-gray-100 hover:bg-blue-50 hover:text-blue-600 px-3 py-2 rounded-lg transition-colors border border-transparent hover:border-blue-200"
+                  >
                     {question}
                   </button>
                 ))}
@@ -240,7 +259,7 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
           )}
 
           {/* Input Area */}
-          <div className="p-4 border-t border-gray-200 bg-white rounded-b-lg">
+          <div className="p-4 border-t border-gray-100 bg-white">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -249,17 +268,22 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
                 onKeyPress={handleKeyPress}
                 placeholder="Ask a question..."
                 disabled={loading || aiServiceStatus === 'offline'}
-                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 transition-all"
               />
               <button
                 onClick={handleSend}
                 disabled={loading || !input.trim() || aiServiceStatus === 'offline'}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2.5 rounded-xl transition-all disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed flex items-center justify-center min-w-[48px]"
               >
-                {loading ? '...' : '📤'}
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </button>
             </div>
-            {aiServiceStatus === 'offline' && <p className="text-xs text-red-600 mt-2">⚠️ AI service is offline. Please start the AI service first.</p>}
+            {aiServiceStatus === 'offline' && (
+              <div className="flex items-center gap-2 text-xs text-red-600 mt-2 bg-red-50 px-3 py-2 rounded-lg">
+                <AlertCircle className="w-3.5 h-3.5" />
+                <span>AI service is offline. Please start the AI service first.</span>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { productionService } from '../../services';
-import { miningSiteService } from '../../services/locationService';
+import { productionService, operatorService } from '../../services';
+import { miningSiteService, loadingPointService, dumpingPointService, roadSegmentService } from '../../services/locationService';
 import { truckService, excavatorService } from '../../services/equipmentService';
+import { haulingService } from '../../services/haulingService';
+import aiService from '../../services/aiService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
-import { Plus, Edit, Trash2, Eye, Calculator, RefreshCw, Search, ChevronDown } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Calculator, RefreshCw, Search, ChevronDown, Truck, CheckCircle, AlertCircle, Package, MapPin, User, Navigation } from 'lucide-react';
 import {
   calculateLoadingTime,
   calculateTravelTime,
@@ -20,6 +22,16 @@ import {
   formatTime,
 } from '../../utils/productionCalculations';
 
+// Hauling Status Options
+const HAULING_STATUS_OPTIONS = [
+  { value: 'LOADING', label: 'Loading', color: 'bg-blue-100 text-blue-800' },
+  { value: 'HAULING', label: 'Hauling', color: 'bg-yellow-100 text-yellow-800' },
+  { value: 'DUMPING', label: 'Dumping', color: 'bg-orange-100 text-orange-800' },
+  { value: 'RETURNING', label: 'Returning', color: 'bg-purple-100 text-purple-800' },
+  { value: 'COMPLETED', label: 'Completed', color: 'bg-green-100 text-green-800' },
+  { value: 'CANCELLED', label: 'Cancelled', color: 'bg-red-100 text-red-800' },
+];
+
 const ProductionList = () => {
   const [productions, setProductions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +45,10 @@ const ProductionList = () => {
   // Equipment State
   const [trucks, setTrucks] = useState([]);
   const [excavators, setExcavators] = useState([]);
+  const [operators, setOperators] = useState([]);
+  const [loadingPoints, setLoadingPoints] = useState([]);
+  const [dumpingPoints, setDumpingPoints] = useState([]);
+  const [roadSegments, setRoadSegments] = useState([]);
   const [selectedTruckIds, setSelectedTruckIds] = useState([]);
   const [selectedExcavatorIds, setSelectedExcavatorIds] = useState([]);
 
@@ -44,6 +60,20 @@ const ProductionList = () => {
 
   // Hauling Activity Info State - for displaying details of newly created hauling activities
   const [haulingActivityInfo, setHaulingActivityInfo] = useState(null);
+
+  // Related Hauling Activities for Edit mode
+  const [relatedHaulingActivities, setRelatedHaulingActivities] = useState([]);
+  const [loadingHaulingActivities, setLoadingHaulingActivities] = useState(false);
+  const [haulingAchievement, setHaulingAchievement] = useState(null);
+  const [editingHaulingId, setEditingHaulingId] = useState(null);
+  const [haulingEditForm, setHaulingEditForm] = useState({ loadWeight: '', status: '' });
+
+  const [isManualMode, setIsManualMode] = useState(false);
+  const [manualHaulingList, setManualHaulingList] = useState([]);
+  const [filteredRoadSegments, setFilteredRoadSegments] = useState([]);
+  const [filteredLoadingPoints, setFilteredLoadingPoints] = useState([]);
+  const [filteredDumpingPoints, setFilteredDumpingPoints] = useState([]);
+  const [siteAutoFillInfo, setSiteAutoFillInfo] = useState(null);
 
   const [formData, setFormData] = useState({
     recordDate: new Date().toISOString().split('T')[0],
@@ -76,13 +106,26 @@ const ProductionList = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [prodRes, siteRes, truckRes, excRes] = await Promise.all([productionService.getAll({ page: pagination.page, limit: pagination.limit }), miningSiteService.getAll(), truckService.getAll(), excavatorService.getAll()]);
+        const [prodRes, siteRes, truckRes, excRes, opRes, lpRes, dpRes, rsRes] = await Promise.all([
+          productionService.getAll({ page: pagination.page, limit: pagination.limit }),
+          miningSiteService.getAll(),
+          truckService.getAll({ limit: 1000 }),
+          excavatorService.getAll({ limit: 1000 }),
+          operatorService.getAll({ limit: 1000 }),
+          loadingPointService.getAll({ limit: 1000 }),
+          dumpingPointService.getAll({ limit: 1000 }),
+          roadSegmentService.getAll({ limit: 1000 }),
+        ]);
 
         setProductions(prodRes.data || []);
         setPagination((prev) => ({ ...prev, totalPages: prodRes.meta?.totalPages || 1 }));
         setMiningSites(Array.isArray(siteRes.data) ? siteRes.data : []);
         setTrucks(Array.isArray(truckRes.data) ? truckRes.data : []);
         setExcavators(Array.isArray(excRes.data) ? excRes.data : []);
+        setOperators(Array.isArray(opRes.data) ? opRes.data : []);
+        setLoadingPoints(Array.isArray(lpRes.data) ? lpRes.data : []);
+        setDumpingPoints(Array.isArray(dpRes.data) ? dpRes.data : []);
+        setRoadSegments(Array.isArray(rsRes.data) ? rsRes.data : []);
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
@@ -102,7 +145,9 @@ const ProductionList = () => {
           const { recommendation, useHaulingData, haulingAggregated, equipmentAllocation, haulingActivityIds, haulingResult, haulingApplied } = JSON.parse(strategyData);
           const raw = recommendation.raw_data || {};
 
-          // Store hauling activity info for detailed display
+          setIsManualMode(false);
+          setManualHaulingList([]);
+
           if (haulingApplied && haulingResult) {
             setHaulingActivityInfo({
               createdActivities: haulingResult.createdActivities || [],
@@ -115,13 +160,10 @@ const ProductionList = () => {
               strategyObjective: raw.strategy_objective || recommendation.strategy_objective || 'AI Recommended',
             });
           }
-
-          // Check if we should use actual hauling data
           if (useHaulingData && haulingAggregated) {
             console.log('[ProductionList] Using actual hauling data for production creation');
             console.log('[ProductionList] haulingAggregated:', haulingAggregated);
 
-            // Use aggregated data from actual hauling activities
             const totalTonase = parseFloat(haulingAggregated.total_tonase) || 0;
             const totalTrips = parseInt(haulingAggregated.total_trips) || 1;
             const totalDistance = parseFloat(haulingAggregated.total_distance_km) || 0;
@@ -129,40 +171,27 @@ const ProductionList = () => {
             const excavatorsOperating = parseInt(haulingAggregated.excavators_operating) || 1;
             const avgLoadWeight = parseFloat(haulingAggregated.avg_load_weight) || 28.5;
             const shiftValue = haulingAggregated.shift || 'SHIFT_1';
+            const targetWeightPerHauling = parseFloat(haulingAggregated.target_weight_per_hauling) || 30;
 
-            // === ROBUST FUEL CALCULATION ===
-            // If total_fuel_liter is provided and valid, use it
-            // Otherwise, calculate based on distance and fuel consumption rates
             let totalFuel = parseFloat(haulingAggregated.total_fuel_liter) || 0;
             if (totalFuel <= 0 && totalDistance > 0) {
-              // Typical mining truck fuel consumption rates
-              const fuelRateLoaded = 0.8; // L/km when loaded
-              const fuelRateEmpty = 0.4; // L/km when empty
-              const oneWayDistance = totalDistance / (totalTrips * 2);
-              const fuelPerTrip = oneWayDistance * fuelRateLoaded + oneWayDistance * fuelRateEmpty;
-              totalFuel = fuelPerTrip * totalTrips;
+              const calcParams = haulingAggregated.calculation_params || {};
+              const truckFuelRate = parseFloat(calcParams.truck_fuel_rate_lkm) || 1.0;
+              totalFuel = totalDistance * truckFuelRate * 1.3;
               console.log('[ProductionList] Calculated totalFuel from distance:', totalFuel);
             }
 
-            // === ROBUST CYCLE TIME CALCULATION ===
-            // If avg_cycle_time_minutes is provided and valid, use it
-            // Otherwise, calculate based on loading, travel, and dumping times
             let avgCycleTimeMinutes = parseFloat(haulingAggregated.avg_cycle_time_minutes) || 0;
             if (avgCycleTimeMinutes <= 0 && totalDistance > 0) {
-              const oneWayDistance = totalDistance / (totalTrips * 2);
-              // Loading: ~8 min for full load (depends on excavator rate)
+              const oneWayDistance = totalTrips > 0 ? totalDistance / totalTrips / 2 : totalDistance / 2;
               const loadingTime = (avgLoadWeight / 50) * 8;
-              // Travel loaded: assume 20 km/h average speed on mine roads
               const travelTimeLoaded = (oneWayDistance / 20) * 60;
-              // Dumping: typically 3 minutes
               const dumpingTime = 3;
-              // Return empty: assume 30 km/h average speed
               const returnTime = (oneWayDistance / 30) * 60;
               avgCycleTimeMinutes = loadingTime + travelTimeLoaded + dumpingTime + returnTime;
               console.log('[ProductionList] Calculated avgCycleTime from distance:', avgCycleTimeMinutes);
             }
 
-            // === ROBUST UTILIZATION RATE CALCULATION ===
             let utilizationRate = parseFloat(haulingAggregated.utilization_rate_percent) || 0;
             if (utilizationRate <= 0 && avgCycleTimeMinutes > 0) {
               const shiftHours = 8;
@@ -172,29 +201,28 @@ const ProductionList = () => {
               console.log('[ProductionList] Calculated utilizationRate:', utilizationRate);
             }
 
-            // Get equipment IDs from actual hauling data
             if (equipmentAllocation) {
               const truckIds = equipmentAllocation.truck_ids || [];
               const excavatorIds = equipmentAllocation.excavator_ids || [];
 
-              // Filter to match available equipment in state
               const matchingTrucks = trucks.filter((t) => truckIds.includes(t.id));
               const matchingExcavators = excavators.filter((e) => excavatorIds.includes(e.id));
 
+              isAiPopulated.current = true;
+
               setSelectedTruckIds(matchingTrucks.length > 0 ? matchingTrucks.map((t) => t.id) : truckIds.slice(0, trucksOperating));
               setSelectedExcavatorIds(matchingExcavators.length > 0 ? matchingExcavators.map((e) => e.id) : excavatorIds.slice(0, excavatorsOperating));
+            } else {
+              isAiPopulated.current = true;
             }
 
-            const roadDistance = totalTrips > 0 ? totalDistance / totalTrips / 2 : 0;
+            const avgDistancePerTrip = totalTrips > 0 ? totalDistance / totalTrips : totalDistance;
+            const haulDistance = avgDistancePerTrip / 2;
 
-            isAiPopulated.current = true;
-
-            // Store financial breakdown for preview
             if (recommendation.financial_breakdown) {
               setStrategyFinancials(recommendation.financial_breakdown);
             }
 
-            // Build remarks with hauling data source info
             let remarks = `AI Strategy #${recommendation.rank || ''} - ${raw.strategy_objective || recommendation.strategy_objective || 'From Hauling Data'}`;
             remarks += ` | Source: ${haulingActivityIds?.length || totalTrips} hauling activities`;
             if (recommendation.vessel_info?.name) {
@@ -207,7 +235,7 @@ const ProductionList = () => {
               miningSiteId: raw.miningSiteId && miningSites.find((s) => s.id === raw.miningSiteId) ? raw.miningSiteId : miningSites[0]?.id || '',
               targetProduction: totalTonase.toFixed(2),
               actualProduction: totalTonase.toFixed(2),
-              haulDistance: roadDistance.toFixed(2),
+              haulDistance: haulDistance.toFixed(2),
               weatherCondition: haulingAggregated.weatherCondition || 'CERAH',
               roadCondition: haulingAggregated.roadCondition || 'GOOD',
               riskLevel: raw.delay_risk_level || 'LOW',
@@ -232,7 +260,7 @@ const ProductionList = () => {
             setShowModal(true);
 
             sessionStorage.removeItem('selectedStrategy');
-            return; // Exit early, we've handled hauling-based creation
+            return;
           }
 
           // Fallback to simulation-based creation (existing logic)
@@ -262,18 +290,18 @@ const ProductionList = () => {
           const utilizationRate = totalTrips > 0 ? ((totalTrips * avgCycleTimeMinutes) / (8 * 60)) * 100 : 0;
 
           if (truckCount > 0 && excavatorCount > 0) {
-            const availableTrucks = trucks.filter((t) => t.status === 'AVAILABLE' || t.status === 'ACTIVE').slice(0, truckCount);
-            const availableExcavators = excavators.filter((e) => e.status === 'AVAILABLE' || e.status === 'ACTIVE').slice(0, excavatorCount);
+            const availableTrucksForAI = trucks.filter((t) => t.isActive !== false && (t.status === 'IDLE' || t.status === 'STANDBY')).slice(0, truckCount);
+            const availableExcavatorsForAI = excavators.filter((e) => e.isActive !== false && (e.status === 'ACTIVE' || e.status === 'IDLE' || e.status === 'STANDBY')).slice(0, excavatorCount);
 
-            const selectedTrucks = availableTrucks.length > 0 ? availableTrucks : trucks.slice(0, truckCount);
-            const selectedExcavators = availableExcavators.length > 0 ? availableExcavators : excavators.slice(0, excavatorCount);
+            const selectedTrucks = availableTrucksForAI.length > 0 ? availableTrucksForAI : trucks.filter((t) => t.isActive !== false).slice(0, truckCount);
+            const selectedExcavators = availableExcavatorsForAI.length > 0 ? availableExcavatorsForAI : excavators.filter((e) => e.isActive !== false).slice(0, excavatorCount);
+
+            isAiPopulated.current = true;
 
             setSelectedTruckIds(selectedTrucks.map((t) => t.id));
             setSelectedExcavatorIds(selectedExcavators.map((e) => e.id));
 
             const roadDistance = parseFloat(raw.distance_km) || (totalTrips > 0 ? totalDistance / totalTrips / 2 : 0);
-
-            isAiPopulated.current = true;
 
             // Store financial breakdown for preview
             if (recommendation.financial_breakdown) {
@@ -367,6 +395,65 @@ const ProductionList = () => {
     }
   };
 
+  const handleMiningSiteChange = (siteId) => {
+    const siteRoadSegments = roadSegments.filter((rs) => rs.miningSiteId === siteId && rs.isActive !== false);
+    const siteLoadingPoints = loadingPoints.filter((lp) => lp.miningSiteId === siteId && lp.isActive !== false);
+    const siteDumpingPoints = dumpingPoints.filter((dp) => dp.miningSiteId === siteId && dp.isActive !== false);
+
+    setFilteredRoadSegments(siteRoadSegments);
+    setFilteredLoadingPoints(siteLoadingPoints);
+    setFilteredDumpingPoints(siteDumpingPoints);
+
+    let autoFilledData = { miningSiteId: siteId };
+    let autoFillDetails = { roadCount: siteRoadSegments.length, lpCount: siteLoadingPoints.length, dpCount: siteDumpingPoints.length };
+
+    if (siteRoadSegments.length > 0) {
+      const avgDistance = siteRoadSegments.reduce((sum, rs) => sum + (rs.distance || 0), 0) / siteRoadSegments.length;
+      autoFilledData.haulDistance = avgDistance.toFixed(2);
+      autoFillDetails.avgDistance = avgDistance;
+
+      const roadConditionCounts = {};
+      siteRoadSegments.forEach((rs) => {
+        const cond = rs.roadCondition || 'GOOD';
+        roadConditionCounts[cond] = (roadConditionCounts[cond] || 0) + 1;
+      });
+      const dominantRoadCondition = Object.entries(roadConditionCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'GOOD';
+      autoFilledData.roadCondition = dominantRoadCondition;
+      autoFillDetails.roadCondition = dominantRoadCondition;
+
+      const riskMapping = { EXCELLENT: 'LOW', GOOD: 'LOW', FAIR: 'MEDIUM', POOR: 'HIGH', CRITICAL: 'CRITICAL' };
+      autoFilledData.riskLevel = riskMapping[dominantRoadCondition] || 'LOW';
+      autoFillDetails.riskLevel = autoFilledData.riskLevel;
+
+      const weatherByRisk = { LOW: 'CERAH', MEDIUM: 'BERAWAN', HIGH: 'HUJAN_RINGAN', CRITICAL: 'HUJAN_SEDANG' };
+      autoFilledData.weatherCondition = weatherByRisk[autoFilledData.riskLevel] || 'CERAH';
+      autoFillDetails.weatherCondition = autoFilledData.weatherCondition;
+    }
+
+    setSiteAutoFillInfo(autoFillDetails);
+    setFormData((prev) => ({ ...prev, ...autoFilledData }));
+
+    if (manualHaulingList.length > 0) {
+      const defaultRoad = siteRoadSegments[0];
+      const defaultLP = siteLoadingPoints[0];
+      const defaultDP = siteDumpingPoints[0];
+
+      setManualHaulingList((prev) =>
+        prev.map((h) => ({
+          ...h,
+          roadSegmentId: defaultRoad?.id || '',
+          roadSegmentName: defaultRoad?.name || 'N/A',
+          roadSegmentDistance: defaultRoad?.distance || h.distance,
+          distance: defaultRoad?.distance || h.distance,
+          loadingPointId: defaultLP?.id || h.loadingPointId,
+          loadingPointName: defaultLP?.name || h.loadingPointName,
+          dumpingPointId: defaultDP?.id || h.dumpingPointId,
+          dumpingPointName: defaultDP?.name || h.dumpingPointName,
+        }))
+      );
+    }
+  };
+
   const calculateMetrics = () => {
     if (isAiPopulated.current) {
       isAiPopulated.current = false;
@@ -427,7 +514,11 @@ const ProductionList = () => {
     setTruckSearch('');
     setExcavatorSearch('');
     setStrategyFinancials(null);
-    setHaulingActivityInfo(null); // Reset hauling info for manual creation
+    setHaulingActivityInfo(null);
+    setFilteredRoadSegments([]);
+    setFilteredLoadingPoints([]);
+    setFilteredDumpingPoints([]);
+    setSiteAutoFillInfo(null);
     setFormData({
       recordDate: new Date().toISOString().split('T')[0],
       shift: 'SHIFT_1',
@@ -454,15 +545,208 @@ const ProductionList = () => {
       downtimeHours: '',
       remarks: '',
     });
+    setIsManualMode(true);
+    setManualHaulingList([]);
     setShowModal(true);
   };
 
-  const handleEdit = (production) => {
+  const handleAddManualHauling = () => {
+    if (selectedTruckIds.length === 0 || selectedExcavatorIds.length === 0) {
+      alert('Pilih minimal 1 truck dan 1 excavator untuk menambah hauling');
+      return;
+    }
+
+    if (!formData.miningSiteId) {
+      alert('Pilih Mining Site terlebih dahulu untuk menambah hauling');
+      return;
+    }
+
+    const activeLoadingPoints = filteredLoadingPoints.length > 0 ? filteredLoadingPoints : loadingPoints.filter((lp) => lp.isActive !== false);
+    const activeDumpingPoints = filteredDumpingPoints.length > 0 ? filteredDumpingPoints : dumpingPoints.filter((dp) => dp.isActive !== false);
+    const activeRoadSegments = filteredRoadSegments.length > 0 ? filteredRoadSegments : roadSegments.filter((rs) => rs.isActive !== false);
+
+    if (activeLoadingPoints.length === 0) {
+      alert('Tidak ada loading point aktif untuk site ini. Silakan pilih site lain atau tambahkan loading point.');
+      return;
+    }
+    if (activeDumpingPoints.length === 0) {
+      alert('Tidak ada dumping point aktif untuk site ini. Silakan pilih site lain atau tambahkan dumping point.');
+      return;
+    }
+    if (operators.length === 0) {
+      alert('Tidak ada operator tersedia. Silakan tambahkan operator terlebih dahulu.');
+      return;
+    }
+
+    const usedTruckIds = manualHaulingList.map((h) => h.truckId);
+    const usedExcavatorIds = manualHaulingList.map((h) => h.excavatorId);
+
+    const availableTruckId = selectedTruckIds.find((id) => !usedTruckIds.includes(id)) || selectedTruckIds[manualHaulingList.length % selectedTruckIds.length];
+    const availableExcavatorId = selectedExcavatorIds.find((id) => !usedExcavatorIds.includes(id)) || selectedExcavatorIds[manualHaulingList.length % selectedExcavatorIds.length];
+
+    const selectedTruck = trucks.find((t) => t.id === availableTruckId);
+    const selectedExcavator = excavators.find((e) => e.id === availableExcavatorId);
+
+    const shiftMapping = { SHIFT_1: 'SHIFT_1', PAGI: 'SHIFT_1', SHIFT_2: 'SHIFT_2', SIANG: 'SHIFT_2', SHIFT_3: 'SHIFT_3', MALAM: 'SHIFT_3' };
+    const currentShift = shiftMapping[formData.shift] || 'SHIFT_1';
+    const shiftOperators = operators.filter((op) => op.shift === currentShift && op.status === 'ACTIVE');
+    const activeOperators = shiftOperators.length > 0 ? shiftOperators : operators.filter((op) => op.status === 'ACTIVE');
+    const defaultOperator = activeOperators[manualHaulingList.length % Math.max(activeOperators.length, 1)] || operators[0];
+
+    const defaultLoadingPoint = activeLoadingPoints[manualHaulingList.length % activeLoadingPoints.length];
+    const defaultDumpingPoint = activeDumpingPoints[manualHaulingList.length % activeDumpingPoints.length];
+    const defaultRoadSegment = activeRoadSegments[manualHaulingList.length % Math.max(activeRoadSegments.length, 1)];
+
+    const numHaulings = manualHaulingList.length + 1;
+    const targetWeight = formData.targetProduction ? parseFloat(formData.targetProduction) / numHaulings : 30;
+
+    const newHauling = {
+      tempId: Date.now(),
+      truckId: availableTruckId,
+      excavatorId: availableExcavatorId,
+      operatorId: defaultOperator?.id || '',
+      loadingPointId: defaultLoadingPoint?.id || '',
+      dumpingPointId: defaultDumpingPoint?.id || '',
+      roadSegmentId: defaultRoadSegment?.id || '',
+      truckCode: selectedTruck?.code || 'N/A',
+      truckCapacity: selectedTruck?.capacity || 0,
+      excavatorCode: selectedExcavator?.code || 'N/A',
+      excavatorModel: selectedExcavator?.model || '',
+      operatorName: defaultOperator?.user?.fullName || defaultOperator?.employeeNumber || 'N/A',
+      loadingPointName: defaultLoadingPoint?.name || 'N/A',
+      dumpingPointName: defaultDumpingPoint?.name || 'N/A',
+      roadSegmentName: defaultRoadSegment?.name || 'N/A',
+      roadSegmentDistance: defaultRoadSegment?.distance || parseFloat(formData.haulDistance) || 3,
+      loadWeight: '',
+      targetWeight: targetWeight,
+      status: 'LOADING',
+      distance: defaultRoadSegment?.distance || parseFloat(formData.haulDistance) || 3,
+    };
+
+    console.log('[Production] Adding manual hauling:', newHauling);
+
+    setManualHaulingList((prev) => {
+      const updated = [...prev, newHauling];
+      const newTargetPerHauling = formData.targetProduction ? parseFloat(formData.targetProduction) / updated.length : 30;
+      return updated.map((h) => ({ ...h, targetWeight: newTargetPerHauling }));
+    });
+  };
+
+  const handleRemoveManualHauling = async (tempId) => {
+    const haulingToRemove = manualHaulingList.find((h) => h.tempId === tempId);
+
+    if (haulingToRemove?.isExisting && haulingToRemove.id) {
+      if (!window.confirm('Hapus hauling activity ini dari database? Tindakan ini tidak dapat dibatalkan.')) {
+        return;
+      }
+
+      try {
+        await haulingService.delete(haulingToRemove.id);
+        setRelatedHaulingActivities((prev) => prev.filter((a) => a.id !== haulingToRemove.id));
+      } catch (error) {
+        console.error('Failed to delete hauling activity:', error);
+        alert('Gagal menghapus hauling activity: ' + (error.response?.data?.message || error.message));
+        return;
+      }
+    }
+
+    setManualHaulingList((prev) => {
+      const filtered = prev.filter((h) => h.tempId !== tempId);
+      if (filtered.length > 0 && formData.targetProduction) {
+        const newTargetPerHauling = parseFloat(formData.targetProduction) / filtered.length;
+        return filtered.map((h) => ({ ...h, targetWeight: h.isExisting ? h.targetWeight : newTargetPerHauling }));
+      }
+      return filtered;
+    });
+  };
+
+  const handleUpdateManualHauling = async (tempId, field, value) => {
+    const hauling = manualHaulingList.find((h) => h.tempId === tempId);
+
+    if (hauling?.isExisting && hauling.id && (field === 'loadWeight' || field === 'status')) {
+      try {
+        const updateData = {};
+        if (field === 'loadWeight') {
+          updateData.loadWeight = value !== '' ? parseFloat(value) : null;
+        } else if (field === 'status') {
+          updateData.status = value;
+        }
+        await haulingService.quickUpdate(hauling.id, updateData);
+      } catch (error) {
+        console.error('Failed to update hauling activity:', error);
+      }
+    }
+
+    setManualHaulingList((prev) =>
+      prev.map((h) => {
+        if (h.tempId !== tempId) return h;
+
+        const updated = { ...h, [field]: value };
+
+        if (field === 'truckId') {
+          const truck = trucks.find((t) => t.id === value);
+          updated.truckCode = truck?.code || 'N/A';
+          updated.truckCapacity = truck?.capacity || 0;
+        } else if (field === 'excavatorId') {
+          const exc = excavators.find((e) => e.id === value);
+          updated.excavatorCode = exc?.code || 'N/A';
+          updated.excavatorModel = exc?.model || '';
+        } else if (field === 'operatorId') {
+          const op = operators.find((o) => o.id === value);
+          updated.operatorName = op?.user?.fullName || op?.employeeNumber || 'N/A';
+        } else if (field === 'loadingPointId') {
+          const lp = loadingPoints.find((l) => l.id === value);
+          updated.loadingPointName = lp?.name || 'N/A';
+        } else if (field === 'dumpingPointId') {
+          const dp = dumpingPoints.find((d) => d.id === value);
+          updated.dumpingPointName = dp?.name || 'N/A';
+        } else if (field === 'roadSegmentId') {
+          const rs = roadSegments.find((r) => r.id === value);
+          updated.roadSegmentName = rs?.name || 'N/A';
+          updated.roadSegmentDistance = rs?.distance || updated.distance;
+          updated.distance = rs?.distance || updated.distance;
+        }
+
+        return updated;
+      })
+    );
+  };
+
+  const handleEdit = async (production) => {
     setModalMode('edit');
     setSelectedProduction(production);
-    setHaulingActivityInfo(null); // Reset hauling info for edit mode
-    // Note: In a real app, we'd need to fetch the specific equipment allocated to this production
-    // For now, we'll just populate the form fields
+    setHaulingActivityInfo(null);
+    setRelatedHaulingActivities([]);
+    setHaulingAchievement(null);
+    setEditingHaulingId(null);
+    setIsManualMode(true);
+    setManualHaulingList([]);
+    setSiteAutoFillInfo(null);
+
+    if (production.miningSiteId) {
+      const siteRoadSegments = roadSegments.filter((rs) => rs.miningSiteId === production.miningSiteId && rs.isActive !== false);
+      const siteLoadingPoints = loadingPoints.filter((lp) => lp.miningSiteId === production.miningSiteId && lp.isActive !== false);
+      const siteDumpingPoints = dumpingPoints.filter((dp) => dp.miningSiteId === production.miningSiteId && dp.isActive !== false);
+      setFilteredRoadSegments(siteRoadSegments);
+      setFilteredLoadingPoints(siteLoadingPoints);
+      setFilteredDumpingPoints(siteDumpingPoints);
+    } else {
+      setFilteredRoadSegments([]);
+      setFilteredLoadingPoints([]);
+      setFilteredDumpingPoints([]);
+    }
+
+    if (production.equipmentAllocation) {
+      const allocation = production.equipmentAllocation;
+      const truckIds = allocation.truck_ids || [];
+      const excavatorIds = allocation.excavator_ids || [];
+      setSelectedTruckIds(truckIds);
+      setSelectedExcavatorIds(excavatorIds);
+    } else {
+      setSelectedTruckIds([]);
+      setSelectedExcavatorIds([]);
+    }
+
     setFormData({
       recordDate: new Date(production.recordDate).toISOString().split('T')[0],
       shift: production.shift,
@@ -470,6 +754,9 @@ const ProductionList = () => {
       targetProduction: production.targetProduction || '',
       actualProduction: production.actualProduction || '',
       haulDistance: production.totalDistance && production.totalTrips ? (production.totalDistance / production.totalTrips / 2).toFixed(2) : '',
+      weatherCondition: production.weatherCondition || 'CERAH',
+      roadCondition: production.roadCondition || 'GOOD',
+      riskLevel: production.riskLevel || 'LOW',
       avgCalori: production.avgCalori || '',
       avgAshContent: production.avgAshContent || '',
       avgSulfur: production.avgSulfur || '',
@@ -487,6 +774,120 @@ const ProductionList = () => {
       remarks: production.remarks || '',
     });
     setShowModal(true);
+
+    if (production.equipmentAllocation) {
+      const allocation = production.equipmentAllocation;
+      const haulingActivityIds = allocation.hauling_activity_ids || [];
+
+      if (haulingActivityIds.length > 0) {
+        setLoadingHaulingActivities(true);
+        try {
+          const response = await haulingService.getByIds(haulingActivityIds);
+
+          if (response.data && response.data.length > 0) {
+            setRelatedHaulingActivities(response.data);
+
+            const existingHaulings = response.data.map((ha) => ({
+              tempId: ha.id,
+              id: ha.id,
+              isExisting: true,
+              truckId: ha.truckId,
+              excavatorId: ha.excavatorId,
+              operatorId: ha.operatorId,
+              loadingPointId: ha.loadingPointId,
+              dumpingPointId: ha.dumpingPointId,
+              roadSegmentId: ha.roadSegmentId || '',
+              truckCode: ha.truck?.code || 'N/A',
+              truckCapacity: ha.truck?.capacity || 0,
+              excavatorCode: ha.excavator?.code || 'N/A',
+              excavatorModel: ha.excavator?.name || '',
+              operatorName: ha.operator?.user?.fullName || ha.operator?.employeeNumber || 'N/A',
+              loadingPointName: ha.loadingPoint?.name || 'N/A',
+              dumpingPointName: ha.dumpingPoint?.name || 'N/A',
+              roadSegmentName: ha.roadSegment?.name || 'N/A',
+              roadSegmentDistance: ha.roadSegment?.distance || ha.distance || 3,
+              loadWeight: ha.loadWeight !== null ? ha.loadWeight.toString() : '',
+              targetWeight: ha.targetWeight || 30,
+              status: ha.status || 'LOADING',
+              distance: ha.distance || 3,
+              activityNumber: ha.activityNumber,
+            }));
+            setManualHaulingList(existingHaulings);
+
+            const truckIds = allocation.truck_ids || [];
+            const excavatorIds = allocation.excavator_ids || [];
+            const recordDate = new Date(production.recordDate);
+            const startDate = new Date(recordDate);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(recordDate);
+            endDate.setHours(23, 59, 59, 999);
+
+            const achievementRes = await haulingService.calculateAchievement(truckIds, excavatorIds, startDate.toISOString(), endDate.toISOString());
+            if (achievementRes.data) {
+              setHaulingAchievement(achievementRes.data);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch related hauling activities:', error);
+        } finally {
+          setLoadingHaulingActivities(false);
+        }
+      }
+    }
+  };
+
+  // Handle quick edit for hauling activity
+  const handleStartHaulingEdit = (activity) => {
+    setEditingHaulingId(activity.id);
+    setHaulingEditForm({
+      loadWeight: activity.loadWeight !== null ? activity.loadWeight.toString() : '',
+      status: activity.status,
+    });
+  };
+
+  const handleCancelHaulingEdit = () => {
+    setEditingHaulingId(null);
+    setHaulingEditForm({ loadWeight: '', status: '' });
+  };
+
+  const handleSaveHaulingEdit = async (activityId) => {
+    try {
+      const updateData = {};
+      if (haulingEditForm.loadWeight !== '') {
+        updateData.loadWeight = parseFloat(haulingEditForm.loadWeight);
+      }
+      if (haulingEditForm.status) {
+        updateData.status = haulingEditForm.status;
+      }
+
+      const response = await haulingService.quickUpdate(activityId, updateData);
+
+      if (response.data) {
+        // Update local state
+        setRelatedHaulingActivities((prev) => prev.map((a) => (a.id === activityId ? response.data : a)));
+
+        // Recalculate achievement
+        if (selectedProduction?.equipmentAllocation) {
+          const allocation = selectedProduction.equipmentAllocation;
+          const recordDate = new Date(selectedProduction.recordDate);
+          const startDate = new Date(recordDate);
+          startDate.setHours(0, 0, 0, 0);
+          const endDate = new Date(recordDate);
+          endDate.setHours(23, 59, 59, 999);
+
+          const achievementRes = await haulingService.calculateAchievement(allocation.truck_ids || [], allocation.excavator_ids || [], startDate.toISOString(), endDate.toISOString());
+          if (achievementRes.data) {
+            setHaulingAchievement(achievementRes.data);
+          }
+        }
+
+        setEditingHaulingId(null);
+        setHaulingEditForm({ loadWeight: '', status: '' });
+      }
+    } catch (error) {
+      console.error('Failed to update hauling activity:', error);
+      alert('Gagal mengupdate hauling activity');
+    }
   };
 
   const handleView = (production) => {
@@ -498,6 +899,105 @@ const ProductionList = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      let createdHaulingActivityIds = [];
+      let existingHaulingActivityIds = [];
+      let manualHaulingTotalFuel = 0;
+      let manualHaulingTotalDistance = 0;
+      let manualHaulingTotalTrips = 0;
+
+      if (isManualMode && manualHaulingList.length > 0) {
+        const existingHaulings = manualHaulingList.filter((h) => h.isExisting && h.id);
+        const newHaulings = manualHaulingList.filter((h) => !h.isExisting);
+
+        existingHaulingActivityIds = existingHaulings.map((h) => h.id);
+
+        console.log('[Production] Existing haulings:', existingHaulings.length, ', New haulings:', newHaulings.length);
+
+        const invalidHaulings = newHaulings.filter((h) => !h.truckId || !h.excavatorId || !h.operatorId || !h.loadingPointId || !h.dumpingPointId);
+
+        if (invalidHaulings.length > 0) {
+          alert(`Ada ${invalidHaulings.length} hauling baru yang belum lengkap data-nya (Truck, Excavator, Operator, Loading Point, Dumping Point wajib diisi)`);
+          return;
+        }
+
+        const newTruckIds = newHaulings.map((h) => h.truckId);
+        const duplicateTrucks = newTruckIds.filter((id, idx) => newTruckIds.indexOf(id) !== idx);
+        if (duplicateTrucks.length > 0) {
+          const duplicateTruckCodes = [...new Set(duplicateTrucks)].map((id) => trucks.find((t) => t.id === id)?.code || id).join(', ');
+          alert(`Truck ${duplicateTruckCodes} dipilih lebih dari sekali. Setiap truck hanya boleh digunakan untuk satu hauling activity dalam batch yang sama.`);
+          return;
+        }
+
+        manualHaulingTotalTrips = manualHaulingList.length;
+
+        for (const hauling of manualHaulingList) {
+          manualHaulingTotalDistance += (parseFloat(hauling.distance) || 3) * 2;
+        }
+
+        if (newHaulings.length > 0) {
+          try {
+            const results = [];
+            for (let index = 0; index < newHaulings.length; index++) {
+              const hauling = newHaulings[index];
+              const shiftValue = formData.shift === 'PAGI' ? 'SHIFT_1' : formData.shift === 'SIANG' ? 'SHIFT_2' : formData.shift === 'MALAM' ? 'SHIFT_3' : formData.shift;
+
+              const haulingPayload = {
+                truckId: hauling.truckId,
+                excavatorId: hauling.excavatorId,
+                operatorId: hauling.operatorId,
+                loadingPointId: hauling.loadingPointId,
+                dumpingPointId: hauling.dumpingPointId,
+                shift: shiftValue,
+                targetWeight: parseFloat(hauling.targetWeight) || 30,
+                distance: parseFloat(hauling.distance) || 3,
+              };
+
+              if (hauling.roadSegmentId) {
+                haulingPayload.roadSegmentId = hauling.roadSegmentId;
+              }
+              if (hauling.loadWeight && parseFloat(hauling.loadWeight) > 0) {
+                haulingPayload.loadWeight = parseFloat(hauling.loadWeight);
+              }
+              if (hauling.status) {
+                haulingPayload.status = hauling.status;
+              }
+
+              console.log(`[Production] Creating new hauling #${index + 1}:`, haulingPayload);
+              const result = await haulingService.create(haulingPayload);
+              results.push(result);
+            }
+
+            console.log('[Production] New hauling activities created:', results);
+
+            results.forEach((res) => {
+              const activityData = res?.data || res;
+              if (activityData?.id) {
+                createdHaulingActivityIds.push(activityData.id);
+                manualHaulingTotalFuel += parseFloat(activityData.fuelConsumed) || 0;
+              }
+            });
+          } catch (haulingError) {
+            console.error('[Production] Failed to create hauling activities:', haulingError);
+            const errorMsg = haulingError.response?.data?.message || haulingError.message || 'Unknown error';
+            alert(`Gagal membuat hauling activities: ${errorMsg}\n\nProduction record tidak akan disimpan.`);
+            return;
+          }
+        }
+
+        for (const hauling of existingHaulings) {
+          if (hauling.loadWeight && parseFloat(hauling.loadWeight) > 0) {
+            try {
+              await haulingService.quickUpdate(hauling.id, {
+                loadWeight: parseFloat(hauling.loadWeight),
+                status: hauling.status,
+              });
+            } catch (error) {
+              console.error('Failed to update existing hauling:', error);
+            }
+          }
+        }
+      }
+
       const payload = {
         recordDate: `${formData.recordDate}T00:00:00.000Z`,
         shift: formData.shift,
@@ -506,7 +1006,6 @@ const ProductionList = () => {
         actualProduction: parseFloat(formData.actualProduction),
       };
 
-      // Optional fields
       const fields = [
         'avgCalori',
         'avgAshContent',
@@ -531,8 +1030,32 @@ const ProductionList = () => {
         }
       });
 
-      // Add equipment allocation with selected truck and excavator IDs
-      if (selectedTruckIds.length > 0 || selectedExcavatorIds.length > 0) {
+      if (isManualMode && manualHaulingList.length > 0) {
+        payload.totalTrips = manualHaulingTotalTrips;
+        payload.totalDistance = manualHaulingTotalDistance;
+        if (manualHaulingTotalFuel > 0) {
+          payload.totalFuel = manualHaulingTotalFuel;
+        }
+
+        const allHaulingIds = [...existingHaulingActivityIds, ...createdHaulingActivityIds];
+
+        payload.equipmentAllocation = {
+          truck_ids: [...new Set(manualHaulingList.map((h) => h.truckId))],
+          excavator_ids: [...new Set(manualHaulingList.map((h) => h.excavatorId))],
+          operator_ids: [...new Set(manualHaulingList.map((h) => h.operatorId).filter(Boolean))],
+          truck_count: new Set(manualHaulingList.map((h) => h.truckId)).size,
+          excavator_count: new Set(manualHaulingList.map((h) => h.excavatorId)).size,
+          hauling_activity_ids: allHaulingIds,
+          created_from: modalMode === 'edit' ? 'manual_edit' : 'manual',
+        };
+
+        payload.trucksOperating = new Set(manualHaulingList.map((h) => h.truckId)).size;
+        payload.excavatorsOperating = new Set(manualHaulingList.map((h) => h.excavatorId)).size;
+
+        if (modalMode === 'create') {
+          payload.remarks = `Manual hauling: ${manualHaulingList.length} trips | IDs: ${allHaulingIds.slice(0, 3).join(', ')}${allHaulingIds.length > 3 ? '...' : ''}`;
+        }
+      } else if (selectedTruckIds.length > 0 || selectedExcavatorIds.length > 0) {
         payload.equipmentAllocation = {
           truck_ids: selectedTruckIds,
           excavator_ids: selectedExcavatorIds,
@@ -576,9 +1099,13 @@ const ProductionList = () => {
     setSelectedExcavatorIds((prev) => (prev.includes(id) ? prev.filter((eid) => eid !== id) : [...prev, id]));
   };
 
-  const filteredTrucks = trucks.filter((truck) => truck.code.toLowerCase().includes(truckSearch.toLowerCase()) || truck.model?.toLowerCase().includes(truckSearch.toLowerCase()));
+  const availableTrucks = trucks.filter((truck) => truck.isActive !== false && (truck.status === 'IDLE' || truck.status === 'STANDBY' || selectedTruckIds.includes(truck.id)));
 
-  const filteredExcavators = excavators.filter((exc) => exc.code.toLowerCase().includes(excavatorSearch.toLowerCase()) || exc.model?.toLowerCase().includes(excavatorSearch.toLowerCase()));
+  const availableExcavators = excavators.filter((exc) => exc.isActive !== false && (exc.status === 'ACTIVE' || exc.status === 'IDLE' || exc.status === 'STANDBY' || selectedExcavatorIds.includes(exc.id)));
+
+  const filteredTrucks = availableTrucks.filter((truck) => truck.code.toLowerCase().includes(truckSearch.toLowerCase()) || truck.model?.toLowerCase().includes(truckSearch.toLowerCase()));
+
+  const filteredExcavators = availableExcavators.filter((exc) => exc.code.toLowerCase().includes(excavatorSearch.toLowerCase()) || exc.model?.toLowerCase().includes(excavatorSearch.toLowerCase()));
 
   if (loading) return <LoadingSpinner fullScreen />;
 
@@ -617,6 +1144,7 @@ const ProductionList = () => {
         <table className="data-table">
           <thead className="bg-gray-50">
             <tr>
+              <th className="table-header">ID</th>
               <th className="table-header">Date</th>
               <th className="table-header">Shift</th>
               <th className="table-header">Mining Site</th>
@@ -628,8 +1156,20 @@ const ProductionList = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
+            {productions.length === 0 && (
+              <tr>
+                <td colSpan="9" className="table-cell text-center text-gray-500 py-8">
+                  No production records found. Click "Add Production Record" to create one.
+                </td>
+              </tr>
+            )}
             {productions.map((production) => (
               <tr key={production.id}>
+                <td className="table-cell">
+                  <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded" title={production.id}>
+                    {production.id.slice(0, 12)}...
+                  </span>
+                </td>
                 <td className="table-cell">{new Date(production.recordDate).toLocaleDateString()}</td>
                 <td className="table-cell">{production.shift}</td>
                 <td className="table-cell">{production.miningSite?.name || '-'}</td>
@@ -741,7 +1281,16 @@ const ProductionList = () => {
                         <span className="text-xs text-gray-500">km Distance</span>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-orange-600">{parseFloat(haulingActivityInfo.aggregatedData.total_fuel_liter || 0).toFixed(1)}</p>
+                        <p className="text-lg font-bold text-orange-600">
+                          {(() => {
+                            const fuel = parseFloat(haulingActivityInfo.aggregatedData.total_fuel_liter || 0);
+                            if (fuel > 0) return fuel.toFixed(1);
+                            const dist = parseFloat(haulingActivityInfo.aggregatedData.total_distance_km || 0);
+                            const calcParams = haulingActivityInfo.aggregatedData.calculation_params || {};
+                            const fuelRate = parseFloat(calcParams.truck_fuel_rate_lkm) || 1.0;
+                            return (dist * fuelRate * 1.3).toFixed(1);
+                          })()}
+                        </p>
                         <span className="text-xs text-gray-500">L Fuel</span>
                       </div>
                       <div>
@@ -754,7 +1303,266 @@ const ProductionList = () => {
               </div>
             )}
 
-            {/* Basic Info */}
+            {/* Hauling Activities Section - For Edit Mode (Achievement Info) */}
+            {modalMode === 'edit' && haulingAchievement && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-blue-800 text-sm flex items-center">
+                    <Package size={16} className="mr-2" />
+                    Hauling Achievement
+                  </h4>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-center">
+                      <span className={`text-xl font-bold ${haulingAchievement.achievement >= 100 ? 'text-green-600' : 'text-orange-600'}`}>{haulingAchievement.achievement.toFixed(1)}%</span>
+                      <p className="text-xs text-gray-500">Achievement</p>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-lg font-semibold text-blue-600">
+                        {haulingAchievement.completedCount}/{haulingAchievement.totalCount}
+                      </span>
+                      <p className="text-xs text-gray-500">Completed</p>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-lg font-semibold text-green-600">{haulingAchievement.totalLoadWeight?.toFixed(1) || 0}</span>
+                      <p className="text-xs text-gray-500">ton Loaded</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isManualMode && (
+              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-semibold text-purple-800 text-lg flex items-center">
+                    <Package size={20} className="mr-2" />
+                    {modalMode === 'edit' ? 'Edit Hauling Activities' : 'Manual Hauling Activities'} ({manualHaulingList.length})
+                  </h4>
+                  <button type="button" onClick={handleAddManualHauling} className="text-sm bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 flex items-center">
+                    <Plus size={14} className="mr-1" /> Add Hauling
+                  </button>
+                </div>
+
+                {manualHaulingList.length > 0 ? (
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {manualHaulingList.map((hauling, idx) => (
+                      <div key={hauling.tempId} className={`bg-white rounded-lg border p-4 shadow-sm ${hauling.isExisting ? 'border-blue-300' : 'border-purple-200'}`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${hauling.isExisting ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                              {hauling.isExisting ? `Existing #${idx + 1}` : `New #${idx + 1}`}
+                            </span>
+                            {hauling.activityNumber && <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-mono">{hauling.activityNumber}</span>}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveManualHauling(hauling.tempId)}
+                            className={`p-1 rounded ${hauling.isExisting ? 'text-red-600 hover:bg-red-50' : 'text-gray-500 hover:bg-gray-50'}`}
+                            title={hauling.isExisting ? 'Delete from database' : 'Remove'}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div>
+                            <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                              <Truck size={12} className="mr-1" /> Truck
+                            </label>
+                            <select
+                              value={hauling.truckId}
+                              onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'truckId', e.target.value)}
+                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 ${hauling.isExisting ? 'bg-gray-100' : ''}`}
+                              disabled={hauling.isExisting}
+                            >
+                              <option value="">Select Truck</option>
+                              {trucks
+                                .filter((t) => selectedTruckIds.includes(t.id) || t.id === hauling.truckId)
+                                .map((truck) => (
+                                  <option key={truck.id} value={truck.id}>
+                                    {truck.code} - {truck.name || truck.model} ({truck.capacity}t)
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Excavator</label>
+                            <select
+                              value={hauling.excavatorId}
+                              onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'excavatorId', e.target.value)}
+                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 ${hauling.isExisting ? 'bg-gray-100' : ''}`}
+                              disabled={hauling.isExisting}
+                            >
+                              <option value="">Select Excavator</option>
+                              {excavators
+                                .filter((e) => selectedExcavatorIds.includes(e.id) || e.id === hauling.excavatorId)
+                                .map((exc) => (
+                                  <option key={exc.id} value={exc.id}>
+                                    {exc.code} - {exc.model} ({exc.productionRate}t/m)
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div>
+                            <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                              <User size={12} className="mr-1" /> Operator
+                            </label>
+                            <select
+                              value={hauling.operatorId}
+                              onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'operatorId', e.target.value)}
+                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 ${hauling.isExisting ? 'bg-gray-100' : ''}`}
+                              disabled={hauling.isExisting}
+                            >
+                              <option value="">Select Operator</option>
+                              {operators
+                                .filter((op) => op.status === 'ACTIVE')
+                                .map((op) => (
+                                  <option key={op.id} value={op.id}>
+                                    {op.employeeNumber} - {op.user?.fullName || 'N/A'} ({op.shift})
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                              <Navigation size={12} className="mr-1" /> Road Segment {filteredRoadSegments.length > 0 && <span className="text-xs text-blue-500 ml-1">({filteredRoadSegments.length} for site)</span>}
+                            </label>
+                            <select
+                              value={hauling.roadSegmentId}
+                              onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'roadSegmentId', e.target.value)}
+                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 ${filteredRoadSegments.length > 0 ? 'bg-blue-50 border-blue-200' : ''}`}
+                            >
+                              <option value="">Select Road</option>
+                              {(filteredRoadSegments.length > 0 ? filteredRoadSegments : roadSegments.filter((rs) => rs.isActive !== false)).map((rs) => (
+                                <option key={rs.id} value={rs.id}>
+                                  {rs.code} - {rs.name} ({rs.distance?.toFixed(2)}km) [{rs.roadCondition}]
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div>
+                            <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                              <MapPin size={12} className="mr-1 text-green-600" /> Loading Point {filteredLoadingPoints.length > 0 && <span className="text-xs text-green-500 ml-1">({filteredLoadingPoints.length} for site)</span>}
+                            </label>
+                            <select
+                              value={hauling.loadingPointId}
+                              onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'loadingPointId', e.target.value)}
+                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 ${filteredLoadingPoints.length > 0 ? 'bg-green-50 border-green-200' : ''}`}
+                            >
+                              <option value="">Select Loading Point</option>
+                              {(filteredLoadingPoints.length > 0 ? filteredLoadingPoints : loadingPoints.filter((lp) => lp.isActive !== false)).map((lp) => (
+                                <option key={lp.id} value={lp.id}>
+                                  {lp.code} - {lp.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                              <MapPin size={12} className="mr-1 text-red-600" /> Dumping Point {filteredDumpingPoints.length > 0 && <span className="text-xs text-orange-500 ml-1">({filteredDumpingPoints.length} for site)</span>}
+                            </label>
+                            <select
+                              value={hauling.dumpingPointId}
+                              onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'dumpingPointId', e.target.value)}
+                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 ${filteredDumpingPoints.length > 0 ? 'bg-orange-50 border-orange-200' : ''}`}
+                            >
+                              <option value="">Select Dumping Point</option>
+                              {(filteredDumpingPoints.length > 0 ? filteredDumpingPoints : dumpingPoints.filter((dp) => dp.isActive !== false)).map((dp) => (
+                                <option key={dp.id} value={dp.id}>
+                                  {dp.code} - {dp.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Target (ton)</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={hauling.targetWeight?.toFixed?.(1) || hauling.targetWeight || ''}
+                              onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'targetWeight', parseFloat(e.target.value) || 0)}
+                              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 bg-gray-50"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Load (ton)</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              placeholder="Actual load"
+                              value={hauling.loadWeight}
+                              onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'loadWeight', e.target.value)}
+                              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Distance (km)</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={hauling.distance?.toFixed?.(2) || hauling.distance || ''}
+                              onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'distance', parseFloat(e.target.value) || 0)}
+                              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 bg-gray-50"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                            <select value={hauling.status} onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'status', e.target.value)} className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500">
+                              {HAULING_STATUS_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Package size={40} className="mx-auto mb-3 text-gray-300" />
+                    <p className="font-medium">Belum ada hauling ditambahkan</p>
+                    <p className="text-xs mt-1">Pilih truck & excavator di atas, lalu klik "Add Hauling"</p>
+                  </div>
+                )}
+
+                <div className="mt-4 pt-3 border-t border-purple-200">
+                  <p className="text-xs text-purple-700">
+                    <strong>Note:</strong>{' '}
+                    {modalMode === 'edit'
+                      ? 'Perubahan pada hauling yang sudah ada akan langsung disimpan. Hauling baru akan dibuat saat Production Record diupdate.'
+                      : 'Hauling activities akan dibuat setelah Production Record disimpan. Achievement awal adalah 0% dan akan meningkat seiring pemenuhan load weight dan status.'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {loadingHaulingActivities && (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                <span className="ml-2 text-gray-600">Loading hauling activities...</span>
+              </div>
+            )}
+
+            {modalMode === 'create' && !haulingActivityInfo && (
+              <div className="flex items-center justify-end mb-2">
+                <label className="flex items-center text-sm text-gray-600 cursor-pointer">
+                  <input type="checkbox" checked={isManualMode} onChange={(e) => setIsManualMode(e.target.checked)} className="mr-2 rounded" />
+                  Mode Manual (Tanpa AI Recommendation)
+                </label>
+              </div>
+            )}
+
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Record Date *</label>
@@ -769,26 +1577,58 @@ const ProductionList = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mining Site *</label>
-                <select value={formData.miningSiteId} onChange={(e) => setFormData({ ...formData, miningSiteId: e.target.value })} className="input-field" required>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mining Site * <span className="text-xs text-blue-600">(Auto-fill enabled)</span>
+                </label>
+                <select value={formData.miningSiteId} onChange={(e) => handleMiningSiteChange(e.target.value)} className="input-field border-blue-300 focus:ring-blue-500" required>
                   <option value="">Select Mining Site</option>
                   {miningSites.map((site) => (
                     <option key={site.id} value={site.id}>
-                      {site.code} - {site.name}
+                      {site.code} - {site.name} ({site.siteType})
                     </option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* Equipment Selection & Auto-Calculation */}
-            <div className="border-t pt-4 bg-blue-50 p-4 rounded-lg">
+            {siteAutoFillInfo && formData.miningSiteId && (
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-3 mt-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center">
+                      <CheckCircle size={14} className="text-green-500 mr-1" />
+                      <span className="text-xs text-gray-600">Auto-filled from site data</span>
+                    </div>
+                    <div className="flex items-center space-x-3 text-xs">
+                      <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{siteAutoFillInfo.roadCount} Roads</span>
+                      <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded">{siteAutoFillInfo.lpCount} Loading Pts</span>
+                      <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded">{siteAutoFillInfo.dpCount} Dumping Pts</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 text-xs">
+                    <span className="text-gray-500">Distance:</span>
+                    <span className="font-semibold text-blue-700">{siteAutoFillInfo.avgDistance?.toFixed(2) || '-'} km</span>
+                    <span className="text-gray-400">|</span>
+                    <span className="text-gray-500">Road:</span>
+                    <span
+                      className={`font-semibold ${
+                        siteAutoFillInfo.roadCondition === 'EXCELLENT' ? 'text-green-600' : siteAutoFillInfo.roadCondition === 'GOOD' ? 'text-blue-600' : siteAutoFillInfo.roadCondition === 'FAIR' ? 'text-yellow-600' : 'text-red-600'
+                      }`}
+                    >
+                      {siteAutoFillInfo.roadCondition}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="border-t pt-4 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg shadow-sm">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-semibold text-blue-800 flex items-center">
                   <Calculator size={18} className="mr-2" />
                   Operational Calculator
                 </h3>
-                <button type="button" onClick={calculateMetrics} className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 flex items-center">
+                <button type="button" onClick={calculateMetrics} className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 flex items-center shadow-sm transition-colors">
                   <RefreshCw size={14} className="mr-1" /> Calculate
                 </button>
               </div>
@@ -799,15 +1639,22 @@ const ProductionList = () => {
                   <input type="number" step="0.01" value={formData.targetProduction} onChange={(e) => setFormData({ ...formData, targetProduction: e.target.value })} className="input-field" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Haul Distance (km) *</label>
-                  <input type="number" step="0.1" value={formData.haulDistance} onChange={(e) => setFormData({ ...formData, haulDistance: e.target.value })} className="input-field" placeholder="One-way distance" />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Haul Distance (km) {siteAutoFillInfo && <span className="text-xs text-green-600 ml-1">✓ auto-filled</span>}</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={formData.haulDistance}
+                    onChange={(e) => setFormData({ ...formData, haulDistance: e.target.value })}
+                    className={`input-field ${siteAutoFillInfo ? 'bg-green-50 border-green-200' : ''}`}
+                    placeholder="One-way distance"
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Weather Condition</label>
-                  <select value={formData.weatherCondition} onChange={(e) => setFormData({ ...formData, weatherCondition: e.target.value })} className="input-field">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Weather Condition {siteAutoFillInfo && <span className="text-xs text-green-600 ml-1">✓ auto-filled</span>}</label>
+                  <select value={formData.weatherCondition} onChange={(e) => setFormData({ ...formData, weatherCondition: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'bg-green-50 border-green-200' : ''}`}>
                     <option value="CERAH">Cerah</option>
                     <option value="BERAWAN">Berawan</option>
                     <option value="HUJAN_RINGAN">Hujan Ringan</option>
@@ -818,8 +1665,8 @@ const ProductionList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Road Condition</label>
-                  <select value={formData.roadCondition} onChange={(e) => setFormData({ ...formData, roadCondition: e.target.value })} className="input-field">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Road Condition {siteAutoFillInfo && <span className="text-xs text-green-600 ml-1">✓ auto-filled</span>}</label>
+                  <select value={formData.roadCondition} onChange={(e) => setFormData({ ...formData, roadCondition: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'bg-green-50 border-green-200' : ''}`}>
                     <option value="EXCELLENT">Excellent</option>
                     <option value="GOOD">Good</option>
                     <option value="FAIR">Fair</option>
@@ -828,8 +1675,8 @@ const ProductionList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Risk Level</label>
-                  <select value={formData.riskLevel} onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value })} className="input-field">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Risk Level {siteAutoFillInfo && <span className="text-xs text-green-600 ml-1">✓ auto-filled</span>}</label>
+                  <select value={formData.riskLevel} onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'bg-green-50 border-green-200' : ''}`}>
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
                     <option value="HIGH">High</option>
@@ -840,10 +1687,12 @@ const ProductionList = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Pilih Truck ({selectedTruckIds.length})</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Pilih Truck ({selectedTruckIds.length})<span className="text-xs text-blue-600 ml-1">({availableTrucks.length} tersedia)</span>
+                  </label>
                   <div className="relative">
                     <button type="button" onClick={() => setTruckDropdownOpen(!truckDropdownOpen)} className="w-full input-field flex items-center justify-between">
-                      <span className="text-sm">{selectedTruckIds.length > 0 ? `${selectedTruckIds.length} truck dipilih` : 'Pilih truck'}</span>
+                      <span className="text-sm">{selectedTruckIds.length > 0 ? `${selectedTruckIds.length} truck dipilih` : 'Pilih truck (IDLE/STANDBY)'}</span>
                       <ChevronDown size={16} />
                     </button>
                     {truckDropdownOpen && (
@@ -856,10 +1705,13 @@ const ProductionList = () => {
                         </div>
                         <div className="overflow-y-auto max-h-48">
                           {filteredTrucks.map((truck) => (
-                            <div key={truck.id} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => toggleTruckSelection(truck.id)}>
+                            <div key={truck.id} className={`flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer ${selectedTruckIds.includes(truck.id) ? 'bg-blue-50' : ''}`} onClick={() => toggleTruckSelection(truck.id)}>
                               <input type="checkbox" checked={selectedTruckIds.includes(truck.id)} onChange={() => toggleTruckSelection(truck.id)} className="rounded text-blue-600" onClick={(e) => e.stopPropagation()} />
-                              <span className="ml-2 text-sm">
+                              <span className="ml-2 text-sm flex-1">
                                 {truck.code} - {truck.model} ({truck.capacity}t)
+                              </span>
+                              <span className={`text-xs px-1.5 py-0.5 rounded ${truck.status === 'IDLE' ? 'bg-green-100 text-green-700' : truck.status === 'STANDBY' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                {truck.status}
                               </span>
                             </div>
                           ))}
@@ -869,10 +1721,12 @@ const ProductionList = () => {
                   </div>
                 </div>
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Pilih Excavator ({selectedExcavatorIds.length})</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Pilih Excavator ({selectedExcavatorIds.length})<span className="text-xs text-green-600 ml-1">({availableExcavators.length} tersedia)</span>
+                  </label>
                   <div className="relative">
                     <button type="button" onClick={() => setExcavatorDropdownOpen(!excavatorDropdownOpen)} className="w-full input-field flex items-center justify-between">
-                      <span className="text-sm">{selectedExcavatorIds.length > 0 ? `${selectedExcavatorIds.length} excavator dipilih` : 'Pilih excavator'}</span>
+                      <span className="text-sm">{selectedExcavatorIds.length > 0 ? `${selectedExcavatorIds.length} excavator dipilih` : 'Pilih excavator (ACTIVE/IDLE)'}</span>
                       <ChevronDown size={16} />
                     </button>
                     {excavatorDropdownOpen && (
@@ -892,10 +1746,13 @@ const ProductionList = () => {
                         </div>
                         <div className="overflow-y-auto max-h-48">
                           {filteredExcavators.map((exc) => (
-                            <div key={exc.id} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => toggleExcavatorSelection(exc.id)}>
+                            <div key={exc.id} className={`flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer ${selectedExcavatorIds.includes(exc.id) ? 'bg-green-50' : ''}`} onClick={() => toggleExcavatorSelection(exc.id)}>
                               <input type="checkbox" checked={selectedExcavatorIds.includes(exc.id)} onChange={() => toggleExcavatorSelection(exc.id)} className="rounded text-blue-600" onClick={(e) => e.stopPropagation()} />
-                              <span className="ml-2 text-sm">
+                              <span className="ml-2 text-sm flex-1">
                                 {exc.code} - {exc.model} ({exc.productionRate}t/m)
+                              </span>
+                              <span className={`text-xs px-1.5 py-0.5 rounded ${exc.status === 'IDLE' ? 'bg-green-100 text-green-700' : exc.status === 'ACTIVE' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                {exc.status}
                               </span>
                             </div>
                           ))}

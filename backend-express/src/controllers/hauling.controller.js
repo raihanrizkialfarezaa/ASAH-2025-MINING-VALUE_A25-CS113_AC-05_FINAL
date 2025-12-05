@@ -65,4 +65,69 @@ export const haulingController = {
     const activities = await haulingService.getActive();
     res.json(ApiResponse.success(activities));
   }),
+
+  /**
+   * Get hauling activities by equipment allocation (truck/excavator IDs)
+   * Used for Production Edit modal to show related hauling activities
+   */
+  getByEquipment: catchAsync(async (req, res) => {
+    const { truckIds, excavatorIds, startDate, endDate, limit } = req.query;
+
+    const truckIdArray = truckIds ? (Array.isArray(truckIds) ? truckIds : truckIds.split(',')) : [];
+    const excavatorIdArray = excavatorIds
+      ? Array.isArray(excavatorIds)
+        ? excavatorIds
+        : excavatorIds.split(',')
+      : [];
+
+    const activities = await haulingService.getByEquipmentAllocation(
+      truckIdArray,
+      excavatorIdArray,
+      { startDate, endDate, limit: limit ? parseInt(limit) : 50 }
+    );
+
+    res.json(ApiResponse.success(activities));
+  }),
+
+  /**
+   * Quick update hauling activity - only loadWeight and status
+   * For Production Edit modal shortcuts
+   */
+  quickUpdate: catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const { loadWeight, status } = req.body;
+
+    const activity = await haulingService.quickUpdate(id, { loadWeight, status });
+    res.json(ApiResponse.success(activity, 'Hauling activity updated successfully'));
+  }),
+
+  /**
+   * Calculate achievement for production based on hauling activities
+   */
+  calculateAchievement: catchAsync(async (req, res) => {
+    const { truckIds, excavatorIds, startDate, endDate } = req.body;
+
+    const truckIdArray = truckIds || [];
+    const excavatorIdArray = excavatorIds || [];
+
+    const achievement = await haulingService.calculateProductionAchievement(
+      truckIdArray,
+      excavatorIdArray,
+      startDate,
+      endDate
+    );
+
+    res.json(ApiResponse.success(achievement));
+  }),
+
+  delete: catchAsync(async (req, res) => {
+    const result = await haulingService.delete(req.params.id);
+    res.json(ApiResponse.success(result, 'Hauling activity deleted successfully'));
+  }),
+
+  getByIds: catchAsync(async (req, res) => {
+    const { ids } = req.body;
+    const activities = await haulingService.getByIds(ids || []);
+    res.json(ApiResponse.success(activities));
+  }),
 };

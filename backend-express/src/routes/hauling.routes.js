@@ -22,7 +22,7 @@ router.get('/statistics', haulingController.getStatistics);
 router.get('/:id', haulingController.getById);
 router.post(
   '/',
-  authorize('SUPERVISOR', 'DISPATCHER'),
+  authorize('SUPERVISOR', 'DISPATCHER', 'ADMIN'),
   createHaulingValidator,
   validate,
   haulingController.create
@@ -56,10 +56,21 @@ router.patch(
 router.patch('/:id/cancel', authorize('SUPERVISOR', 'ADMIN'), haulingController.cancel);
 router.post(
   '/:id/delay',
-  authorize('SUPERVISOR', 'DISPATCHER'),
+  authorize('SUPERVISOR', 'DISPATCHER', 'ADMIN'),
   addDelayValidator,
   validate,
   haulingController.addDelay
 );
+
+// New endpoints for Production Edit modal integration
+router.get('/by-equipment', haulingController.getByEquipment);
+router.patch(
+  '/:id/quick-update',
+  authorize('SUPERVISOR', 'DISPATCHER', 'ADMIN'),
+  haulingController.quickUpdate
+);
+router.post('/calculate-achievement', haulingController.calculateAchievement);
+router.post('/by-ids', haulingController.getByIds);
+router.delete('/:id', authorize('SUPERVISOR', 'ADMIN'), haulingController.delete);
 
 export default router;

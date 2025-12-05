@@ -136,6 +136,7 @@ export const haulingService = {
           supervisorId,
           loadingStartTime: new Date(),
           status: HAULING_STATUS.LOADING,
+          loadWeight: data.loadWeight || 0,
         },
         include: {
           truck: { select: { id: true, code: true, name: true } },
@@ -609,5 +610,225 @@ export const haulingService = {
     }
 
     return `HA-${dateStr}-${sequence.toString().padStart(3, '0')}`;
+  },
+
+  /**
+   * Get hauling activities by production record's equipment allocation
+   * Used to show related hauling activities in Production Edit modal
+   */
+  async getByEquipmentAllocation(truckIds = [], excavatorIds = [], options = {}) {
+    const { startDate, endDate, limit = 50 } = options;
+
+    const where = {
+      OR: [{ truckId: { in: truckIds } }, { excavatorId: { in: excavatorIds } }],
+    };
+
+    // Filter by date range if provided
+    if (startDate || endDate) {
+      where.loadingStartTime = {};
+      if (startDate) where.loadingStartTime.gte = new Date(startDate);
+      if (endDate) where.loadingStartTime.lte = new Date(endDate);
+    }
+
+    const activities = await prisma.haulingActivity.findMany({
+      where,
+      take: limit,
+      include: {
+        truck: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            fuelConsumption: true,
+            capacity: true,
+          },
+        },
+        excavator: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            fuelConsumption: true,
+            productionRate: true,
+          },
+        },
+        operator: {
+          include: {
+            user: { select: { id: true, fullName: true } },
+          },
+        },
+        loadingPoint: { select: { id: true, code: true, name: true } },
+        dumpingPoint: { select: { id: true, code: true, name: true } },
+      },
+      orderBy: { loadingStartTime: 'desc' },
+    });
+
+    // Calculate achievement based on status and load weight
+    const activitiesWithAchievement = activities.map((activity) => ({
+      ...activity,
+      isAchieved:
+        activity.status === HAULING_STATUS.COMPLETED &&
+        activity.loadWeight !== null &&
+        activity.loadWeight >= activity.targetWeight,
+    }));
+
+    return activitiesWithAchievement;
+  },
+
+  /**
+   * Quick update hauling activity - only loadWeight and status
+   * For use in Production Edit modal shortcuts
+   */
+  async quickUpdate(id, data) {
+    const activity = await prisma.haulingActivity.findUnique({
+      where: { id },
+    });
+
+    if (!activity) {
+      throw ApiError.notFound('Hauling activity not found');
+    }
+
+    // Only allow loadWeight and status updates
+    const updateData = {};
+    if (data.loadWeight !== undefined) {
+      updateData.loadWeight = data.loadWeight !== null ? parseFloat(data.loadWeight) : null;
+    }
+    if (data.status !== undefined) {
+      if (!Object.values(HAULING_STATUS).includes(data.status)) {
+        throw ApiError.badRequest('Invalid status value');
+      }
+      updateData.status = data.status;
+
+      // If status changed to COMPLETED, set completion time
+      if (data.status === HAULING_STATUS.COMPLETED && !activity.dumpingEndTime) {
+        updateData.dumpingEndTime = new Date();
+      }
+    }
+
+    const updated = await prisma.haulingActivity.update({
+      where: { id },
+      data: updateData,
+      include: {
+        truck: {
+          select: { id: true, code: true, name: true, fuelConsumption: true, capacity: true },
+        },
+        excavator: {
+          select: { id: true, code: true, name: true, fuelConsumption: true, productionRate: true },
+        },
+        operator: {
+          include: {
+            user: { select: { id: true, fullName: true } },
+          },
+        },
+      },
+    });
+
+    // Calculate if achieved
+    updated.isAchieved =
+      updated.status === HAULING_STATUS.COMPLETED &&
+      updated.loadWeight !== null &&
+      updated.loadWeight >= updated.targetWeight;
+
+    return updated;
+  },
+
+  /**
+   * Calculate achievement percentage for a production based on its hauling activities
+   * Achievement = 100% only when ALL hauling activities are:
+   * 1. Status = COMPLETED
+   * 2. Load Weight >= Target Weight
+   */
+  async calculateProductionAchievement(truckIds = [], excavatorIds = [], startDate, endDate) {
+    const activities = await this.getByEquipmentAllocation(truckIds, excavatorIds, {
+      startDate,
+      endDate,
+    });
+
+    if (activities.length === 0) {
+      return {
+        achievement: 0,
+        completedCount: 0,
+        totalCount: 0,
+        totalLoadWeight: 0,
+        totalTargetWeight: 0,
+      };
+    }
+
+    const completedAndAchieved = activities.filter((a) => a.isAchieved);
+    const totalLoadWeight = activities.reduce((sum, a) => sum + (a.loadWeight || 0), 0);
+    const totalTargetWeight = activities.reduce((sum, a) => sum + (a.targetWeight || 0), 0);
+
+    const allAchieved = activities.length > 0 && activities.every((a) => a.isAchieved);
+    const achievement = allAchieved ? 100 : (completedAndAchieved.length / activities.length) * 100;
+
+    return {
+      achievement: parseFloat(achievement.toFixed(2)),
+      completedCount: completedAndAchieved.length,
+      totalCount: activities.length,
+      totalLoadWeight,
+      totalTargetWeight,
+      loadWeightProgress: totalTargetWeight > 0 ? (totalLoadWeight / totalTargetWeight) * 100 : 0,
+    };
+  },
+
+  async delete(id) {
+    const activity = await prisma.haulingActivity.findUnique({
+      where: { id },
+      include: { truck: true },
+    });
+
+    if (!activity) {
+      throw ApiError.notFound('Hauling activity not found');
+    }
+
+    await prisma.$transaction(async (tx) => {
+      if (
+        activity.truck &&
+        activity.status !== HAULING_STATUS.COMPLETED &&
+        activity.status !== HAULING_STATUS.CANCELLED
+      ) {
+        await tx.truck.update({
+          where: { id: activity.truckId },
+          data: { status: TRUCK_STATUS.IDLE },
+        });
+      }
+
+      await tx.haulingActivity.delete({
+        where: { id },
+      });
+    });
+
+    return { message: 'Hauling activity deleted successfully', id };
+  },
+
+  async getByIds(ids = []) {
+    if (!ids || ids.length === 0) return [];
+
+    const activities = await prisma.haulingActivity.findMany({
+      where: {
+        id: { in: ids },
+      },
+      include: {
+        truck: { select: { id: true, code: true, name: true, capacity: true } },
+        excavator: { select: { id: true, code: true, name: true, productionRate: true } },
+        operator: {
+          include: {
+            user: { select: { id: true, fullName: true } },
+          },
+        },
+        loadingPoint: { select: { id: true, code: true, name: true } },
+        dumpingPoint: { select: { id: true, code: true, name: true } },
+        roadSegment: { select: { id: true, code: true, name: true, distance: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return activities.map((a) => ({
+      ...a,
+      isAchieved:
+        a.status === HAULING_STATUS.COMPLETED &&
+        a.loadWeight !== null &&
+        a.loadWeight >= a.targetWeight,
+    }));
   },
 };

@@ -17,6 +17,18 @@ class AIService {
     }
   }
 
+  async healthCheck() {
+    try {
+      const response = await api.get('/ai/health');
+      const data = response.data;
+      const isOnline = data?.success === true || data?.status === 'healthy' || data?.status === 'online' || data?.data?.status === 'online' || data?.data?.status === 'healthy';
+      return { success: isOnline };
+    } catch (error) {
+      console.error('AI health check failed:', error);
+      return { success: false };
+    }
+  }
+
   /**
    * Get real-time operational conditions
    */
