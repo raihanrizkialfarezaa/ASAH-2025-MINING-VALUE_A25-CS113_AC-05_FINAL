@@ -6,8 +6,29 @@ import os
 import re
 import math
 from datetime import datetime, timedelta
+from functools import lru_cache
+import hashlib
+import time
 
 MODEL_NAME = "qwen2.5:7b"
+
+QUERY_CACHE = {}
+CACHE_TTL = 60
+
+def get_cached_result(cache_key):
+    if cache_key in QUERY_CACHE:
+        cached_data, timestamp = QUERY_CACHE[cache_key]
+        if time.time() - timestamp < CACHE_TTL:
+            return cached_data
+        else:
+            del QUERY_CACHE[cache_key]
+    return None
+
+def set_cached_result(cache_key, data):
+    QUERY_CACHE[cache_key] = (data, time.time())
+
+def get_cache_key(query):
+    return hashlib.md5(query.encode()).hexdigest()
 
 # ============================================================================
 # MINING OPERATIONS KNOWLEDGE BASE
@@ -301,170 +322,920 @@ def parse_simulation_parameters(question):
     
     return params
 
-def get_enhanced_schema():
-    schema_info = """
-=== DATABASE SCHEMA FOR MINING OPERATIONS ===
+FULL_DATABASE_SCHEMA = """
+=== MINING OPERATIONS DATABASE - COMPLETE SCHEMA ===
 
-TABLE: trucks (Truck fleet data)
-COLUMNS: id, code, name, brand, model, yearManufacture, capacity (Float - tons), fuelCapacity, fuelConsumption (L/km), averageSpeed (km/h), maintenanceCost, status (TruckStatus enum), lastMaintenance, nextMaintenance, totalHours, totalDistance, currentOperatorId, currentLocation, isActive (Boolean), purchaseDate, retirementDate, remarks, createdAt, updatedAt
-STATUS VALUES: 'IDLE', 'HAULING', 'LOADING', 'DUMPING', 'IN_QUEUE', 'MAINTENANCE', 'BREAKDOWN', 'REFUELING', 'STANDBY', 'OUT_OF_SERVICE'
-NOTES: To find active/available trucks use "isActive" = true AND status = 'IDLE'. Capacity is in tons.
+[TABLES & RELATIONSHIPS]
 
-TABLE: excavators (Excavator equipment data)
-COLUMNS: id, code, name, brand, model, yearManufacture, bucketCapacity, productionRate (tons/min), fuelConsumption (L/hour), maintenanceCost, status (ExcavatorStatus enum), lastMaintenance, nextMaintenance, totalHours, currentLocation, isActive (Boolean), purchaseDate, retirementDate, remarks, createdAt, updatedAt
-STATUS VALUES: 'ACTIVE', 'IDLE', 'MAINTENANCE', 'BREAKDOWN', 'STANDBY', 'OUT_OF_SERVICE'
-NOTES: To find operating excavators use "isActive" = true AND status IN ('ACTIVE', 'IDLE').
+1. trucks - Armada truk hauling
+   - id (PK), code (unique), name, brand, model, yearManufacture
+   - capacity (Float, tons), fuelCapacity, fuelConsumption (L/km), averageSpeed (km/h)
+   - maintenanceCost, status, lastMaintenance, nextMaintenance
+   - totalHours (Int), totalDistance (Float), currentOperatorId (FK->operators)
+   - currentLocation, isActive (Boolean), purchaseDate, retirementDate
+   - STATUS: 'IDLE'|'HAULING'|'LOADING'|'DUMPING'|'IN_QUEUE'|'MAINTENANCE'|'BREAKDOWN'|'REFUELING'|'STANDBY'|'OUT_OF_SERVICE'
 
-TABLE: operators (Equipment operators)
-COLUMNS: id, userId, employeeNumber, licenseNumber, licenseType (LicenseType enum), licenseExpiry, competency (JSON), status (OperatorStatus enum), shift (Shift enum), totalHours, rating (1-5), salary, joinDate, resignDate, createdAt, updatedAt
-LICENSE VALUES: 'SIM_A', 'SIM_B1', 'SIM_B2', 'OPERATOR_ALAT_BERAT'
-STATUS VALUES: 'ACTIVE', 'ON_LEAVE', 'SICK', 'RESIGNED', 'SUSPENDED'
-SHIFT VALUES: 'SHIFT_1', 'SHIFT_2', 'SHIFT_3'
+2. excavators - Excavator untuk loading
+   - id (PK), code (unique), name, brand, model, yearManufacture
+   - bucketCapacity (Float, m³), productionRate (tons/min), fuelConsumption (L/hour)
+   - maintenanceCost, status, lastMaintenance, nextMaintenance, totalHours
+   - currentLocation, isActive (Boolean), purchaseDate, retirementDate
+   - STATUS: 'ACTIVE'|'IDLE'|'MAINTENANCE'|'BREAKDOWN'|'STANDBY'|'OUT_OF_SERVICE'
 
-TABLE: users (System users)
-COLUMNS: id, username, email, password, fullName, role (Role enum), isActive (Boolean), lastLogin, createdAt, updatedAt
-ROLE VALUES: 'ADMIN', 'SUPERVISOR', 'OPERATOR', 'DISPATCHER', 'MAINTENANCE_STAFF'
+3. operators - Operator alat berat
+   - id (PK), userId (FK->users), employeeNumber (unique), licenseNumber
+   - licenseType, licenseExpiry, competency (JSON), status, shift
+   - totalHours, rating (1-5), salary, joinDate, resignDate
+   - LICENSE: 'SIM_A'|'SIM_B1'|'SIM_B2'|'OPERATOR_ALAT_BERAT'
+   - STATUS: 'ACTIVE'|'ON_LEAVE'|'SICK'|'RESIGNED'|'SUSPENDED'
+   - SHIFT: 'SHIFT_1'|'SHIFT_2'|'SHIFT_3'
 
-TABLE: hauling_activities (Hauling trip records)
-COLUMNS: id, activityNumber, truckId, excavatorId, operatorId, supervisorId, loadingPointId, dumpingPointId, roadSegmentId, shift (Shift enum), queueStartTime, queueEndTime, loadingStartTime, loadingEndTime, departureTime, arrivalTime, dumpingStartTime, dumpingEndTime, returnTime, queueDuration, loadingDuration, haulingDuration, dumpingDuration, returnDuration, totalCycleTime, loadWeight, targetWeight, loadEfficiency, distance, fuelConsumed, status (HaulingStatus enum), weatherCondition, roadCondition (RoadCondition enum), isDelayed (Boolean), delayMinutes, delayReasonId, delayReasonDetail, predictedDelayRisk, predictedDelayMinutes, remarks, createdAt, updatedAt
-HAULING STATUS VALUES: 'PLANNED', 'IN_QUEUE', 'LOADING', 'HAULING', 'DUMPING', 'RETURNING', 'COMPLETED', 'DELAYED', 'CANCELLED', 'INCIDENT'
-ROAD CONDITION VALUES: 'EXCELLENT', 'GOOD', 'FAIR', 'POOR', 'VERY_POOR', 'IMPASSABLE'
+4. users - Pengguna sistem
+   - id (PK), username (unique), email (unique), password, fullName
+   - role, isActive (Boolean), lastLogin, createdAt
+   - ROLE: 'ADMIN'|'SUPERVISOR'|'OPERATOR'|'DISPATCHER'|'MAINTENANCE_STAFF'
 
-TABLE: production_records (Daily production data)
-COLUMNS: id, recordDate, shift (Shift enum), miningSiteId, targetProduction, actualProduction, achievement, avgCalori, avgAshContent, avgSulfur, avgMoisture, totalTrips, totalDistance, totalFuel, avgCycleTime, trucksOperating, trucksBreakdown, excavatorsOperating, excavatorsBreakdown, downtimeHours, utilizationRate, equipmentAllocation (JSON), remarks, createdAt, updatedAt
+5. hauling_activities - Aktivitas hauling batubara
+   - id (PK), activityNumber (unique)
+   - truckId (FK->trucks), excavatorId (FK->excavators)
+   - operatorId (FK->operators), supervisorId (FK->users)
+   - loadingPointId (FK->loading_points), dumpingPointId (FK->dumping_points)
+   - roadSegmentId (FK->road_segments), shift
+   - queueStartTime, queueEndTime, loadingStartTime, loadingEndTime
+   - departureTime, arrivalTime, dumpingStartTime, dumpingEndTime, returnTime
+   - queueDuration, loadingDuration, haulingDuration, dumpingDuration, returnDuration
+   - totalCycleTime (Int, minutes), loadWeight (Float, tons), targetWeight, loadEfficiency
+   - distance (Float, km), fuelConsumed, status, weatherCondition, roadCondition
+   - isDelayed (Boolean), delayMinutes, delayReasonId (FK->delay_reasons)
+   - STATUS: 'PLANNED'|'IN_QUEUE'|'LOADING'|'HAULING'|'DUMPING'|'RETURNING'|'COMPLETED'|'DELAYED'|'CANCELLED'|'INCIDENT'
+   - ROAD_CONDITION: 'EXCELLENT'|'GOOD'|'FAIR'|'POOR'|'CRITICAL'
 
-TABLE: mining_sites (Mining locations)
-COLUMNS: id, code, name, siteType (SiteType enum), isActive (Boolean), latitude, longitude, elevation, capacity, description, createdAt, updatedAt
-SITE TYPE VALUES: 'PIT', 'STOCKPILE', 'PORT', 'CRUSHER', 'CONVEYOR', 'WORKSHOP', 'OFFICE'
+6. production_records - Rekap produksi harian
+   - id (PK), recordDate (Date), shift, miningSiteId (FK->mining_sites)
+   - targetProduction (Float), actualProduction (Float), achievement (Float, %)
+   - avgCalori, avgAshContent, avgSulfur, avgMoisture
+   - totalTrips, totalDistance, totalFuel, avgCycleTime
+   - trucksOperating, trucksBreakdown, excavatorsOperating, excavatorsBreakdown
+   - downtimeHours, utilizationRate, equipmentAllocation (JSON)
 
-TABLE: loading_points (Coal loading points)
-COLUMNS: id, code, name, miningSiteId, excavatorId, latitude, longitude, elevation, coalSeam, coalQuality (JSON), maxCapacity, isActive (Boolean), remarks, createdAt, updatedAt
+7. mining_sites - Lokasi tambang
+   - id (PK), code (unique), name, siteType, isActive (Boolean)
+   - latitude, longitude, elevation, capacity, description
+   - SITE_TYPE: 'PIT'|'STOCKPILE'|'CRUSHER'|'PORT'|'COAL_HAULING_ROAD'|'ROM_PAD'
 
-TABLE: dumping_points (Coal dumping points)
-COLUMNS: id, code, name, miningSiteId, latitude, longitude, elevation, dumperType (DumperType enum), currentLevel, maxCapacity, coalQuality (JSON), isActive (Boolean), remarks, createdAt, updatedAt
-DUMPER TYPE VALUES: 'STOCKPILE', 'CRUSHER', 'BARGE', 'RECLAIM', 'ROM'
+8. loading_points - Titik loading batubara
+   - id (PK), code (unique), name, miningSiteId (FK->mining_sites)
+   - excavatorId (FK->excavators), isActive (Boolean), maxQueueSize
+   - latitude, longitude, coalSeam, coalQuality (JSON)
 
-TABLE: road_segments (Haul roads)
-COLUMNS: id, code, name, startPoint, endPoint, distance (km), roadType (RoadType enum), condition (RoadCondition enum), gradient, maxSpeed, isActive (Boolean), maintenanceRequired (Boolean), lastMaintenance, remarks, createdAt, updatedAt
-ROAD TYPE VALUES: 'MAIN_HAUL', 'SECONDARY', 'ACCESS', 'RAMP', 'CROSSOVER'
+9. dumping_points - Titik dumping batubara
+   - id (PK), code (unique), name, miningSiteId (FK->mining_sites)
+   - dumpingType, isActive (Boolean), capacity, currentStock
+   - latitude, longitude
+   - DUMPING_TYPE: 'STOCKPILE'|'CRUSHER'|'WASTE_DUMP'|'ROM_STOCKPILE'|'PORT'
 
-TABLE: vessels (Ships and barges)
-COLUMNS: id, code, name, vesselType (VesselType enum), gt (Gross Tonnage), dwt (Deadweight Tonnage), loa (Length Overall), capacity (tons), owner, isOwned (Boolean), status (VesselStatus enum), currentLocation, isActive (Boolean), remarks, createdAt, updatedAt
-VESSEL TYPE VALUES: 'MOTHER_VESSEL', 'BARGE', 'TUG_BOAT'
-VESSEL STATUS VALUES: 'AVAILABLE', 'LOADING', 'SAILING', 'DISCHARGING', 'MAINTENANCE', 'CHARTERED'
+10. road_segments - Segmen jalan hauling
+    - id (PK), code (unique), name, miningSiteId (FK->mining_sites)
+    - startPoint, endPoint, distance (Float, km), roadCondition, maxSpeed
+    - gradient, isActive (Boolean), lastMaintenance
+    - ROAD_CONDITION: 'EXCELLENT'|'GOOD'|'FAIR'|'POOR'|'CRITICAL'
 
-TABLE: sailing_schedules (Shipping schedules)
-COLUMNS: id, scheduleNumber, vesselId, voyageNumber, loadingPort, destination, etaLoading, etsLoading, etaDestination, ataLoading, loadingStart, loadingComplete, atsLoading, ataDestination, plannedQuantity, actualQuantity, buyer, contractNumber, status (SailingStatus enum), remarks, createdAt, updatedAt
-SAILING STATUS VALUES: 'SCHEDULED', 'STANDBY', 'LOADING', 'SAILING', 'ARRIVED', 'DISCHARGING', 'COMPLETED', 'CANCELLED'
+11. vessels - Kapal dan tongkang
+    - id (PK), code (unique), name, vesselType
+    - gt (Gross Tonnage), dwt (Deadweight Tonnage), loa (Length Overall)
+    - capacity (Float, tons), owner, isOwned (Boolean), status, currentLocation, isActive
+    - VESSEL_TYPE: 'MOTHER_VESSEL'|'BARGE'|'TUG_BOAT'
+    - VESSEL_STATUS: 'AVAILABLE'|'LOADING'|'SAILING'|'DISCHARGING'|'MAINTENANCE'|'CHARTERED'
 
-TABLE: maintenance_logs (Equipment maintenance records)
-COLUMNS: id, maintenanceNumber, truckId, excavatorId, supportEquipmentId, maintenanceType (MaintenanceType enum), scheduledDate, actualDate, completionDate, duration, cost, description, partsReplaced (JSON), mechanicName, status (MaintenanceStatus enum), downtimeHours, remarks, createdAt, updatedAt
-MAINTENANCE TYPE VALUES: 'PREVENTIVE', 'CORRECTIVE', 'PREDICTIVE', 'OVERHAUL', 'INSPECTION'
-MAINTENANCE STATUS VALUES: 'SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'DELAYED'
+12. sailing_schedules - Jadwal pelayaran
+    - id (PK), scheduleNumber (unique), vesselId (FK->vessels), voyageNumber
+    - loadingPort, destination, etaLoading, etsLoading, etaDestination
+    - ataLoading, loadingStart, loadingComplete, atsLoading, ataDestination
+    - plannedQuantity (Float), actualQuantity, buyer, contractNumber, status
+    - STATUS: 'SCHEDULED'|'STANDBY'|'LOADING'|'SAILING'|'ARRIVED'|'DISCHARGING'|'COMPLETED'|'CANCELLED'
 
-TABLE: incident_reports (Safety incidents)
-COLUMNS: id, incidentNumber, incidentDate, reportDate, location, miningSiteCode, truckId, excavatorId, reportedById, operatorId, incidentType (IncidentType enum), severity (Severity enum), description, rootCause, injuries, fatalities, equipmentDamage, productionLoss, estimatedCost, downtimeHours, status (IncidentStatus enum), actionTaken, preventiveMeasure, photos (JSON), documents (JSON), remarks, createdAt, updatedAt
-INCIDENT TYPE VALUES: 'ACCIDENT', 'NEAR_MISS', 'EQUIPMENT_FAILURE', 'SPILL', 'FIRE', 'COLLISION', 'ROLLOVER', 'ENVIRONMENTAL', 'SAFETY_VIOLATION'
-SEVERITY VALUES: 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
+13. maintenance_logs - Log perawatan alat
+    - id (PK), maintenanceNumber (unique)
+    - truckId (FK->trucks), excavatorId (FK->excavators), supportEquipmentId (FK)
+    - maintenanceType, scheduledDate, actualDate, completionDate
+    - duration, cost, description, partsReplaced (JSON), mechanicName
+    - status, downtimeHours
+    - MAINTENANCE_TYPE: 'PREVENTIVE'|'CORRECTIVE'|'PREDICTIVE'|'OVERHAUL'|'INSPECTION'
+    - STATUS: 'SCHEDULED'|'IN_PROGRESS'|'COMPLETED'|'CANCELLED'|'DELAYED'
 
-TABLE: fuel_consumptions (Fuel usage records)
-COLUMNS: id, consumptionDate, truckId, excavatorId, supportEquipmentId, fuelType (FuelType enum), quantity (liters), costPerLiter, totalCost, operatingHours, distance, fuelEfficiency, fuelStation, remarks, createdAt, updatedAt
-FUEL TYPE VALUES: 'SOLAR', 'BENSIN', 'PERTAMAX'
+14. incident_reports - Laporan insiden
+    - id (PK), incidentNumber (unique), incidentDate, reportDate
+    - location, miningSiteCode, truckId (FK), excavatorId (FK)
+    - reportedById (FK->users), operatorId (FK->operators)
+    - incidentType, severity, description, rootCause
+    - injuries, fatalities, equipmentDamage, productionLoss, estimatedCost, downtimeHours
+    - status, actionTaken, preventiveMeasure, photos (JSON), documents (JSON)
+    - INCIDENT_TYPE: 'ACCIDENT'|'NEAR_MISS'|'EQUIPMENT_FAILURE'|'SPILL'|'FIRE'|'COLLISION'|'ROLLOVER'|'ENVIRONMENTAL'|'SAFETY_VIOLATION'
+    - SEVERITY: 'LOW'|'MEDIUM'|'HIGH'|'CRITICAL'
 
-TABLE: weather_logs (Weather conditions)
-COLUMNS: id, timestamp, miningSiteId, condition (WeatherCondition enum), temperature, humidity, windSpeed, windDirection, rainfall, visibility (Visibility enum), waveHeight, seaCondition, isOperational (Boolean), riskLevel (RiskLevel enum), remarks
-WEATHER CONDITION VALUES: 'CERAH', 'BERAWAN', 'MENDUNG', 'HUJAN_RINGAN', 'HUJAN_SEDANG', 'HUJAN_LEBAT', 'BADAI', 'KABUT'
-RISK LEVEL VALUES: 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
+15. fuel_consumptions - Konsumsi BBM
+    - id (PK), consumptionDate, truckId (FK), excavatorId (FK), supportEquipmentId (FK)
+    - fuelType, quantity (Float, liters), costPerLiter, totalCost
+    - operatingHours, distance, fuelEfficiency, fuelStation
+    - FUEL_TYPE: 'SOLAR'|'BENSIN'|'PERTAMAX'
 
-TABLE: delay_reasons (Delay categories)
-COLUMNS: id, code, category (DelayCategory enum), name, description, isActive (Boolean)
-DELAY CATEGORY VALUES: 'WEATHER', 'EQUIPMENT', 'QUEUE', 'ROAD', 'OPERATOR', 'FUEL', 'ADMINISTRATIVE', 'SAFETY', 'OTHER'
+16. weather_logs - Log cuaca
+    - id (PK), timestamp, miningSiteId (FK->mining_sites)
+    - condition, temperature, humidity, windSpeed, windDirection, rainfall
+    - visibility, waveHeight, seaCondition, isOperational (Boolean), riskLevel
+    - CONDITION: 'CERAH'|'BERAWAN'|'MENDUNG'|'HUJAN_RINGAN'|'HUJAN_SEDANG'|'HUJAN_LEBAT'|'BADAI'|'KABUT'
+    - VISIBILITY: 'EXCELLENT'|'GOOD'|'MODERATE'|'POOR'|'VERY_POOR'
+    - RISK_LEVEL: 'LOW'|'MEDIUM'|'HIGH'|'CRITICAL'
 
-TABLE: support_equipment (Other equipment like graders, dozers)
-COLUMNS: id, code, name, equipmentType (SupportEquipmentType enum), brand, model, status (SupportEquipmentStatus enum), lastMaintenance, totalHours, isActive (Boolean), createdAt, updatedAt
-EQUIPMENT TYPE VALUES: 'GRADER', 'WATER_TRUCK', 'FUEL_TRUCK', 'DOZER', 'COMPACTOR', 'LIGHT_VEHICLE'
+17. delay_reasons - Kategori alasan delay
+    - id (PK), code (unique), category, name, description, isActive (Boolean)
+    - CATEGORY: 'WEATHER'|'EQUIPMENT'|'QUEUE'|'ROAD'|'OPERATOR'|'FUEL'|'ADMINISTRATIVE'|'SAFETY'|'OTHER'
 
-TABLE: queue_logs (Loading point queue data)
-COLUMNS: id, loadingPointId, truckId, queueLength, queueStartTime, queueEndTime, waitingTime, timestamp
+18. support_equipment - Peralatan pendukung
+    - id (PK), code (unique), name, equipmentType, brand, model
+    - status, lastMaintenance, totalHours, isActive (Boolean)
+    - TYPE: 'GRADER'|'WATER_TRUCK'|'FUEL_TRUCK'|'DOZER'|'COMPACTOR'|'LIGHT_VEHICLE'
+    - STATUS: 'ACTIVE'|'IDLE'|'MAINTENANCE'|'BREAKDOWN'|'OUT_OF_SERVICE'
 
-TABLE: equipment_status_logs (Equipment status history)
-COLUMNS: id, timestamp, truckId, excavatorId, supportEquipmentId, previousStatus, currentStatus, statusReason, location, durationMinutes, remarks
+19. queue_logs - Log antrian loading
+    - id (PK), loadingPointId (FK), truckId, queueLength, queueStartTime, queueEndTime, waitingTime, timestamp
 
-TABLE: barge_loading_logs (Barge loading records)
-COLUMNS: id, loadingNumber, vesselCode, vesselName, loadingDate, shift, startTime, endTime, stockpileSource, quantity, loaderUsed, bargeTrips, weatherCondition, tidalCondition, delayMinutes, delayReason, remarks, createdAt, updatedAt
+20. equipment_status_logs - Riwayat status alat
+    - id (PK), timestamp, truckId (FK), excavatorId (FK), supportEquipmentId (FK)
+    - previousStatus, currentStatus, statusReason, location, durationMinutes
 
-TABLE: jetty_berths (Jetty/port berths)
-COLUMNS: id, code, name, portName, maxVesselSize, maxDraft, hasConveyor (Boolean), loadingCapacity, isActive (Boolean), remarks, createdAt, updatedAt
+21. barge_loading_logs - Log muat tongkang
+    - id (PK), loadingNumber (unique), vesselCode, vesselName
+    - loadingDate, shift, startTime, endTime, stockpileSource, quantity
+    - loaderUsed, bargeTrips, weatherCondition, tidalCondition, delayMinutes, delayReason
 
-TABLE: berthing_logs (Vessel berthing records)
-COLUMNS: id, jettyBerthId, vesselCode, vesselName, arrivalTime, berthingTime, loadingStart, loadingEnd, departureTime, draftArrival, draftDeparture, waitingTime, remarks, createdAt, updatedAt
+22. jetty_berths - Dermaga kapal
+    - id (PK), code (unique), name, portName, maxVesselSize, maxDraft
+    - hasConveyor (Boolean), loadingCapacity, isActive (Boolean)
 
-TABLE: shipment_records (Coal shipment records)
-COLUMNS: id, shipmentNumber, vesselId, sailingScheduleId, shipmentDate, loadingDate, coalType, quantity, calorie, totalMoisture, ashContent, sulfurContent, stockpileOrigin, buyer, destination, surveyorName, blNumber, coaNumber, freightCost, totalFreight, remarks, createdAt, updatedAt
+23. berthing_logs - Log sandar kapal
+    - id (PK), jettyBerthId (FK), vesselCode, vesselName
+    - arrivalTime, berthingTime, loadingStart, loadingEnd, departureTime
+    - draftArrival, draftDeparture, waitingTime
 
-TABLE: recommendation_logs (AI recommendation history)
-COLUMNS: id, recommendationType, scenario (JSON), recommendations (JSON), selectedStrategy, selectedStrategyId, implementedAt, implementedBy, results (JSON), profitActual, profitPredicted, variance, feedback, createdAt, updatedAt
+24. shipment_records - Rekap pengiriman
+    - id (PK), shipmentNumber (unique), vesselId (FK), sailingScheduleId (FK)
+    - shipmentDate, loadingDate, coalType, quantity, calorie
+    - totalMoisture, ashContent, sulfurContent, stockpileOrigin
+    - buyer, destination, surveyorName, blNumber, coaNumber, freightCost, totalFreight
 
-TABLE: prediction_logs (ML prediction history)
-COLUMNS: id, predictionType, inputParameters (JSON), results (JSON), accuracy, executionTime, modelVersion, timestamp, createdAt
+25. recommendation_logs - Log rekomendasi AI
+    - id (PK), recommendationType, scenario (JSON), recommendations (JSON)
+    - selectedStrategy, selectedStrategyId, implementedAt, implementedBy (FK)
+    - results (JSON), profitActual, profitPredicted, variance, feedback
 
-TABLE: chatbot_interactions (Chatbot history)
-COLUMNS: id, userId, sessionId, userQuestion, aiResponse, context (JSON), responseTime, rating, timestamp, createdAt
+26. prediction_logs - Log prediksi ML
+    - id (PK), predictionType, inputParameters (JSON), results (JSON)
+    - accuracy, executionTime, modelVersion, timestamp
 
-=== IMPORTANT QUERY RULES ===
-1. All camelCase columns MUST use double quotes: "isActive", "loadWeight", "createdAt", etc.
-2. Enum values are case-sensitive strings: 'IDLE' not 'idle', 'ACTIVE' not 'active'
-3. Boolean values: true/false (lowercase)
-4. For "active" trucks: WHERE "isActive" = true
-5. For "available/idle" trucks: WHERE status = 'IDLE' AND "isActive" = true  
-6. For count queries: SELECT COUNT(*) FROM table_name
-7. For maximum/minimum: ORDER BY column DESC/ASC LIMIT 1
-8. Always include relevant columns in SELECT for clarity
-9. Date comparisons use standard PostgreSQL syntax
-10. JOIN tables using their id fields (e.g., trucks.id = hauling_activities."truckId")
+27. chatbot_interactions - Riwayat chatbot
+    - id (PK), userId (FK), sessionId, userQuestion, aiResponse
+    - context (JSON), responseTime, rating, timestamp
+
+28. model_training_logs - Log training model
+    - id (PK), modelType, modelVersion, trainingDataSize
+    - trainingAccuracy, validationAccuracy, testAccuracy
+    - hyperparameters (JSON), featureImportance (JSON), trainedAt, status
+
+29. system_configs - Konfigurasi sistem
+    - id (PK), configKey (unique), configValue, dataType, category
+    - description, isActive (Boolean), updatedBy (FK)
+
+[KEY RELATIONSHIPS]
+- hauling_activities connects: trucks, excavators, operators, users, loading_points, dumping_points, road_segments, delay_reasons
+- production_records -> mining_sites (site performance)
+- vessels -> sailing_schedules -> shipment_records (shipping chain)
+- maintenance_logs -> trucks/excavators/support_equipment
+- fuel_consumptions -> trucks/excavators/support_equipment
+- incident_reports -> trucks/excavators/users/operators
+
+[POSTGRESQL RULES]
+1. CamelCase columns MUST use double quotes: "isActive", "loadWeight", "createdAt", "totalCycleTime"
+2. Enum values are UPPERCASE strings with single quotes: 'IDLE', 'ACTIVE', 'COMPLETED'
+3. Boolean: true/false (lowercase, no quotes)
+4. Date filtering: WHERE "recordDate" >= CURRENT_DATE - INTERVAL '7 days'
+5. Active equipment: "isActive" = true
+6. Available trucks: status = 'IDLE' AND "isActive" = true
+7. For aggregations: COALESCE(SUM/AVG(...), 0) to handle NULLs
+8. JOINs use quoted FK: JOIN trucks t ON h."truckId" = t.id
 """
-    return schema_info
 
-SCHEMA_CONTEXT = get_enhanced_schema()
+QUERY_EXAMPLES = {
+    "count": "SELECT COUNT(*) as total FROM {table} WHERE \"isActive\" = true",
+    "max": "SELECT * FROM {table} WHERE \"isActive\" = true ORDER BY {column} DESC LIMIT 1",
+    "min": "SELECT * FROM {table} WHERE \"isActive\" = true ORDER BY {column} ASC LIMIT 1",
+    "avg": "SELECT ROUND(AVG({column})::numeric, 2) as avg_{column} FROM {table} WHERE \"isActive\" = true",
+    "sum": "SELECT COALESCE(SUM({column}), 0) as total FROM {table}",
+    "group_status": "SELECT status, COUNT(*) as count FROM {table} WHERE \"isActive\" = true GROUP BY status ORDER BY count DESC",
+    "recent": "SELECT * FROM {table} ORDER BY \"createdAt\" DESC LIMIT {limit}",
+    "join_truck_hauling": "SELECT h.*, t.code as truck_code, t.name as truck_name FROM hauling_activities h JOIN trucks t ON h.\"truckId\" = t.id",
+    "date_range": "SELECT * FROM {table} WHERE \"{date_column}\" >= CURRENT_DATE - INTERVAL '{days} days'",
+    "top_n": "SELECT {columns} FROM {table} WHERE \"isActive\" = true ORDER BY {order_column} DESC LIMIT {n}",
+}
+
+SEMANTIC_QUERY_MAP = {
+    "truk": {"table": "trucks", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "truck": {"table": "trucks", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "excavator": {"table": "excavators", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "ekskavator": {"table": "excavators", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "alat berat": {"table": "excavators", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "operator": {"table": "operators", "id_col": "id", "code_col": "employeeNumber", "name_col": "id"},
+    "kapal": {"table": "vessels", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "vessel": {"table": "vessels", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "tongkang": {"table": "vessels", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "barge": {"table": "vessels", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "hauling": {"table": "hauling_activities", "id_col": "id", "code_col": "activityNumber", "name_col": "activityNumber"},
+    "produksi": {"table": "production_records", "id_col": "id", "code_col": "id", "name_col": "id"},
+    "production": {"table": "production_records", "id_col": "id", "code_col": "id", "name_col": "id"},
+    "site": {"table": "mining_sites", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "tambang": {"table": "mining_sites", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "lokasi": {"table": "mining_sites", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "loading point": {"table": "loading_points", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "titik muat": {"table": "loading_points", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "dumping point": {"table": "dumping_points", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "titik buang": {"table": "dumping_points", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "jalan": {"table": "road_segments", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "road": {"table": "road_segments", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "maintenance": {"table": "maintenance_logs", "id_col": "id", "code_col": "maintenanceNumber", "name_col": "maintenanceNumber"},
+    "perawatan": {"table": "maintenance_logs", "id_col": "id", "code_col": "maintenanceNumber", "name_col": "maintenanceNumber"},
+    "insiden": {"table": "incident_reports", "id_col": "id", "code_col": "incidentNumber", "name_col": "incidentNumber"},
+    "incident": {"table": "incident_reports", "id_col": "id", "code_col": "incidentNumber", "name_col": "incidentNumber"},
+    "kecelakaan": {"table": "incident_reports", "id_col": "id", "code_col": "incidentNumber", "name_col": "incidentNumber"},
+    "bbm": {"table": "fuel_consumptions", "id_col": "id", "code_col": "id", "name_col": "id"},
+    "fuel": {"table": "fuel_consumptions", "id_col": "id", "code_col": "id", "name_col": "id"},
+    "bahan bakar": {"table": "fuel_consumptions", "id_col": "id", "code_col": "id", "name_col": "id"},
+    "cuaca": {"table": "weather_logs", "id_col": "id", "code_col": "id", "name_col": "id"},
+    "weather": {"table": "weather_logs", "id_col": "id", "code_col": "id", "name_col": "id"},
+    "delay": {"table": "delay_reasons", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "keterlambatan": {"table": "delay_reasons", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "jadwal": {"table": "sailing_schedules", "id_col": "id", "code_col": "scheduleNumber", "name_col": "scheduleNumber"},
+    "schedule": {"table": "sailing_schedules", "id_col": "id", "code_col": "scheduleNumber", "name_col": "scheduleNumber"},
+    "pelayaran": {"table": "sailing_schedules", "id_col": "id", "code_col": "scheduleNumber", "name_col": "scheduleNumber"},
+    "pengiriman": {"table": "shipment_records", "id_col": "id", "code_col": "shipmentNumber", "name_col": "shipmentNumber"},
+    "shipment": {"table": "shipment_records", "id_col": "id", "code_col": "shipmentNumber", "name_col": "shipmentNumber"},
+    "dermaga": {"table": "jetty_berths", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "jetty": {"table": "jetty_berths", "id_col": "id", "code_col": "code", "name_col": "name"},
+    "antrian": {"table": "queue_logs", "id_col": "id", "code_col": "id", "name_col": "id"},
+    "queue": {"table": "queue_logs", "id_col": "id", "code_col": "id", "name_col": "id"},
+}
+
+COLUMN_SYNONYMS = {
+    "kapasitas": "capacity",
+    "capacity": "capacity",
+    "muatan": "loadWeight",
+    "load": "loadWeight",
+    "berat": "loadWeight",
+    "jarak": "distance",
+    "distance": "distance",
+    "waktu": "totalCycleTime",
+    "siklus": "totalCycleTime",
+    "cycle": "totalCycleTime",
+    "jam": "totalHours",
+    "hours": "totalHours",
+    "rating": "rating",
+    "nilai": "rating",
+    "gaji": "salary",
+    "salary": "salary",
+    "bucket": "bucketCapacity",
+    "ember": "bucketCapacity",
+    "produksi": "actualProduction",
+    "production": "actualProduction",
+    "target": "targetProduction",
+    "achievement": "achievement",
+    "pencapaian": "achievement",
+    "bbm": "quantity",
+    "fuel": "quantity",
+    "biaya": "cost",
+    "cost": "cost",
+    "harga": "costPerLiter",
+    "suhu": "temperature",
+    "temperature": "temperature",
+    "hujan": "rainfall",
+    "rainfall": "rainfall",
+    "downtime": "downtimeHours",
+    "utilisasi": "utilizationRate",
+    "utilization": "utilizationRate",
+    "kecepatan": "averageSpeed",
+    "speed": "averageSpeed",
+}
+
+def get_enhanced_schema():
+    return FULL_DATABASE_SCHEMA
+
+SCHEMA_CONTEXT = FULL_DATABASE_SCHEMA
 
 PREDEFINED_QUERIES = {
-    "idle_trucks_count": """SELECT COUNT(*) as total_idle FROM trucks WHERE status = 'IDLE' AND "isActive" = true""",
+    "idle_trucks_count": """SELECT COUNT(*) as total FROM trucks WHERE status = 'IDLE' AND "isActive" = true""",
     "largest_truck": """SELECT code, name, brand, model, capacity FROM trucks WHERE "isActive" = true ORDER BY capacity DESC LIMIT 1""",
-    "active_excavators": """SELECT COUNT(*) as total_active, AVG("bucketCapacity") as avg_bucket FROM excavators WHERE "isActive" = true""",
-    "mining_sites": """SELECT code, name, "siteType", latitude, longitude FROM mining_sites WHERE "isActive" = true""",
+    "smallest_truck": """SELECT code, name, brand, model, capacity FROM trucks WHERE "isActive" = true ORDER BY capacity ASC LIMIT 1""",
+    "active_excavators": """SELECT COUNT(*) as total FROM excavators WHERE "isActive" = true""",
+    "idle_excavators": """SELECT COUNT(*) as total FROM excavators WHERE status = 'IDLE' AND "isActive" = true""",
+    "mining_sites": """SELECT code, name, "siteType" FROM mining_sites WHERE "isActive" = true""",
     "recent_hauling": """SELECT h."activityNumber", h."loadWeight", h."totalCycleTime", h.status, t.code as truck_code FROM hauling_activities h LEFT JOIN trucks t ON h."truckId" = t.id ORDER BY h."createdAt" DESC LIMIT 10""",
     "truck_status_summary": """SELECT status, COUNT(*) as count FROM trucks WHERE "isActive" = true GROUP BY status ORDER BY count DESC""",
-    "production_summary": """SELECT SUM("actualProduction") as total_production, AVG(achievement) as avg_achievement FROM production_records""",
+    "excavator_status_summary": """SELECT status, COUNT(*) as count FROM excavators WHERE "isActive" = true GROUP BY status ORDER BY count DESC""",
+    "production_summary": """SELECT COALESCE(SUM("actualProduction"), 0) as total_production, COALESCE(AVG(achievement), 0) as avg_achievement FROM production_records""",
+    "total_trucks": """SELECT COUNT(*) as total FROM trucks WHERE "isActive" = true""",
+    "total_excavators": """SELECT COUNT(*) as total FROM excavators WHERE "isActive" = true""",
+    "all_trucks": """SELECT COUNT(*) as total FROM trucks""",
+    "all_excavators": """SELECT COUNT(*) as total FROM excavators""",
+    "total_operators": """SELECT COUNT(*) as total FROM operators WHERE status = 'ACTIVE'""",
+    "all_operators": """SELECT COUNT(*) as total FROM operators""",
+    "total_vessels": """SELECT COUNT(*) as total FROM vessels WHERE "isActive" = true""",
+    "all_vessels": """SELECT COUNT(*) as total FROM vessels""",
+    "total_hauling": """SELECT COUNT(*) as total FROM hauling_activities""",
+    "completed_hauling": """SELECT COUNT(*) as total FROM hauling_activities WHERE status = 'COMPLETED'""",
+    "total_production_records": """SELECT COUNT(*) as total FROM production_records""",
+    "total_maintenance": """SELECT COUNT(*) as total FROM maintenance_logs""",
+    "total_incidents": """SELECT COUNT(*) as total FROM incident_reports""",
+    "total_fuel": """SELECT COALESCE(SUM(quantity), 0) as total_liters, COALESCE(SUM("totalCost"), 0) as total_cost FROM fuel_consumptions""",
+    "total_loading_points": """SELECT COUNT(*) as total FROM loading_points WHERE "isActive" = true""",
+    "total_dumping_points": """SELECT COUNT(*) as total FROM dumping_points WHERE "isActive" = true""",
+    "total_road_segments": """SELECT COUNT(*) as total FROM road_segments WHERE "isActive" = true""",
+    "avg_truck_capacity": """SELECT ROUND(AVG(capacity)::numeric, 2) as avg_capacity, MAX(capacity) as max_capacity, MIN(capacity) as min_capacity FROM trucks WHERE "isActive" = true""",
+    "avg_excavator_bucket": """SELECT ROUND(AVG("bucketCapacity")::numeric, 2) as avg_bucket, MAX("bucketCapacity") as max_bucket, MIN("bucketCapacity") as min_bucket FROM excavators WHERE "isActive" = true""",
+    "avg_hauling_cycle": """SELECT ROUND(AVG("totalCycleTime")::numeric, 2) as avg_cycle, ROUND(AVG("loadWeight")::numeric, 2) as avg_load, ROUND(AVG(distance)::numeric, 2) as avg_distance FROM hauling_activities WHERE "totalCycleTime" > 0""",
+    "daily_production": """SELECT "recordDate", SUM("actualProduction") as production, AVG(achievement) as achievement FROM production_records WHERE "recordDate" >= CURRENT_DATE - INTERVAL '7 days' GROUP BY "recordDate" ORDER BY "recordDate" DESC""",
+    "truck_brands": """SELECT brand, COUNT(*) as count FROM trucks WHERE "isActive" = true GROUP BY brand ORDER BY count DESC""",
+    "excavator_brands": """SELECT brand, COUNT(*) as count FROM excavators WHERE "isActive" = true GROUP BY brand ORDER BY count DESC""",
+    "maintenance_trucks": """SELECT COUNT(*) as total FROM trucks WHERE status = 'MAINTENANCE' AND "isActive" = true""",
+    "breakdown_trucks": """SELECT COUNT(*) as total FROM trucks WHERE status = 'BREAKDOWN' AND "isActive" = true""",
+    "hauling_trucks": """SELECT COUNT(*) as total FROM trucks WHERE status = 'HAULING' AND "isActive" = true""",
+    "loading_trucks": """SELECT COUNT(*) as total FROM trucks WHERE status = 'LOADING' AND "isActive" = true""",
+    "weather_today": """SELECT condition, temperature, humidity, rainfall, "riskLevel" FROM weather_logs ORDER BY timestamp DESC LIMIT 1""",
+    "recent_incidents": """SELECT "incidentNumber", "incidentType", severity, "incidentDate" FROM incident_reports ORDER BY "incidentDate" DESC LIMIT 5""",
+    "active_schedules": """SELECT "scheduleNumber", status, "plannedQuantity" FROM sailing_schedules WHERE status NOT IN ('COMPLETED', 'CANCELLED') ORDER BY "etaLoading" LIMIT 10""",
+    "vessel_status": """SELECT status, COUNT(*) as count FROM vessels WHERE "isActive" = true GROUP BY status ORDER BY count DESC""",
+    "operator_shifts": """SELECT shift, COUNT(*) as count FROM operators WHERE status = 'ACTIVE' GROUP BY shift ORDER BY shift""",
+    "delay_categories": """SELECT category, COUNT(*) as count FROM delay_reasons WHERE "isActive" = true GROUP BY category ORDER BY count DESC""",
+    "road_conditions": """SELECT "roadCondition" as condition, COUNT(*) as count FROM road_segments WHERE "isActive" = true GROUP BY "roadCondition" ORDER BY count DESC""",
+    "top_trucks_by_hours": """SELECT code, name, "totalHours" FROM trucks WHERE "isActive" = true ORDER BY "totalHours" DESC LIMIT 10""",
+    "top_trucks_by_distance": """SELECT code, name, "totalDistance" FROM trucks WHERE "isActive" = true ORDER BY "totalDistance" DESC LIMIT 10""",
+    "largest_excavator": """SELECT code, name, brand, model, "bucketCapacity" FROM excavators WHERE "isActive" = true AND "bucketCapacity" IS NOT NULL ORDER BY "bucketCapacity" DESC LIMIT 1""",
+    "smallest_excavator": """SELECT code, name, brand, model, "bucketCapacity" FROM excavators WHERE "isActive" = true AND "bucketCapacity" IS NOT NULL ORDER BY "bucketCapacity" ASC LIMIT 1""",
+    "largest_vessel": """SELECT code, name, "vesselType", capacity, dwt FROM vessels WHERE "isActive" = true ORDER BY capacity DESC LIMIT 1""",
+    "smallest_vessel": """SELECT code, name, "vesselType", capacity, dwt FROM vessels WHERE "isActive" = true ORDER BY capacity ASC LIMIT 1""",
+    "top_operators_by_hours": """SELECT "employeeNumber", "totalHours", rating, shift FROM operators WHERE status = 'ACTIVE' ORDER BY "totalHours" DESC LIMIT 10""",
+    "top_operators_by_rating": """SELECT "employeeNumber", "totalHours", rating, shift FROM operators WHERE status = 'ACTIVE' ORDER BY rating DESC LIMIT 10""",
+    "hauling_by_shift": """SELECT shift, COUNT(*) as total_trips, ROUND(AVG("loadWeight")::numeric, 2) as avg_load, ROUND(AVG("totalCycleTime")::numeric, 2) as avg_cycle FROM hauling_activities GROUP BY shift ORDER BY shift""",
+    "hauling_delayed": """SELECT COUNT(*) as total FROM hauling_activities WHERE "isDelayed" = true""",
+    "hauling_completed": """SELECT COUNT(*) as total FROM hauling_activities WHERE status = 'COMPLETED'""",
+    "hauling_in_progress": """SELECT COUNT(*) as total FROM hauling_activities WHERE status IN ('LOADING', 'HAULING', 'DUMPING', 'RETURNING')""",
+    "production_today": """SELECT COALESCE(SUM("actualProduction"), 0) as total, COALESCE(AVG(achievement), 0) as avg_achievement FROM production_records WHERE "recordDate" = CURRENT_DATE""",
+    "production_this_month": """SELECT COALESCE(SUM("actualProduction"), 0) as total, COALESCE(AVG(achievement), 0) as avg_achievement FROM production_records WHERE "recordDate" >= DATE_TRUNC('month', CURRENT_DATE)""",
+    "production_by_site": """SELECT ms.name as site_name, SUM(pr."actualProduction") as total_production, AVG(pr.achievement) as avg_achievement FROM production_records pr JOIN mining_sites ms ON pr."miningSiteId" = ms.id GROUP BY ms.name ORDER BY total_production DESC""",
+    "incidents_by_type": """SELECT "incidentType", COUNT(*) as count FROM incident_reports GROUP BY "incidentType" ORDER BY count DESC""",
+    "incidents_by_severity": """SELECT severity, COUNT(*) as count FROM incident_reports GROUP BY severity ORDER BY count DESC""",
+    "incidents_this_month": """SELECT COUNT(*) as total FROM incident_reports WHERE "incidentDate" >= DATE_TRUNC('month', CURRENT_DATE)""",
+    "maintenance_by_type": """SELECT "maintenanceType", COUNT(*) as count FROM maintenance_logs GROUP BY "maintenanceType" ORDER BY count DESC""",
+    "maintenance_pending": """SELECT COUNT(*) as total FROM maintenance_logs WHERE status IN ('SCHEDULED', 'IN_PROGRESS')""",
+    "maintenance_completed_month": """SELECT COUNT(*) as total FROM maintenance_logs WHERE status = 'COMPLETED' AND "completionDate" >= DATE_TRUNC('month', CURRENT_DATE)""",
+    "fuel_by_equipment": """SELECT CASE WHEN "truckId" IS NOT NULL THEN 'Truck' WHEN "excavatorId" IS NOT NULL THEN 'Excavator' ELSE 'Support Equipment' END as equipment_type, SUM(quantity) as total_liters, SUM("totalCost") as total_cost FROM fuel_consumptions GROUP BY CASE WHEN "truckId" IS NOT NULL THEN 'Truck' WHEN "excavatorId" IS NOT NULL THEN 'Excavator' ELSE 'Support Equipment' END""",
+    "fuel_this_month": """SELECT COALESCE(SUM(quantity), 0) as total_liters, COALESCE(SUM("totalCost"), 0) as total_cost FROM fuel_consumptions WHERE "consumptionDate" >= DATE_TRUNC('month', CURRENT_DATE)""",
+    "weather_history": """SELECT condition, COUNT(*) as count FROM weather_logs WHERE timestamp >= CURRENT_DATE - INTERVAL '7 days' GROUP BY condition ORDER BY count DESC""",
+    "vessels_by_type": """SELECT "vesselType", COUNT(*) as count FROM vessels WHERE "isActive" = true GROUP BY "vesselType" ORDER BY count DESC""",
+    "vessels_loading": """SELECT code, name, capacity FROM vessels WHERE status = 'LOADING' AND "isActive" = true""",
+    "schedules_this_month": """SELECT COUNT(*) as total FROM sailing_schedules WHERE "etaLoading" >= DATE_TRUNC('month', CURRENT_DATE) AND "etaLoading" < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'""",
+    "shipments_this_month": """SELECT COUNT(*) as total_shipments, COALESCE(SUM(quantity), 0) as total_quantity FROM shipment_records WHERE "shipmentDate" >= DATE_TRUNC('month', CURRENT_DATE)""",
+    "support_equipment_count": """SELECT "equipmentType", COUNT(*) as count FROM support_equipment WHERE "isActive" = true GROUP BY "equipmentType" ORDER BY count DESC""",
+    "queue_avg_wait": """SELECT ROUND(AVG("waitingTime")::numeric, 2) as avg_wait_minutes FROM queue_logs WHERE "waitingTime" IS NOT NULL""",
+    "loading_points_with_excavator": """SELECT lp.code, lp.name, e.code as excavator_code, e.name as excavator_name FROM loading_points lp LEFT JOIN excavators e ON lp."excavatorId" = e.id WHERE lp."isActive" = true""",
+    "truck_details_all": """SELECT code, name, brand, model, capacity, status, "totalHours", "totalDistance" FROM trucks WHERE "isActive" = true ORDER BY code""",
+    "excavator_details_all": """SELECT code, name, brand, model, "bucketCapacity", "productionRate", status, "totalHours" FROM excavators WHERE "isActive" = true ORDER BY code""",
+    "operator_details_all": """SELECT "employeeNumber", "licenseType", status, shift, "totalHours", rating, salary FROM operators ORDER BY "employeeNumber" """,
+    "hauling_performance": """SELECT DATE("loadingStartTime") as date, COUNT(*) as trips, ROUND(AVG("loadWeight")::numeric, 2) as avg_load, ROUND(AVG("totalCycleTime")::numeric, 2) as avg_cycle, ROUND(SUM("loadWeight")::numeric, 2) as total_hauled FROM hauling_activities WHERE "loadingStartTime" >= CURRENT_DATE - INTERVAL '7 days' GROUP BY DATE("loadingStartTime") ORDER BY date DESC""",
+    "efficiency_summary": """SELECT ROUND(AVG("loadEfficiency")::numeric * 100, 2) as avg_load_efficiency, ROUND(AVG("utilizationRate")::numeric, 2) as avg_utilization FROM hauling_activities h, production_records p WHERE h."loadEfficiency" IS NOT NULL""",
+    "downtime_summary": """SELECT SUM("downtimeHours") as total_downtime, AVG("downtimeHours") as avg_downtime FROM production_records WHERE "recordDate" >= CURRENT_DATE - INTERVAL '7 days'""",
+    "delay_analysis": """SELECT dr.category, dr.name, COUNT(h.id) as occurrences FROM hauling_activities h JOIN delay_reasons dr ON h."delayReasonId" = dr.id WHERE h."isDelayed" = true GROUP BY dr.category, dr.name ORDER BY occurrences DESC LIMIT 10""",
+    "cost_summary_maintenance": """SELECT SUM(cost) as total_cost, COUNT(*) as total_jobs FROM maintenance_logs WHERE status = 'COMPLETED' AND "completionDate" >= CURRENT_DATE - INTERVAL '30 days'""",
+    "cost_summary_fuel": """SELECT SUM("totalCost") as total_cost, SUM(quantity) as total_liters FROM fuel_consumptions WHERE "consumptionDate" >= CURRENT_DATE - INTERVAL '30 days'""",
+    "fleet_summary": """SELECT (SELECT COUNT(*) FROM trucks WHERE "isActive" = true) as total_trucks, (SELECT COUNT(*) FROM excavators WHERE "isActive" = true) as total_excavators, (SELECT COUNT(*) FROM vessels WHERE "isActive" = true) as total_vessels, (SELECT COUNT(*) FROM operators WHERE status = 'ACTIVE') as total_operators""",
+    "production_vs_target": """SELECT "recordDate", "targetProduction", "actualProduction", achievement, "trucksOperating", "excavatorsOperating" FROM production_records WHERE "recordDate" >= CURRENT_DATE - INTERVAL '7 days' ORDER BY "recordDate" DESC""",
+    "top_hauling_trucks": """SELECT t.code, t.name, COUNT(h.id) as total_trips, SUM(h."loadWeight") as total_hauled FROM hauling_activities h JOIN trucks t ON h."truckId" = t.id WHERE h."createdAt" >= CURRENT_DATE - INTERVAL '7 days' GROUP BY t.code, t.name ORDER BY total_hauled DESC LIMIT 10""",
+    "top_hauling_excavators": """SELECT e.code, e.name, COUNT(h.id) as total_trips, SUM(h."loadWeight") as total_loaded FROM hauling_activities h JOIN excavators e ON h."excavatorId" = e.id WHERE h."createdAt" >= CURRENT_DATE - INTERVAL '7 days' GROUP BY e.code, e.name ORDER BY total_loaded DESC LIMIT 10""",
 }
+
+QUERY_PATTERNS = [
+    (r'truk.*kapasitas.*(?:terbesar|maksimum|tertinggi|paling\s+besar)', 'largest_truck', 'largest_truck'),
+    (r'truk.*kapasitas.*(?:terkecil|minimum|terendah|paling\s+kecil)', 'smallest_truck', 'smallest_truck'),
+    (r'kapasitas.*(?:terbesar|maksimum|tertinggi).*truk', 'largest_truck', 'largest_truck'),
+    (r'kapasitas.*(?:terkecil|minimum|terendah).*truk', 'smallest_truck', 'smallest_truck'),
+    (r'(?:truk|truck).*(?:terbesar|terbanyak|maksimum|tertinggi)', 'largest_truck', 'largest_truck'),
+    (r'(?:truk|truck).*(?:terkecil|minimum|terendah)', 'smallest_truck', 'smallest_truck'),
+    (r'excavator.*bucket.*(?:terbesar|maksimum|tertinggi|paling\s+besar)', 'largest_excavator', 'largest_excavator'),
+    (r'excavator.*bucket.*(?:terkecil|minimum|terendah|paling\s+kecil)', 'smallest_excavator', 'smallest_excavator'),
+    (r'excavator.*(?:kapasitas|terbesar|tertinggi)', 'largest_excavator', 'largest_excavator'),
+    (r'excavator.*(?:terkecil|terendah)', 'smallest_excavator', 'smallest_excavator'),
+    (r'bucket.*(?:terbesar|maksimum|tertinggi).*excavator', 'largest_excavator', 'largest_excavator'),
+    (r'bucket.*(?:terkecil|minimum|terendah).*excavator', 'smallest_excavator', 'smallest_excavator'),
+    (r'(?:kapal|vessel|barge).*(?:kapasitas|dwt).*(?:terbesar|maksimum|tertinggi)', 'largest_vessel', 'largest_vessel'),
+    (r'(?:kapal|vessel|barge).*(?:kapasitas|dwt).*(?:terkecil|minimum|terendah)', 'smallest_vessel', 'smallest_vessel'),
+    (r'(?:kapal|vessel|barge).*(?:terbesar|maksimum|tertinggi)', 'largest_vessel', 'largest_vessel'),
+    (r'(?:kapal|vessel|barge).*(?:terkecil|minimum|terendah)', 'smallest_vessel', 'smallest_vessel'),
+    (r'(?:berapa|jumlah|total|banyak|ada).*(?:truk|truck)(?:\s+(?:yang\s+)?(?:aktif|active))?(?:\s+saat\s+ini)?', 'total_trucks', 'truck_count'),
+    (r'(?:berapa|jumlah|total|banyak|ada).*(?:excavator|ekskavator|alat\s+berat)', 'total_excavators', 'excavator_count'),
+    (r'(?:berapa|jumlah|total|banyak|ada).*operator', 'total_operators', 'operator_count'),
+    (r'(?:berapa|jumlah|total|banyak|ada).*(?:kapal|vessel|barge|tongkang)', 'total_vessels', 'vessel_count'),
+    (r'(?:berapa|jumlah|total|banyak|ada).*(?:hauling|pengangkutan|trip)', 'total_hauling', 'hauling_count'),
+    (r'(?:berapa|jumlah|total|banyak|ada).*(?:loading\s+point|titik\s+muat)', 'total_loading_points', 'loading_point_count'),
+    (r'(?:berapa|jumlah|total|banyak|ada).*(?:dumping\s+point|titik\s+buang)', 'total_dumping_points', 'dumping_point_count'),
+    (r'(?:berapa|jumlah|total|banyak|ada).*(?:road|jalan|segment)', 'total_road_segments', 'road_count'),
+    (r'(?:berapa|jumlah|total|banyak|ada).*(?:insiden|incident|kecelakaan)', 'total_incidents', 'incident_count'),
+    (r'(?:berapa|jumlah|total|banyak|ada).*(?:maintenance|perawatan)', 'total_maintenance', 'maintenance_count'),
+    (r'truk.*(?:idle|tersedia|available|nganggur|menganggur|standby)', 'idle_trucks_count', 'idle_trucks'),
+    (r'(?:idle|tersedia|available|nganggur).*truk', 'idle_trucks_count', 'idle_trucks'),
+    (r'excavator.*(?:idle|tersedia|available|nganggur)', 'idle_excavators', 'idle_excavators'),
+    (r'truk.*(?:maintenance|perawatan|perbaikan|servis)', 'maintenance_trucks', 'maintenance_trucks'),
+    (r'truk.*(?:breakdown|rusak|mogok)', 'breakdown_trucks', 'breakdown_trucks'),
+    (r'truk.*(?:hauling|mengangkut|berjalan|jalan)', 'hauling_trucks', 'hauling_trucks'),
+    (r'truk.*(?:loading|memuat|muat)', 'loading_trucks', 'loading_trucks'),
+    (r'status.*truk', 'truck_status_summary', 'truck_status'),
+    (r'status.*excavator', 'excavator_status_summary', 'excavator_status'),
+    (r'status.*(?:kapal|vessel)', 'vessel_status', 'vessel_status'),
+    (r'(?:rata-rata|average|avg|rerata).*kapasitas.*truk', 'avg_truck_capacity', 'avg_truck_capacity'),
+    (r'(?:rata-rata|average|avg|rerata).*(?:bucket|ember).*excavator', 'avg_excavator_bucket', 'avg_excavator_bucket'),
+    (r'(?:rata-rata|average|avg|rerata).*(?:cycle|siklus).*hauling', 'avg_hauling_cycle', 'avg_hauling_cycle'),
+    (r'produksi.*(?:total|keseluruhan|semua)', 'production_summary', 'production_summary'),
+    (r'(?:performa|kinerja|performance).*produksi', 'daily_production', 'daily_production'),
+    (r'produksi.*(?:harian|per\s+hari|mingguan|7\s+hari|seminggu|minggu)', 'daily_production', 'daily_production'),
+    (r'produksi.*(?:hari\s+ini|today)', 'production_today', 'production_today'),
+    (r'produksi.*(?:bulan\s+ini|this\s+month)', 'production_this_month', 'production_this_month'),
+    (r'produksi.*(?:per\s+site|per\s+lokasi|tiap\s+tambang)', 'production_by_site', 'production_by_site'),
+    (r'(?:target|aktual).*produksi', 'production_vs_target', 'production_vs_target'),
+    (r'hauling.*(?:terbaru|recent|terakhir)', 'recent_hauling', 'recent_hauling'),
+    (r'hauling.*(?:delay|terlambat)', 'hauling_delayed', 'hauling_delayed'),
+    (r'hauling.*(?:selesai|complete)', 'hauling_completed', 'hauling_completed'),
+    (r'hauling.*(?:berjalan|in\s+progress|sedang)', 'hauling_in_progress', 'hauling_in_progress'),
+    (r'hauling.*(?:per\s+shift|tiap\s+shift)', 'hauling_by_shift', 'hauling_by_shift'),
+    (r'(?:performa|kinerja).*hauling', 'hauling_performance', 'hauling_performance'),
+    (r'(?:mining\s+site|tambang|lokasi\s+tambang|site|pit)', 'mining_sites', 'mining_sites'),
+    (r'(?:cuaca|weather)(?:.*(?:hari\s+ini|terkini|sekarang|saat\s+ini))?', 'weather_today', 'weather'),
+    (r'(?:riwayat|history).*cuaca', 'weather_history', 'weather_history'),
+    (r'insiden.*(?:terbaru|recent|terakhir)', 'recent_incidents', 'recent_incidents'),
+    (r'insiden.*(?:per\s+tipe|by\s+type|jenis)', 'incidents_by_type', 'incidents_by_type'),
+    (r'insiden.*(?:severity|tingkat|keparahan)', 'incidents_by_severity', 'incidents_by_severity'),
+    (r'insiden.*(?:bulan\s+ini|this\s+month)', 'incidents_this_month', 'incidents_this_month'),
+    (r'jadwal.*(?:pelayaran|sailing|kapal)', 'active_schedules', 'schedules'),
+    (r'jadwal.*(?:bulan\s+ini|this\s+month)', 'schedules_this_month', 'schedules_this_month'),
+    (r'(?:merk|brand|merek).*truk', 'truck_brands', 'truck_brands'),
+    (r'(?:merk|brand|merek).*excavator', 'excavator_brands', 'excavator_brands'),
+    (r'shift.*operator', 'operator_shifts', 'operator_shifts'),
+    (r'(?:alasan|kategori|penyebab).*(?:delay|keterlambatan|terlambat)', 'delay_categories', 'delay_categories'),
+    (r'(?:analisis|analysis).*delay', 'delay_analysis', 'delay_analysis'),
+    (r'kondisi.*(?:jalan|road)', 'road_conditions', 'road_conditions'),
+    (r'(?:jalan|road).*kondisi', 'road_conditions', 'road_conditions'),
+    (r'truk.*(?:jam\s+operasi|hours|jam).*(?:tertinggi|terbanyak|top)', 'top_trucks_by_hours', 'top_trucks_hours'),
+    (r'truk.*(?:jarak\s+tempuh|distance|jarak).*(?:terjauh|terbanyak|top)', 'top_trucks_by_distance', 'top_trucks_distance'),
+    (r'(?:konsumsi|penggunaan).*(?:bbm|bahan\s+bakar|fuel|solar)', 'total_fuel', 'fuel_consumption'),
+    (r'(?:bbm|fuel).*(?:bulan\s+ini|this\s+month)', 'fuel_this_month', 'fuel_this_month'),
+    (r'(?:bbm|fuel).*(?:per\s+alat|per\s+equipment)', 'fuel_by_equipment', 'fuel_by_equipment'),
+    (r'maintenance.*(?:per\s+tipe|by\s+type|jenis)', 'maintenance_by_type', 'maintenance_by_type'),
+    (r'maintenance.*(?:pending|dijadwalkan|scheduled)', 'maintenance_pending', 'maintenance_pending'),
+    (r'maintenance.*(?:selesai|complete).*(?:bulan|month)', 'maintenance_completed_month', 'maintenance_completed_month'),
+    (r'operator.*(?:jam|hours).*(?:tertinggi|terbanyak|top)', 'top_operators_by_hours', 'top_operators_hours'),
+    (r'operator.*(?:rating|nilai).*(?:tertinggi|terbaik|top)', 'top_operators_by_rating', 'top_operators_rating'),
+    (r'(?:kapal|vessel).*(?:per\s+tipe|by\s+type|jenis)', 'vessels_by_type', 'vessels_by_type'),
+    (r'(?:kapal|vessel).*(?:loading|muat|sedang\s+muat)', 'vessels_loading', 'vessels_loading'),
+    (r'pengiriman.*(?:bulan\s+ini|this\s+month)', 'shipments_this_month', 'shipments_this_month'),
+    (r'(?:support\s+equipment|alat\s+pendukung|peralatan\s+pendukung)', 'support_equipment_count', 'support_equipment_count'),
+    (r'(?:antrian|queue).*(?:rata-rata|average|avg)', 'queue_avg_wait', 'queue_avg_wait'),
+    (r'(?:rata-rata|average|avg).*(?:antrian|queue|tunggu|wait)', 'queue_avg_wait', 'queue_avg_wait'),
+    (r'(?:waktu\s+tunggu|waiting\s+time).*(?:rata-rata|average|avg)', 'queue_avg_wait', 'queue_avg_wait'),
+    (r'loading\s+point.*excavator', 'loading_points_with_excavator', 'loading_points_with_excavator'),
+    (r'(?:detail|daftar|list).*(?:semua\s+)?truk', 'truck_details_all', 'truck_details_all'),
+    (r'(?:detail|daftar|list).*(?:semua\s+)?excavator', 'excavator_details_all', 'excavator_details_all'),
+    (r'(?:detail|daftar|list).*(?:semua\s+)?operator', 'operator_details_all', 'operator_details_all'),
+    (r'(?:efisiensi|efficiency).*(?:summary|ringkasan)?', 'efficiency_summary', 'efficiency_summary'),
+    (r'(?:downtime|waktu\s+henti)', 'downtime_summary', 'downtime_summary'),
+    (r'(?:biaya|cost).*maintenance', 'cost_summary_maintenance', 'cost_summary_maintenance'),
+    (r'(?:biaya|cost).*(?:bbm|fuel)', 'cost_summary_fuel', 'cost_summary_fuel'),
+    (r'(?:ringkasan|summary).*(?:armada|fleet)', 'fleet_summary', 'fleet_summary'),
+    (r'(?:top|ranking).*truk.*hauling', 'top_hauling_trucks', 'top_hauling_trucks'),
+    (r'(?:top|ranking).*excavator.*(?:hauling|loading)', 'top_hauling_excavators', 'top_hauling_excavators'),
+]
+
+INTENT_KEYWORDS = {
+    "count": ["berapa", "jumlah", "total", "banyak", "ada berapa", "hitung", "count"],
+    "max": ["terbesar", "tertinggi", "maksimum", "paling besar", "paling tinggi", "biggest", "largest", "maximum", "top"],
+    "min": ["terkecil", "terendah", "minimum", "paling kecil", "paling rendah", "smallest", "lowest", "minimum"],
+    "avg": ["rata-rata", "average", "rerata", "mean"],
+    "sum": ["total", "jumlah", "sum", "keseluruhan"],
+    "list": ["daftar", "list", "semua", "tampilkan", "lihat", "show", "all"],
+    "status": ["status", "kondisi", "keadaan", "state"],
+    "recent": ["terbaru", "terakhir", "recent", "latest", "baru"],
+    "compare": ["bandingkan", "compare", "perbandingan", "versus", "vs"],
+    "trend": ["tren", "trend", "perkembangan", "history", "riwayat"],
+    "detail": ["detail", "rinci", "lengkap", "info", "informasi"],
+}
+
+def get_fast_answer(question):
+    question_lower = question.lower().strip()
+    
+    for pattern, query_key, answer_type in QUERY_PATTERNS:
+        if re.search(pattern, question_lower):
+            query = PREDEFINED_QUERIES.get(query_key)
+            if query:
+                return query, answer_type
+    
+    return None, None
+
+def smart_query_builder(question):
+    question_lower = question.lower()
+    
+    entity = None
+    for keyword, info in SEMANTIC_QUERY_MAP.items():
+        if keyword in question_lower:
+            entity = info
+            break
+    
+    if not entity:
+        return None
+    
+    intent = None
+    for intent_type, keywords in INTENT_KEYWORDS.items():
+        if any(kw in question_lower for kw in keywords):
+            intent = intent_type
+            break
+    
+    if not intent:
+        intent = "list"
+    
+    column = None
+    for synonym, col_name in COLUMN_SYNONYMS.items():
+        if synonym in question_lower:
+            column = col_name
+            break
+    
+    table = entity["table"]
+    
+    if intent == "count":
+        return f'SELECT COUNT(*) as total FROM {table} WHERE "isActive" = true'
+    elif intent == "max" and column:
+        return f'SELECT * FROM {table} WHERE "isActive" = true ORDER BY "{column}" DESC LIMIT 1'
+    elif intent == "min" and column:
+        return f'SELECT * FROM {table} WHERE "isActive" = true ORDER BY "{column}" ASC LIMIT 1'
+    elif intent == "avg" and column:
+        return f'SELECT ROUND(AVG("{column}")::numeric, 2) as avg_{column} FROM {table} WHERE "isActive" = true'
+    elif intent == "status":
+        return f'SELECT status, COUNT(*) as count FROM {table} WHERE "isActive" = true GROUP BY status ORDER BY count DESC'
+    elif intent == "recent":
+        return f'SELECT * FROM {table} ORDER BY "createdAt" DESC LIMIT 10'
+    elif intent == "list":
+        return f'SELECT * FROM {table} WHERE "isActive" = true LIMIT 20'
+    
+    return None
+
+def format_fast_answer(query_type, df, question):
+    if df.empty:
+        return "Tidak ada data yang ditemukan."
+    
+    row = df.iloc[0]
+    
+    formatters = {
+        'truck_count': lambda r: f"Berdasarkan data yang tersedia, jumlah truk aktif saat ini adalah **{r.get('total', r.iloc[0])} unit**.",
+        'excavator_count': lambda r: f"Berdasarkan data yang tersedia, jumlah excavator aktif saat ini adalah **{r.get('total', r.iloc[0])} unit**.",
+        'operator_count': lambda r: f"Jumlah operator aktif saat ini adalah **{r.get('total', r.iloc[0])} orang**.",
+        'vessel_count': lambda r: f"Jumlah kapal/vessel aktif saat ini adalah **{r.get('total', r.iloc[0])} unit**.",
+        'hauling_count': lambda r: f"Total aktivitas hauling yang tercatat adalah **{r.get('total', r.iloc[0]):,} trip**.",
+        'loading_point_count': lambda r: f"Jumlah loading point aktif adalah **{r.get('total', r.iloc[0])} lokasi**.",
+        'dumping_point_count': lambda r: f"Jumlah dumping point aktif adalah **{r.get('total', r.iloc[0])} lokasi**.",
+        'road_count': lambda r: f"Jumlah segment jalan aktif adalah **{r.get('total', r.iloc[0])} segment**.",
+        'incident_count': lambda r: f"Total insiden yang tercatat adalah **{r.get('total', r.iloc[0])} kejadian**.",
+        'maintenance_count': lambda r: f"Total log maintenance adalah **{r.get('total', r.iloc[0])} record**.",
+        'idle_trucks': lambda r: f"Saat ini terdapat **{r.get('total', r.iloc[0])} unit truk** dalam status IDLE (tersedia untuk digunakan).",
+        'idle_excavators': lambda r: f"Saat ini terdapat **{r.get('total', r.iloc[0])} unit excavator** dalam status IDLE.",
+        'maintenance_trucks': lambda r: f"Saat ini terdapat **{r.get('total', r.iloc[0])} unit truk** dalam status MAINTENANCE.",
+        'breakdown_trucks': lambda r: f"Saat ini terdapat **{r.get('total', r.iloc[0])} unit truk** dalam status BREAKDOWN.",
+        'hauling_trucks': lambda r: f"Saat ini terdapat **{r.get('total', r.iloc[0])} unit truk** yang sedang melakukan hauling.",
+        'loading_trucks': lambda r: f"Saat ini terdapat **{r.get('total', r.iloc[0])} unit truk** yang sedang loading.",
+        'largest_truck': lambda r: f"Truk dengan kapasitas terbesar adalah **{r.get('code', '')} ({r.get('name', '')})** dengan kapasitas **{r.get('capacity', 0):.1f} ton**, brand **{r.get('brand', '')}** model **{r.get('model', '')}**.",
+        'smallest_truck': lambda r: f"Truk dengan kapasitas terkecil adalah **{r.get('code', '')} ({r.get('name', '')})** dengan kapasitas **{r.get('capacity', 0):.1f} ton**, brand **{r.get('brand', '')}** model **{r.get('model', '')}**.",
+        'avg_truck_capacity': lambda r: f"Rata-rata kapasitas truk adalah **{r.get('avg_capacity', 0):.2f} ton** (Max: {r.get('max_capacity', 0):.1f} ton, Min: {r.get('min_capacity', 0):.1f} ton).",
+        'avg_excavator_bucket': lambda r: f"Rata-rata kapasitas bucket excavator adalah **{r.get('avg_bucket', 0):.2f} m³** (Max: {r.get('max_bucket', 0):.1f} m³, Min: {r.get('min_bucket', 0):.1f} m³).",
+        'avg_hauling_cycle': lambda r: f"Rata-rata siklus hauling: **{r.get('avg_cycle', 0) or 0:.1f} menit**, Rata-rata muatan: **{r.get('avg_load', 0) or 0:.1f} ton**, Rata-rata jarak: **{r.get('avg_distance', 0) or 0:.1f} km**.",
+        'production_summary': lambda r: f"Total produksi tercatat: **{r.get('total_production', 0) or 0:,.0f} ton** dengan rata-rata achievement **{r.get('avg_achievement', 0) or 0:.1f}%**.",
+        'fuel_consumption': lambda r: f"Total konsumsi BBM: **{r.get('total_liters', 0) or 0:,.0f} liter** dengan total biaya **Rp {r.get('total_cost', 0) or 0:,.0f}**.",
+        'largest_excavator': lambda r: f"Excavator dengan bucket terbesar adalah **{r.get('code', 'N/A')} ({r.get('name', 'N/A')})** dengan kapasitas bucket **{r.get('bucketCapacity', 0) or 0:.1f} m³**, brand **{r.get('brand', 'N/A') or 'N/A'}** model **{r.get('model', 'N/A') or 'N/A'}**.",
+        'smallest_excavator': lambda r: f"Excavator dengan bucket terkecil adalah **{r.get('code', 'N/A')} ({r.get('name', 'N/A')})** dengan kapasitas bucket **{r.get('bucketCapacity', 0) or 0:.1f} m³**, brand **{r.get('brand', 'N/A') or 'N/A'}** model **{r.get('model', 'N/A') or 'N/A'}**.",
+        'largest_vessel': lambda r: f"Kapal dengan kapasitas terbesar adalah **{r.get('code', 'N/A')} ({r.get('name', 'N/A')})** dengan kapasitas **{r.get('capacity', 0) or 0:,.0f} ton**, DWT: **{r.get('dwt', 0) or 0:,.0f}**, tipe: **{r.get('vesselType', 'N/A') or 'N/A'}**.",
+        'smallest_vessel': lambda r: f"Kapal dengan kapasitas terkecil adalah **{r.get('code', 'N/A')} ({r.get('name', 'N/A')})** dengan kapasitas **{r.get('capacity', 0) or 0:,.0f} ton**, DWT: **{r.get('dwt', 0) or 0:,.0f}**, tipe: **{r.get('vesselType', 'N/A') or 'N/A'}**.",
+    }
+    
+    if query_type in formatters:
+        try:
+            return formatters[query_type](row)
+        except Exception:
+            pass
+    
+    if query_type == 'truck_status':
+        lines = ["**Status Truk Saat Ini:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['status']}: **{r['count']} unit**")
+        return "\n".join(lines)
+    
+    if query_type == 'excavator_status':
+        lines = ["**Status Excavator Saat Ini:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['status']}: **{r['count']} unit**")
+        return "\n".join(lines)
+    
+    if query_type == 'vessel_status':
+        lines = ["**Status Vessel Saat Ini:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['status']}: **{r['count']} unit**")
+        return "\n".join(lines)
+    
+    if query_type == 'truck_brands':
+        lines = ["**Distribusi Brand Truk:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['brand']}: **{r['count']} unit**")
+        return "\n".join(lines)
+    
+    if query_type == 'excavator_brands':
+        lines = ["**Distribusi Brand Excavator:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['brand']}: **{r['count']} unit**")
+        return "\n".join(lines)
+    
+    if query_type == 'mining_sites':
+        lines = ["**Daftar Mining Site Aktif:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['code']}: **{r['name']}** (Tipe: {r.get('siteType', 'N/A')})")
+        return "\n".join(lines)
+    
+    if query_type == 'recent_hauling':
+        lines = ["**10 Aktivitas Hauling Terakhir:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r.get('activityNumber', 'N/A')}: Truk {r.get('truck_code', 'N/A')}, Muatan {r.get('loadWeight', 0):.1f} ton, Siklus {r.get('totalCycleTime', 0):.0f} menit ({r.get('status', 'N/A')})")
+        return "\n".join(lines)
+    
+    if query_type == 'daily_production':
+        lines = ["**Produksi 7 Hari Terakhir:**"]
+        for _, r in df.iterrows():
+            date_str = str(r.get('recordDate', ''))[:10]
+            lines.append(f"- {date_str}: **{r.get('production', 0):,.0f} ton** (Achievement: {r.get('achievement', 0):.1f}%)")
+        return "\n".join(lines)
+    
+    if query_type == 'weather':
+        return f"**Cuaca Terkini:** {row.get('condition', 'N/A')}, Suhu: {row.get('temperature', 'N/A')}°C, Kelembaban: {row.get('humidity', 'N/A')}%, Curah Hujan: {row.get('rainfall', 0)} mm, Risk Level: {row.get('riskLevel', 'N/A')}"
+    
+    if query_type == 'recent_incidents':
+        lines = ["**5 Insiden Terakhir:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r.get('incidentNumber', 'N/A')}: {r.get('incidentType', 'N/A')} (Severity: {r.get('severity', 'N/A')}, Tanggal: {str(r.get('incidentDate', ''))[:10]})")
+        return "\n".join(lines)
+    
+    if query_type == 'schedules':
+        lines = ["**Jadwal Pelayaran Aktif:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r.get('scheduleNumber', 'N/A')}: Status {r.get('status', 'N/A')}, Qty: {r.get('plannedQuantity', 0):,.0f} ton")
+        return "\n".join(lines)
+    
+    if query_type == 'operator_shifts':
+        lines = ["**Distribusi Operator per Shift:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['shift']}: **{r['count']} operator**")
+        return "\n".join(lines)
+    
+    if query_type == 'delay_categories':
+        lines = ["**Kategori Delay:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['category']}: **{r['count']} jenis**")
+        return "\n".join(lines)
+    
+    if query_type == 'road_conditions':
+        lines = ["**Kondisi Jalan:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['condition']}: **{r['count']} segment**")
+        return "\n".join(lines)
+    
+    if query_type == 'top_trucks_hours':
+        lines = ["**Top 10 Truk Berdasarkan Jam Operasi:**"]
+        for idx, r in df.iterrows():
+            lines.append(f"{idx+1}. {r.get('code', 'N/A')} ({r.get('name', 'N/A')}): **{r.get('totalHours', 0):,.0f} jam**")
+        return "\n".join(lines)
+    
+    if query_type == 'top_trucks_distance':
+        lines = ["**Top 10 Truk Berdasarkan Jarak Tempuh:**"]
+        for idx, r in df.iterrows():
+            lines.append(f"{idx+1}. {r.get('code', 'N/A')} ({r.get('name', 'N/A')}): **{r.get('totalDistance', 0):,.0f} km**")
+        return "\n".join(lines)
+    
+    if query_type == 'largest_excavator':
+        return f"Excavator dengan bucket terbesar adalah **{row.get('code', '')} ({row.get('name', '')})** dengan bucket **{row.get('bucketCapacity', 0):.1f} m³**, brand **{row.get('brand', '')}** model **{row.get('model', '')}**."
+    
+    if query_type == 'smallest_excavator':
+        return f"Excavator dengan bucket terkecil adalah **{row.get('code', '')} ({row.get('name', '')})** dengan bucket **{row.get('bucketCapacity', 0):.1f} m³**, brand **{row.get('brand', '')}** model **{row.get('model', '')}**."
+    
+    if query_type == 'largest_vessel':
+        return f"Kapal dengan kapasitas terbesar adalah **{row.get('code', '')} ({row.get('name', '')})** dengan kapasitas **{row.get('capacity', 0):,.0f} ton**, DWT **{row.get('dwt', 0):,.0f} ton**, tipe **{row.get('vesselType', '')}**."
+    
+    if query_type == 'smallest_vessel':
+        return f"Kapal dengan kapasitas terkecil adalah **{row.get('code', '')} ({row.get('name', '')})** dengan kapasitas **{row.get('capacity', 0):,.0f} ton**, DWT **{row.get('dwt', 0):,.0f} ton**, tipe **{row.get('vesselType', '')}**."
+    
+    if query_type == 'production_today':
+        return f"Produksi hari ini: **{row.get('total', 0):,.0f} ton** dengan rata-rata achievement **{row.get('avg_achievement', 0):.1f}%**."
+    
+    if query_type == 'production_this_month':
+        return f"Produksi bulan ini: **{row.get('total', 0):,.0f} ton** dengan rata-rata achievement **{row.get('avg_achievement', 0):.1f}%**."
+    
+    if query_type == 'production_by_site':
+        lines = ["**Produksi per Mining Site:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r.get('site_name', 'N/A')}: **{r.get('total_production', 0):,.0f} ton** (Achievement: {r.get('avg_achievement', 0):.1f}%)")
+        return "\n".join(lines)
+    
+    if query_type == 'production_vs_target':
+        lines = ["**Target vs Aktual Produksi (7 Hari Terakhir):**"]
+        for _, r in df.iterrows():
+            date_str = str(r.get('recordDate', ''))[:10]
+            lines.append(f"- {date_str}: Target **{r.get('targetProduction', 0):,.0f}** vs Aktual **{r.get('actualProduction', 0):,.0f}** (Achievement: {r.get('achievement', 0):.1f}%)")
+        return "\n".join(lines)
+    
+    if query_type == 'hauling_delayed':
+        return f"Total hauling yang mengalami delay: **{row.get('total', 0):,} trip**."
+    
+    if query_type == 'hauling_completed':
+        return f"Total hauling yang selesai (COMPLETED): **{row.get('total', 0):,} trip**."
+    
+    if query_type == 'hauling_in_progress':
+        return f"Total hauling yang sedang berjalan: **{row.get('total', 0):,} trip**."
+    
+    if query_type == 'hauling_by_shift':
+        lines = ["**Statistik Hauling per Shift:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['shift']}: **{r.get('total_trips', 0):,} trip**, Avg Load: {r.get('avg_load', 0):.1f} ton, Avg Cycle: {r.get('avg_cycle', 0):.0f} menit")
+        return "\n".join(lines)
+    
+    if query_type == 'hauling_performance':
+        lines = ["**Performa Hauling 7 Hari Terakhir:**"]
+        for _, r in df.iterrows():
+            date_str = str(r.get('date', ''))[:10]
+            lines.append(f"- {date_str}: **{r.get('trips', 0):,} trip**, Total: {r.get('total_hauled', 0):,.0f} ton, Avg Load: {r.get('avg_load', 0):.1f} ton")
+        return "\n".join(lines)
+    
+    if query_type == 'weather_history':
+        lines = ["**Riwayat Cuaca 7 Hari Terakhir:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['condition']}: **{r['count']} kejadian**")
+        return "\n".join(lines)
+    
+    if query_type == 'incidents_by_type':
+        lines = ["**Insiden per Tipe:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['incidentType']}: **{r['count']} kejadian**")
+        return "\n".join(lines)
+    
+    if query_type == 'incidents_by_severity':
+        lines = ["**Insiden per Severity:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['severity']}: **{r['count']} kejadian**")
+        return "\n".join(lines)
+    
+    if query_type == 'incidents_this_month':
+        return f"Total insiden bulan ini: **{row.get('total', 0)} kejadian**."
+    
+    if query_type == 'maintenance_by_type':
+        lines = ["**Maintenance per Tipe:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['maintenanceType']}: **{r['count']} job**")
+        return "\n".join(lines)
+    
+    if query_type == 'maintenance_pending':
+        return f"Total maintenance yang pending/scheduled: **{row.get('total', 0)} job**."
+    
+    if query_type == 'maintenance_completed_month':
+        return f"Total maintenance selesai bulan ini: **{row.get('total', 0)} job**."
+    
+    if query_type == 'fuel_this_month':
+        return f"Konsumsi BBM bulan ini: **{row.get('total_liters', 0):,.0f} liter** dengan total biaya **Rp {row.get('total_cost', 0):,.0f}**."
+    
+    if query_type == 'fuel_by_equipment':
+        lines = ["**Konsumsi BBM per Tipe Equipment:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['equipment_type']}: **{r.get('total_liters', 0):,.0f} liter** (Rp {r.get('total_cost', 0):,.0f})")
+        return "\n".join(lines)
+    
+    if query_type == 'vessels_by_type':
+        lines = ["**Kapal per Tipe:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['vesselType']}: **{r['count']} unit**")
+        return "\n".join(lines)
+    
+    if query_type == 'vessels_loading':
+        lines = ["**Kapal Sedang Loading:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['code']}: {r['name']} (Kapasitas: {r.get('capacity', 0):,.0f} ton)")
+        return "\n".join(lines)
+    
+    if query_type == 'schedules_this_month':
+        return f"Total jadwal pelayaran bulan ini: **{row.get('total', 0)} jadwal**."
+    
+    if query_type == 'shipments_this_month':
+        return f"Pengiriman bulan ini: **{row.get('total_shipments', 0)} shipment** dengan total quantity **{row.get('total_quantity', 0):,.0f} ton**."
+    
+    if query_type == 'support_equipment_count':
+        lines = ["**Support Equipment per Tipe:**"]
+        for _, r in df.iterrows():
+            lines.append(f"- {r['equipmentType']}: **{r['count']} unit**")
+        return "\n".join(lines)
+    
+    if query_type == 'queue_avg_wait':
+        return f"Rata-rata waktu tunggu antrian: **{row.get('avg_wait_minutes', 0):.1f} menit**."
+    
+    if query_type == 'loading_points_with_excavator':
+        lines = ["**Loading Point dan Excavator:**"]
+        for _, r in df.iterrows():
+            exc = r.get('excavator_code', 'N/A') or 'Tidak ada'
+            lines.append(f"- {r['code']}: {r['name']} → Excavator: {exc}")
+        return "\n".join(lines)
+    
+    if query_type == 'top_operators_hours':
+        lines = ["**Top 10 Operator Berdasarkan Jam Kerja:**"]
+        for idx, r in df.iterrows():
+            lines.append(f"{idx+1}. {r.get('employeeNumber', 'N/A')}: **{r.get('totalHours', 0):,.0f} jam** (Rating: {r.get('rating', 0):.1f}, Shift: {r.get('shift', 'N/A')})")
+        return "\n".join(lines)
+    
+    if query_type == 'top_operators_rating':
+        lines = ["**Top 10 Operator Berdasarkan Rating:**"]
+        for idx, r in df.iterrows():
+            lines.append(f"{idx+1}. {r.get('employeeNumber', 'N/A')}: **Rating {r.get('rating', 0):.1f}** ({r.get('totalHours', 0):,.0f} jam, Shift: {r.get('shift', 'N/A')})")
+        return "\n".join(lines)
+    
+    if query_type == 'delay_analysis':
+        lines = ["**Analisis Penyebab Delay (Top 10):**"]
+        for idx, r in df.iterrows():
+            lines.append(f"{idx+1}. [{r.get('category', 'N/A')}] {r.get('name', 'N/A')}: **{r.get('occurrences', 0)} kejadian**")
+        return "\n".join(lines)
+    
+    if query_type == 'efficiency_summary':
+        return f"Ringkasan Efisiensi: Load Efficiency **{row.get('avg_load_efficiency', 0):.1f}%**, Utilization Rate **{row.get('avg_utilization', 0):.1f}%**."
+    
+    if query_type == 'downtime_summary':
+        return f"Ringkasan Downtime (7 hari): Total **{row.get('total_downtime', 0):.1f} jam**, Rata-rata **{row.get('avg_downtime', 0):.1f} jam/hari**."
+    
+    if query_type == 'cost_summary_maintenance':
+        return f"Biaya Maintenance (30 hari): Total **Rp {row.get('total_cost', 0):,.0f}** dari **{row.get('total_jobs', 0)} job**."
+    
+    if query_type == 'cost_summary_fuel':
+        return f"Biaya BBM (30 hari): Total **Rp {row.get('total_cost', 0):,.0f}** untuk **{row.get('total_liters', 0):,.0f} liter**."
+    
+    if query_type == 'fleet_summary':
+        return f"**Ringkasan Armada:** Truk: **{row.get('total_trucks', 0)} unit**, Excavator: **{row.get('total_excavators', 0)} unit**, Vessel: **{row.get('total_vessels', 0)} unit**, Operator: **{row.get('total_operators', 0)} orang**."
+    
+    if query_type == 'top_hauling_trucks':
+        lines = ["**Top 10 Truk Hauling (7 Hari Terakhir):**"]
+        for idx, r in df.iterrows():
+            lines.append(f"{idx+1}. {r.get('code', 'N/A')} ({r.get('name', 'N/A')}): **{r.get('total_trips', 0)} trip**, Total: {r.get('total_hauled', 0):,.0f} ton")
+        return "\n".join(lines)
+    
+    if query_type == 'top_hauling_excavators':
+        lines = ["**Top 10 Excavator Loading (7 Hari Terakhir):**"]
+        for idx, r in df.iterrows():
+            lines.append(f"{idx+1}. {r.get('code', 'N/A')} ({r.get('name', 'N/A')}): **{r.get('total_trips', 0)} trip**, Total: {r.get('total_loaded', 0):,.0f} ton")
+        return "\n".join(lines)
+    
+    if query_type == 'truck_details_all':
+        lines = [f"**Daftar Truk Aktif ({len(df)} unit):**"]
+        for _, r in df.head(15).iterrows():
+            lines.append(f"- {r['code']}: {r['name']} | {r.get('brand', 'N/A')} {r.get('model', '')} | {r.get('capacity', 0):.0f}t | {r['status']}")
+        if len(df) > 15:
+            lines.append(f"... dan {len(df)-15} truk lainnya")
+        return "\n".join(lines)
+    
+    if query_type == 'excavator_details_all':
+        lines = [f"**Daftar Excavator Aktif ({len(df)} unit):**"]
+        for _, r in df.head(15).iterrows():
+            lines.append(f"- {r['code']}: {r['name']} | {r.get('brand', 'N/A')} | Bucket: {r.get('bucketCapacity', 0):.1f}m³ | {r['status']}")
+        if len(df) > 15:
+            lines.append(f"... dan {len(df)-15} excavator lainnya")
+        return "\n".join(lines)
+    
+    if query_type == 'operator_details_all':
+        lines = [f"**Daftar Operator ({len(df)} orang):**"]
+        for _, r in df.head(15).iterrows():
+            lines.append(f"- {r['employeeNumber']}: {r.get('licenseType', 'N/A')} | {r['status']} | {r.get('shift', 'N/A')} | Rating: {r.get('rating', 0):.1f}")
+        if len(df) > 15:
+            lines.append(f"... dan {len(df)-15} operator lainnya")
+        return "\n".join(lines)
+    
+    return f"Data ditemukan: {len(df)} baris."
 
 def get_predefined_query(question):
     question_lower = question.lower()
     
-    if 'idle' in question_lower and 'truk' in question_lower:
-        if 'kapasitas' in question_lower and ('terbesar' in question_lower or 'maksimum' in question_lower):
-            return """SELECT 
-                (SELECT COUNT(*) FROM trucks WHERE status = 'IDLE' AND "isActive" = true) as idle_trucks,
-                t.code, t.name, t.brand, t.model, t.capacity
-            FROM trucks t 
-            WHERE "isActive" = true 
-            ORDER BY capacity DESC LIMIT 1"""
-        return PREDEFINED_QUERIES["idle_trucks_count"]
+    fast_query, _ = get_fast_answer(question)
+    if fast_query:
+        return fast_query
     
-    if 'excavator' in question_lower and ('aktif' in question_lower or 'active' in question_lower):
-        return PREDEFINED_QUERIES["active_excavators"]
-    
-    if 'mining site' in question_lower or 'tambang' in question_lower or 'site' in question_lower:
-        if 'aktif' in question_lower or 'active' in question_lower or 'daftar' in question_lower:
-            return PREDEFINED_QUERIES["mining_sites"]
-    
-    if 'hauling' in question_lower and ('terbaru' in question_lower or 'recent' in question_lower or 'terakhir' in question_lower):
-        return PREDEFINED_QUERIES["recent_hauling"]
-    
-    if 'status' in question_lower and 'truk' in question_lower:
-        return PREDEFINED_QUERIES["truck_status_summary"]
-    
-    if 'produksi' in question_lower and ('total' in question_lower or 'aktual' in question_lower):
-        return PREDEFINED_QUERIES["production_summary"]
+    smart_query = smart_query_builder(question)
+    if smart_query:
+        return smart_query
     
     return None
 
@@ -475,7 +1246,10 @@ def generate_sql_query(user_question):
     
     prompt = f"""You are an expert PostgreSQL query generator for a mining operations database.
 
-{SCHEMA_CONTEXT}
+{FULL_DATABASE_SCHEMA}
+
+QUERY EXAMPLES:
+{json.dumps(QUERY_EXAMPLES, indent=2)}
 
 USER QUESTION: {user_question}
 
@@ -483,27 +1257,32 @@ TASK: Generate a valid PostgreSQL SELECT query to answer the user's question.
 
 CRITICAL RULES:
 1. Output ONLY the raw SQL query - no explanations, no markdown, no code blocks
-2. Use double quotes for camelCase columns: "isActive", "loadWeight", "createdAt"
-3. Use single quotes for string/enum values: 'IDLE', 'ACTIVE', 'COMPLETED'
-4. For "largest/biggest/most" use ORDER BY ... DESC LIMIT 1
-5. For "smallest/least" use ORDER BY ... ASC LIMIT 1
-6. For "how many/count/total" use COUNT(*)
-7. For "available trucks" use: status = 'IDLE' AND "isActive" = true
-8. For "operating excavators" use: status = 'ACTIVE' AND "isActive" = true
-9. Boolean values are lowercase: true, false
-10. Always select useful columns, not just *
+2. Use double quotes for camelCase columns: "isActive", "loadWeight", "createdAt", "totalCycleTime", "bucketCapacity"
+3. Use single quotes for string/enum values: 'IDLE', 'ACTIVE', 'COMPLETED', 'SHIFT_1'
+4. For "largest/biggest/most/terbesar" use ORDER BY ... DESC LIMIT 1
+5. For "smallest/least/terkecil" use ORDER BY ... ASC LIMIT 1
+6. For "how many/count/total/berapa/jumlah" use SELECT COUNT(*) as total
+7. For "available/idle trucks" use: status = 'IDLE' AND "isActive" = true
+8. For "operating excavators" use: status IN ('ACTIVE', 'IDLE') AND "isActive" = true
+9. Boolean values are lowercase: true, false (no quotes)
+10. Always include relevant columns in SELECT for clarity
+11. Use COALESCE for SUM/AVG to handle NULLs: COALESCE(SUM(...), 0)
+12. For date ranges: WHERE "recordDate" >= CURRENT_DATE - INTERVAL '7 days'
+13. For JOINs, always use quoted foreign keys: JOIN trucks t ON h."truckId" = t.id
+14. LIMIT results to reasonable numbers (10-50 for lists)
 
-COMMON PATTERNS:
-- Biggest truck by capacity: SELECT code, name, brand, model, capacity FROM trucks WHERE "isActive" = true ORDER BY capacity DESC LIMIT 1
-- Count active trucks: SELECT COUNT(*) FROM trucks WHERE "isActive" = true
-- Recent hauling: SELECT * FROM hauling_activities ORDER BY "createdAt" DESC LIMIT 10
-- Truck with operator: SELECT t.code, t.name, o."employeeNumber" FROM trucks t LEFT JOIN operators o ON t."currentOperatorId" = o.id
+COMMON QUERY PATTERNS:
+- Truk kapasitas terbesar: SELECT code, name, brand, model, capacity FROM trucks WHERE "isActive" = true ORDER BY capacity DESC LIMIT 1
+- Jumlah truk aktif: SELECT COUNT(*) as total FROM trucks WHERE "isActive" = true
+- Hauling terbaru: SELECT h.*, t.code as truck_code FROM hauling_activities h JOIN trucks t ON h."truckId" = t.id ORDER BY h."createdAt" DESC LIMIT 10
+- Produksi per site: SELECT ms.name, SUM(pr."actualProduction") as total FROM production_records pr JOIN mining_sites ms ON pr."miningSiteId" = ms.id GROUP BY ms.name
+- Status summary: SELECT status, COUNT(*) as count FROM trucks WHERE "isActive" = true GROUP BY status
 
 SQL Query:"""
     
     try:
         response = ollama.chat(model=MODEL_NAME, messages=[
-            {'role': 'system', 'content': 'You are a PostgreSQL expert. Output ONLY the raw SQL query without any formatting, explanation, or code blocks. Just the pure SQL statement.'},
+            {'role': 'system', 'content': 'You are a PostgreSQL expert for mining operations. Output ONLY the raw SQL query without any formatting, explanation, or code blocks. Just the pure SQL SELECT statement. Always use double quotes for camelCase columns.'},
             {'role': 'user', 'content': prompt}
         ])
         sql = response['message']['content'].strip()
@@ -651,11 +1430,30 @@ def handle_simulation_question(user_question):
     }
 
 def execute_and_summarize_stream(user_question):
-    """Enhanced streaming response with simulation capability"""
-    
     yield json.dumps({"type": "step", "status": "thinking", "message": "Menganalisis pertanyaan..."}) + "\n"
     
-    # Detect question type
+    fast_query, query_type = get_fast_answer(user_question)
+    if fast_query:
+        yield json.dumps({"type": "step", "status": "fast_path", "message": "Menggunakan fast-path untuk query sederhana"}) + "\n"
+        yield json.dumps({"type": "sql", "query": fast_query}) + "\n"
+        
+        try:
+            cache_key = get_cache_key(fast_query)
+            cached = get_cached_result(cache_key)
+            if cached is not None:
+                yield json.dumps({"type": "step", "status": "cached", "message": "Data dari cache"}) + "\n"
+                df = cached
+            else:
+                df = fetch_dataframe(fast_query)
+                set_cached_result(cache_key, df)
+            
+            answer = format_fast_answer(query_type, df, user_question)
+            yield json.dumps({"type": "answer", "content": answer}) + "\n"
+            yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+            return
+        except Exception as e:
+            yield json.dumps({"type": "step", "status": "fallback", "message": f"Fast-path gagal: {str(e)}, mencoba metode standar..."}) + "\n"
+    
     question_type = detect_question_type(user_question)
     
     # ============================================================

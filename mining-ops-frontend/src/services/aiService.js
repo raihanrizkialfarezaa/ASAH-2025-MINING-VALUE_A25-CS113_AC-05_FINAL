@@ -144,10 +144,17 @@ class AIService {
    */
   async askChatbot(question, context = []) {
     try {
-      const response = await api.post('/ai/chatbot', {
-        question,
-        context,
-      });
+      // Use longer timeout for chatbot (3 minutes) since AI processing can take time
+      const response = await api.post(
+        '/ai/chatbot',
+        {
+          question,
+          context,
+        },
+        {
+          timeout: 180000, // 3 minutes timeout for chatbot
+        }
+      );
       return response.data;
     } catch (error) {
       console.error('Chatbot request failed:', error);
