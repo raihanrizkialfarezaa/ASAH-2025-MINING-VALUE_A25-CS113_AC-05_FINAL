@@ -21,6 +21,14 @@ const PrivateRoute = ({ children }) => {
   return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
+const RoleRoute = ({ children, allowedRoles }) => {
+  const user = authService.getCurrentUser();
+  if (!user || !allowedRoles.includes(user.role)) {
+    return <Navigate to="/dashboard" />;
+  }
+  return children;
+};
+
 function App() {
   return (
     <BrowserRouter>
@@ -34,16 +42,72 @@ function App() {
                 <Routes>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/trucks" element={<TruckList />} />
-                  <Route path="/vessels" element={<VesselList />} />
                   <Route path="/excavators" element={<ExcavatorList />} />
-                  <Route path="/operators" element={<OperatorList />} />
-                  <Route path="/hauling" element={<HaulingList />} />
-                  <Route path="/locations" element={<LocationManagement />} />
-                  <Route path="/maintenance" element={<MaintenanceList />} />
                   <Route path="/weather" element={<WeatherList />} />
-                  <Route path="/production" element={<ProductionList />} />
-                  <Route path="/users" element={<UserList />} />
-                  <Route path="/ai-recommendations" element={<AIRecommendations />} />
+                  <Route
+                    path="/vessels"
+                    element={
+                      <RoleRoute allowedRoles={['ADMIN', 'SUPERVISOR', 'DISPATCHER']}>
+                        <VesselList />
+                      </RoleRoute>
+                    }
+                  />
+                  <Route
+                    path="/operators"
+                    element={
+                      <RoleRoute allowedRoles={['ADMIN', 'SUPERVISOR']}>
+                        <OperatorList />
+                      </RoleRoute>
+                    }
+                  />
+                  <Route
+                    path="/hauling"
+                    element={
+                      <RoleRoute allowedRoles={['ADMIN', 'SUPERVISOR', 'OPERATOR', 'DISPATCHER']}>
+                        <HaulingList />
+                      </RoleRoute>
+                    }
+                  />
+                  <Route
+                    path="/locations"
+                    element={
+                      <RoleRoute allowedRoles={['ADMIN', 'SUPERVISOR', 'DISPATCHER']}>
+                        <LocationManagement />
+                      </RoleRoute>
+                    }
+                  />
+                  <Route
+                    path="/maintenance"
+                    element={
+                      <RoleRoute allowedRoles={['ADMIN', 'SUPERVISOR', 'MAINTENANCE_STAFF']}>
+                        <MaintenanceList />
+                      </RoleRoute>
+                    }
+                  />
+                  <Route
+                    path="/production"
+                    element={
+                      <RoleRoute allowedRoles={['ADMIN', 'SUPERVISOR', 'OPERATOR', 'DISPATCHER']}>
+                        <ProductionList />
+                      </RoleRoute>
+                    }
+                  />
+                  <Route
+                    path="/users"
+                    element={
+                      <RoleRoute allowedRoles={['ADMIN']}>
+                        <UserList />
+                      </RoleRoute>
+                    }
+                  />
+                  <Route
+                    path="/ai-recommendations"
+                    element={
+                      <RoleRoute allowedRoles={['ADMIN', 'SUPERVISOR', 'DISPATCHER']}>
+                        <AIRecommendations />
+                      </RoleRoute>
+                    }
+                  />
                   <Route path="/" element={<Navigate to="/dashboard" />} />
                 </Routes>
               </Layout>

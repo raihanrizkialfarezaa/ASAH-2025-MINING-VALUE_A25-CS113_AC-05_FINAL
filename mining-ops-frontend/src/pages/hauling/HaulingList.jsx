@@ -6,6 +6,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
 import StatusBadge from '../../components/common/StatusBadge';
+import { authService } from '../../services/authService';
 import {
   Plus,
   Eye,
@@ -34,6 +35,9 @@ import {
 } from 'lucide-react';
 
 const HaulingList = () => {
+  const currentUser = authService.getCurrentUser();
+  const canEdit = ['ADMIN', 'SUPERVISOR'].includes(currentUser?.role);
+
   const [activities, setActivities] = useState([]);
   const [allActivities, setAllActivities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -569,10 +573,12 @@ const HaulingList = () => {
             <RefreshCw size={18} />
             <span>Refresh</span>
           </button>
-          <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
-            <Plus size={20} />
-            <span>Add Hauling Activity</span>
-          </button>
+          {canEdit && (
+            <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
+              <Plus size={20} />
+              <span>Add Hauling Activity</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -866,12 +872,16 @@ const HaulingList = () => {
                         <button onClick={() => handleView(activity)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
                           <Eye size={18} />
                         </button>
-                        <button onClick={() => handleEdit(activity)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
-                          <Edit size={18} />
-                        </button>
-                        <button onClick={() => handleDelete(activity.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Cancel">
-                          <Trash2 size={18} />
-                        </button>
+                        {canEdit && (
+                          <button onClick={() => handleEdit(activity)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
+                            <Edit size={18} />
+                          </button>
+                        )}
+                        {canEdit && (
+                          <button onClick={() => handleDelete(activity.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Cancel">
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

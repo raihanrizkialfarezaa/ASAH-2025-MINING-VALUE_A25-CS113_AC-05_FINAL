@@ -53,22 +53,21 @@ const Layout = ({ children }) => {
   };
 
   const menuItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/ai-recommendations', icon: Bot, label: 'AI Recommendations' },
-    { path: '/trucks', icon: Truck, label: 'Trucks' },
-    { path: '/vessels', icon: Package, label: 'Vessels' },
-    { path: '/excavators', icon: Construction, label: 'Excavators' },
-    { path: '/operators', icon: Users, label: 'Operators' },
-    { path: '/hauling', icon: Package, label: 'Hauling' },
-    { path: '/locations', icon: MapPin, label: 'Locations' },
-    { path: '/maintenance', icon: Wrench, label: 'Maintenance' },
-    { path: '/weather', icon: CloudRain, label: 'Weather' },
-    { path: '/production', icon: BarChart3, label: 'Production' },
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['ADMIN', 'SUPERVISOR', 'OPERATOR', 'DISPATCHER', 'MAINTENANCE_STAFF'] },
+    { path: '/ai-recommendations', icon: Bot, label: 'AI Recommendations', roles: ['ADMIN', 'SUPERVISOR', 'DISPATCHER'] },
+    { path: '/trucks', icon: Truck, label: 'Trucks', roles: ['ADMIN', 'SUPERVISOR', 'OPERATOR', 'DISPATCHER', 'MAINTENANCE_STAFF'] },
+    { path: '/vessels', icon: Package, label: 'Vessels', roles: ['ADMIN', 'SUPERVISOR', 'DISPATCHER'] },
+    { path: '/excavators', icon: Construction, label: 'Excavators', roles: ['ADMIN', 'SUPERVISOR', 'OPERATOR', 'DISPATCHER', 'MAINTENANCE_STAFF'] },
+    { path: '/operators', icon: Users, label: 'Operators', roles: ['ADMIN', 'SUPERVISOR'] },
+    { path: '/hauling', icon: Package, label: 'Hauling', roles: ['ADMIN', 'SUPERVISOR', 'OPERATOR', 'DISPATCHER'] },
+    { path: '/locations', icon: MapPin, label: 'Locations', roles: ['ADMIN', 'SUPERVISOR', 'DISPATCHER'] },
+    { path: '/maintenance', icon: Wrench, label: 'Maintenance', roles: ['ADMIN', 'SUPERVISOR', 'MAINTENANCE_STAFF'] },
+    { path: '/weather', icon: CloudRain, label: 'Weather', roles: ['ADMIN', 'SUPERVISOR', 'OPERATOR', 'DISPATCHER', 'MAINTENANCE_STAFF'] },
+    { path: '/production', icon: BarChart3, label: 'Production', roles: ['ADMIN', 'SUPERVISOR', 'OPERATOR', 'DISPATCHER'] },
+    { path: '/users', icon: Settings, label: 'Users', roles: ['ADMIN'] },
   ];
 
-  if (user?.role === 'ADMIN') {
-    menuItems.push({ path: '/users', icon: Settings, label: 'Users' });
-  }
+  const filteredMenuItems = menuItems.filter((item) => item.roles.includes(user?.role));
 
   const handleLogout = () => {
     authService.logout();
@@ -86,7 +85,7 @@ const Layout = ({ children }) => {
         </div>
 
         <nav className="flex-1 px-2 py-4 space-y-1">
-          {menuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname.startsWith(item.path);
 

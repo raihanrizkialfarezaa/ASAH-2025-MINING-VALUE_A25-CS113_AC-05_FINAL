@@ -3,33 +3,12 @@ import { userService } from '../../services';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
-import {
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  Filter,
-  Search,
-  X,
-  SortAsc,
-  SortDesc,
-  RefreshCw,
-  ChevronDown,
-  Users as UsersIcon,
-  Calendar,
-  Shield,
-  User,
-  Clock,
-  AlertCircle,
-  CheckCircle,
-  Mail,
-  UserCheck,
-  UserX,
-  Activity,
-  Key,
-} from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Filter, Search, X, SortAsc, SortDesc, RefreshCw, ChevronDown, Users as UsersIcon, Calendar, Shield, User, Clock, AlertCircle, CheckCircle, Mail, UserCheck, UserX, Activity, Key } from 'lucide-react';
+import { authService } from '../../services/authService';
 
 const UserList = () => {
+  const currentUser = authService.getCurrentUser();
+  const canEdit = currentUser?.role === 'ADMIN';
   const [users, setUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,12 +45,7 @@ const UserList = () => {
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (user) =>
-          user.username?.toLowerCase().includes(query) ||
-          user.fullName?.toLowerCase().includes(query) ||
-          user.email?.toLowerCase().includes(query)
-      );
+      filtered = filtered.filter((user) => user.username?.toLowerCase().includes(query) || user.fullName?.toLowerCase().includes(query) || user.email?.toLowerCase().includes(query));
     }
 
     if (roleFilter) {
@@ -381,10 +355,12 @@ const UserList = () => {
             <RefreshCw size={18} />
             <span>Refresh</span>
           </button>
-          <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
-            <Plus size={20} />
-            <span>Add User</span>
-          </button>
+          {canEdit && (
+            <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
+              <Plus size={20} />
+              <span>Add User</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -675,12 +651,16 @@ const UserList = () => {
                         <button onClick={() => handleView(user)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
                           <Eye size={18} />
                         </button>
-                        <button onClick={() => handleEdit(user)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
-                          <Edit size={18} />
-                        </button>
-                        <button onClick={() => handleDelete(user.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Deactivate">
-                          <Trash2 size={18} />
-                        </button>
+                        {canEdit && (
+                          <button onClick={() => handleEdit(user)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
+                            <Edit size={18} />
+                          </button>
+                        )}
+                        {canEdit && (
+                          <button onClick={() => handleDelete(user.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Deactivate">
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -917,13 +897,7 @@ const UserList = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className={`input-field ${formErrors.email ? 'border-red-500' : ''}`}
-                  placeholder="john@example.com"
-                />
+                <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className={`input-field ${formErrors.email ? 'border-red-500' : ''}`} placeholder="john@example.com" />
                 {formErrors.email && <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>}
               </div>
 

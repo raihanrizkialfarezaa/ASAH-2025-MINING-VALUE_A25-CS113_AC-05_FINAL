@@ -21,6 +21,7 @@ import {
   formatCurrency,
   formatTime,
 } from '../../utils/productionCalculations';
+import { authService } from '../../services/authService';
 
 // Hauling Status Options
 const HAULING_STATUS_OPTIONS = [
@@ -33,6 +34,9 @@ const HAULING_STATUS_OPTIONS = [
 ];
 
 const ProductionList = () => {
+  const currentUser = authService.getCurrentUser();
+  const canEdit = ['ADMIN', 'SUPERVISOR'].includes(currentUser?.role);
+
   const [productions, setProductions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, totalPages: 1 });
@@ -1345,10 +1349,12 @@ const ProductionList = () => {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Production Records</h1>
           <p className="text-gray-500 mt-1">Track and manage daily production activities</p>
         </div>
-        <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 shadow-lg hover:shadow-xl transition-shadow">
-          <Plus size={20} />
-          <span>Add Production Record</span>
-        </button>
+        {canEdit && (
+          <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 shadow-lg hover:shadow-xl transition-shadow">
+            <Plus size={20} />
+            <span>Add Production Record</span>
+          </button>
+        )}
       </div>
 
       {statistics && (
@@ -1597,12 +1603,16 @@ const ProductionList = () => {
                       <button onClick={() => handleView(production)} className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors" title="View Details">
                         <Eye size={18} />
                       </button>
-                      <button onClick={() => handleEdit(production)} className="p-2 rounded-lg text-green-600 hover:bg-green-50 transition-colors" title="Edit">
-                        <Edit size={18} />
-                      </button>
-                      <button onClick={() => handleDelete(production.id)} className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Delete">
-                        <Trash2 size={18} />
-                      </button>
+                      {canEdit && (
+                        <button onClick={() => handleEdit(production)} className="p-2 rounded-lg text-green-600 hover:bg-green-50 transition-colors" title="Edit">
+                          <Edit size={18} />
+                        </button>
+                      )}
+                      {canEdit && (
+                        <button onClick={() => handleDelete(production.id)} className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Delete">
+                          <Trash2 size={18} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

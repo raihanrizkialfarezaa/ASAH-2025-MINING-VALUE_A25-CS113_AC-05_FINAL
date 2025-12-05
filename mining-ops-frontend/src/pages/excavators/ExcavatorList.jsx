@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { excavatorService } from '../../services/equipmentService';
 import { miningSiteService, loadingPointService, dumpingPointService } from '../../services/locationService';
+import { authService } from '../../services/authService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
@@ -36,6 +37,8 @@ import {
 } from 'lucide-react';
 
 const ExcavatorList = () => {
+  const currentUser = authService.getCurrentUser();
+  const canEdit = ['ADMIN', 'SUPERVISOR'].includes(currentUser?.role);
   const [excavators, setExcavators] = useState([]);
   const [allExcavators, setAllExcavators] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -473,10 +476,12 @@ const ExcavatorList = () => {
             <RefreshCw size={18} />
             <span>Refresh</span>
           </button>
-          <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
-            <Plus size={20} />
-            <span>Add Excavator</span>
-          </button>
+          {canEdit && (
+            <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
+              <Plus size={20} />
+              <span>Add Excavator</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -805,15 +810,19 @@ const ExcavatorList = () => {
                         <button onClick={() => handleView(excavator)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
                           <Eye size={18} />
                         </button>
-                        <button onClick={() => handleEdit(excavator)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
-                          <Edit size={18} />
-                        </button>
+                        {canEdit && (
+                          <button onClick={() => handleEdit(excavator)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
+                            <Edit size={18} />
+                          </button>
+                        )}
                         <button onClick={() => handlePerformance(excavator)} className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors" title="Performance">
                           <Activity size={18} />
                         </button>
-                        <button onClick={() => handleDelete(excavator.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
-                          <Trash2 size={18} />
-                        </button>
+                        {canEdit && (
+                          <button onClick={() => handleDelete(excavator.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

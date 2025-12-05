@@ -8,8 +8,11 @@ import Pagination from '../../components/common/Pagination';
 import StatusBadge from '../../components/common/StatusBadge';
 import MapPicker from '../../components/common/MapPicker';
 import { MapPin, ArrowRight, Activity, Plus, Edit, Trash2, Eye, Map as MapIcon, List, Search, X, RefreshCw, Filter, SortAsc, SortDesc, CheckCircle, XCircle, Navigation, Layers, Route, TrendingUp } from 'lucide-react';
+import { authService } from '../../services/authService';
 
 const LocationManagement = () => {
+  const currentUser = authService.getCurrentUser();
+  const canEdit = ['ADMIN', 'SUPERVISOR'].includes(currentUser?.role);
   const [activeTab, setActiveTab] = useState('sites');
   const [viewMode, setViewMode] = useState('list');
   const [sites, setSites] = useState([]);
@@ -478,10 +481,12 @@ const LocationManagement = () => {
               <span className="text-sm font-medium">Map</span>
             </button>
           </div>
-          <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
-            <Plus size={20} />
-            <span>Add New</span>
-          </button>
+          {canEdit && (
+            <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
+              <Plus size={20} />
+              <span>Add New</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -643,12 +648,16 @@ const LocationManagement = () => {
                       <button onClick={() => handleView(site)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="View">
                         <Eye size={16} />
                       </button>
-                      <button onClick={() => handleEdit(site)} className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors" title="Edit">
-                        <Edit size={16} />
-                      </button>
-                      <button onClick={() => handleDelete(site.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
-                        <Trash2 size={16} />
-                      </button>
+                      {canEdit && (
+                        <button onClick={() => handleEdit(site)} className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors" title="Edit">
+                          <Edit size={16} />
+                        </button>
+                      )}
+                      {canEdit && (
+                        <button onClick={() => handleDelete(site.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -702,12 +711,16 @@ const LocationManagement = () => {
                       <button onClick={() => handleView(point)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="View">
                         <Eye size={16} />
                       </button>
-                      <button onClick={() => handleEdit(point)} className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors" title="Edit">
-                        <Edit size={16} />
-                      </button>
-                      <button onClick={() => handleDelete(point.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
-                        <Trash2 size={16} />
-                      </button>
+                      {canEdit && (
+                        <button onClick={() => handleEdit(point)} className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors" title="Edit">
+                          <Edit size={16} />
+                        </button>
+                      )}
+                      {canEdit && (
+                        <button onClick={() => handleDelete(point.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -776,12 +789,16 @@ const LocationManagement = () => {
                       <button onClick={() => handleView(point)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="View">
                         <Eye size={16} />
                       </button>
-                      <button onClick={() => handleEdit(point)} className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors" title="Edit">
-                        <Edit size={16} />
-                      </button>
-                      <button onClick={() => handleDelete(point.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
-                        <Trash2 size={16} />
-                      </button>
+                      {canEdit && (
+                        <button onClick={() => handleEdit(point)} className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors" title="Edit">
+                          <Edit size={16} />
+                        </button>
+                      )}
+                      {canEdit && (
+                        <button onClick={() => handleDelete(point.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -899,12 +916,16 @@ const LocationManagement = () => {
                       <button onClick={() => handleView(road)} className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="View">
                         <Eye size={18} />
                       </button>
-                      <button onClick={() => handleEdit(road)} className="p-2 text-green-600 hover:bg-green-50 rounded transition-colors" title="Edit">
-                        <Edit size={18} />
-                      </button>
-                      <button onClick={() => handleDelete(road.id)} className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
-                        <Trash2 size={18} />
-                      </button>
+                      {canEdit && (
+                        <button onClick={() => handleEdit(road)} className="p-2 text-green-600 hover:bg-green-50 rounded transition-colors" title="Edit">
+                          <Edit size={18} />
+                        </button>
+                      )}
+                      {canEdit && (
+                        <button onClick={() => handleDelete(road.id)} className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
+                          <Trash2 size={18} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

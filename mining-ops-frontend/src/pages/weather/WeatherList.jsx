@@ -5,6 +5,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
 import StatusBadge from '../../components/common/StatusBadge';
+import { authService } from '../../services/authService';
 import { 
   Plus, 
   Edit, 
@@ -33,6 +34,9 @@ import {
 } from 'lucide-react';
 
 const WeatherList = () => {
+  const currentUser = authService.getCurrentUser();
+  const canEdit = ['ADMIN', 'SUPERVISOR'].includes(currentUser?.role);
+
   const [weathers, setWeathers] = useState([]);
   const [allWeathers, setAllWeathers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -402,10 +406,12 @@ const WeatherList = () => {
             <RefreshCw size={18} />
             <span>Refresh</span>
           </button>
-          <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
-            <Plus size={20} />
-            <span>Add Weather Log</span>
-          </button>
+          {canEdit && (
+            <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
+              <Plus size={20} />
+              <span>Add Weather Log</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -706,12 +712,16 @@ const WeatherList = () => {
                           <button onClick={() => handleView(weather)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
                             <Eye size={18} />
                           </button>
-                          <button onClick={() => handleEdit(weather)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
-                            <Edit size={18} />
-                          </button>
-                          <button onClick={() => handleDelete(weather.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
-                            <Trash2 size={18} />
-                          </button>
+                          {canEdit && (
+                            <button onClick={() => handleEdit(weather)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
+                              <Edit size={18} />
+                            </button>
+                          )}
+                          {canEdit && (
+                            <button onClick={() => handleDelete(weather.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
+                              <Trash2 size={18} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

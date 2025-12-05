@@ -6,8 +6,11 @@ import Pagination from '../../components/common/Pagination';
 import StatusBadge from '../../components/common/StatusBadge';
 import { Plus, Edit, Trash2, Eye, Filter, Search, X, SortAsc, SortDesc, RefreshCw, ChevronDown, User, Users, Activity, Clock, UserCheck, UserX, Star, Calendar, CreditCard, Award, CheckCircle, Truck, Shield, Mail } from 'lucide-react';
 import { userService } from '../../services';
+import { authService } from '../../services/authService';
 
 const OperatorList = () => {
+  const currentUser = authService.getCurrentUser();
+  const canEdit = ['ADMIN', 'SUPERVISOR'].includes(currentUser?.role);
   const [operators, setOperators] = useState([]);
   const [allOperators, setAllOperators] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -470,10 +473,12 @@ const OperatorList = () => {
           <p className="text-sm text-gray-500 mt-1">Manage and monitor operator workforce in real-time</p>
         </div>
         <div className="flex space-x-3">
-          <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
-            <Plus size={20} />
-            <span>Add Operator</span>
-          </button>
+          {canEdit && (
+            <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
+              <Plus size={20} />
+              <span>Add Operator</span>
+            </button>
+          )}
           <button onClick={fetchOperators} className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border shadow-sm text-gray-700 font-medium transition-colors flex items-center space-x-2">
             <RefreshCw size={18} />
             <span>Refresh</span>
@@ -757,12 +762,16 @@ const OperatorList = () => {
                         <button onClick={() => handleView(operator)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
                           <Eye size={18} />
                         </button>
-                        <button onClick={() => handleEdit(operator)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
-                          <Edit size={18} />
-                        </button>
-                        <button onClick={() => handleDelete(operator.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
-                          <Trash2 size={18} />
-                        </button>
+                        {canEdit && (
+                          <button onClick={() => handleEdit(operator)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
+                            <Edit size={18} />
+                          </button>
+                        )}
+                        {canEdit && (
+                          <button onClick={() => handleDelete(operator.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

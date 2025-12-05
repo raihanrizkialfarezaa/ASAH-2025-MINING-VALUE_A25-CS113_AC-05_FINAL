@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { truckService } from '../../services/equipmentService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { loadingPointService, dumpingPointService } from '../../services/locationService';
+import { authService } from '../../services/authService';
 import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -34,6 +35,8 @@ import {
 } from 'lucide-react';
 
 const TruckList = () => {
+  const currentUser = authService.getCurrentUser();
+  const canEdit = ['ADMIN', 'SUPERVISOR'].includes(currentUser?.role);
   const [trucks, setTrucks] = useState([]);
   const [allTrucks, setAllTrucks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -401,10 +404,12 @@ const TruckList = () => {
             <RefreshCw size={18} />
             <span>Refresh</span>
           </button>
-          <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
-            <Plus size={20} />
-            <span>Add Truck</span>
-          </button>
+          {canEdit && (
+            <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
+              <Plus size={20} />
+              <span>Add Truck</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -651,15 +656,19 @@ const TruckList = () => {
                         <button onClick={() => handleView(truck)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
                           <Eye size={18} />
                         </button>
-                        <button onClick={() => handleEdit(truck)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
-                          <Edit size={18} />
-                        </button>
+                        {canEdit && (
+                          <button onClick={() => handleEdit(truck)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
+                            <Edit size={18} />
+                          </button>
+                        )}
                         <button onClick={() => handlePerformance(truck)} className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors" title="Performance">
                           <Activity size={18} />
                         </button>
-                        <button onClick={() => handleDelete(truck.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
-                          <Trash2 size={18} />
-                        </button>
+                        {canEdit && (
+                          <button onClick={() => handleDelete(truck.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
