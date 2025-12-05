@@ -3,6 +3,52 @@ import ApiError from '../utils/apiError.js';
 import { getPaginationParams, calculatePagination } from '../utils/pagination.js';
 import { HAULING_STATUS, TRUCK_STATUS } from '../config/constants.js';
 
+const updateProductionAchievementByHaulingId = async (haulingActivityId) => {
+  try {
+    const productionRecords = await prisma.productionRecord.findMany({
+      where: {
+        equipmentAllocation: {
+          path: ['hauling_activity_ids'],
+          array_contains: haulingActivityId,
+        },
+      },
+    });
+
+    for (const record of productionRecords) {
+      const haulingIds = record.equipmentAllocation?.hauling_activity_ids || [];
+      if (haulingIds.length === 0) continue;
+
+      const activities = await prisma.haulingActivity.findMany({
+        where: { id: { in: haulingIds } },
+      });
+
+      const completedAndAchieved = activities.filter(
+        (a) =>
+          a.status === HAULING_STATUS.COMPLETED &&
+          a.loadWeight !== null &&
+          a.loadWeight >= a.targetWeight
+      );
+
+      const totalLoadWeight = activities.reduce(
+        (sum, a) => sum + (parseFloat(a.loadWeight) || 0),
+        0
+      );
+      const achievement =
+        activities.length > 0 ? (completedAndAchieved.length / activities.length) * 100 : 0;
+
+      await prisma.productionRecord.update({
+        where: { id: record.id },
+        data: {
+          achievement: parseFloat(achievement.toFixed(2)),
+          actualProduction: parseFloat(totalLoadWeight.toFixed(2)),
+        },
+      });
+    }
+  } catch (error) {
+    console.error('Failed to update production achievement:', error);
+  }
+};
+
 export const haulingService = {
   async getAll(query) {
     const { page, limit, skip } = getPaginationParams(query);
@@ -723,26 +769,33 @@ export const haulingService = {
       },
     });
 
-    // Calculate if achieved
     updated.isAchieved =
       updated.status === HAULING_STATUS.COMPLETED &&
       updated.loadWeight !== null &&
       updated.loadWeight >= updated.targetWeight;
 
+    updateProductionAchievementByHaulingId(id);
+
     return updated;
   },
 
-  /**
-   * Calculate achievement percentage for a production based on its hauling activities
-   * Achievement = 100% only when ALL hauling activities are:
-   * 1. Status = COMPLETED
-   * 2. Load Weight >= Target Weight
-   */
-  async calculateProductionAchievement(truckIds = [], excavatorIds = [], startDate, endDate) {
-    const activities = await this.getByEquipmentAllocation(truckIds, excavatorIds, {
-      startDate,
-      endDate,
-    });
+  async calculateProductionAchievement(
+    truckIds = [],
+    excavatorIds = [],
+    startDate,
+    endDate,
+    haulingActivityIds = []
+  ) {
+    let activities = [];
+
+    if (haulingActivityIds && haulingActivityIds.length > 0) {
+      activities = await this.getByIds(haulingActivityIds);
+    } else {
+      activities = await this.getByEquipmentAllocation(truckIds, excavatorIds, {
+        startDate,
+        endDate,
+      });
+    }
 
     if (activities.length === 0) {
       return {
@@ -751,23 +804,41 @@ export const haulingService = {
         totalCount: 0,
         totalLoadWeight: 0,
         totalTargetWeight: 0,
+        loadWeightProgress: 0,
       };
     }
 
-    const completedAndAchieved = activities.filter((a) => a.isAchieved);
-    const totalLoadWeight = activities.reduce((sum, a) => sum + (a.loadWeight || 0), 0);
-    const totalTargetWeight = activities.reduce((sum, a) => sum + (a.targetWeight || 0), 0);
+    // Count completed haulings (status = COMPLETED and loadWeight >= targetWeight)
+    const completedAndAchieved = activities.filter(
+      (a) =>
+        a.status === HAULING_STATUS.COMPLETED &&
+        a.loadWeight !== null &&
+        a.loadWeight >= a.targetWeight
+    );
 
-    const allAchieved = activities.length > 0 && activities.every((a) => a.isAchieved);
-    const achievement = allAchieved ? 100 : (completedAndAchieved.length / activities.length) * 100;
+    const totalLoadWeight = activities.reduce((sum, a) => sum + (parseFloat(a.loadWeight) || 0), 0);
+    const totalTargetWeight = activities.reduce(
+      (sum, a) => sum + (parseFloat(a.targetWeight) || 0),
+      0
+    );
+
+    const loadWeightProgress =
+      totalTargetWeight > 0
+        ? parseFloat(((totalLoadWeight / totalTargetWeight) * 100).toFixed(2))
+        : 0;
+
+    // Simple achievement formula: (completedCount / totalCount) * 100
+    const achievement = parseFloat(
+      ((completedAndAchieved.length / activities.length) * 100).toFixed(2)
+    );
 
     return {
-      achievement: parseFloat(achievement.toFixed(2)),
+      achievement: Math.min(achievement, 100),
       completedCount: completedAndAchieved.length,
       totalCount: activities.length,
-      totalLoadWeight,
-      totalTargetWeight,
-      loadWeightProgress: totalTargetWeight > 0 ? (totalLoadWeight / totalTargetWeight) * 100 : 0,
+      totalLoadWeight: parseFloat(totalLoadWeight.toFixed(2)),
+      totalTargetWeight: parseFloat(totalTargetWeight.toFixed(2)),
+      loadWeightProgress,
     };
   },
 

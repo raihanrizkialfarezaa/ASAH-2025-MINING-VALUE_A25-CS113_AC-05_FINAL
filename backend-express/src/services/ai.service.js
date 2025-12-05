@@ -489,10 +489,10 @@ class AIService {
             dumpingPointId: effectiveDumpingPointId,
             shift: shift || 'SHIFT_1',
             loadingStartTime: new Date(),
-            loadWeight: null, // Kosongkan, admin akan mengisi
-            targetWeight: parseFloat(targetWeightPerHauling.toFixed(2)), // Dibagi rata dari Production Target
+            loadWeight: 0,
+            targetWeight: parseFloat(targetWeightPerHauling.toFixed(2)),
             distance: actualDistance,
-            fuelConsumed: fuelConsumed, // Calculated from actual equipment fuel consumption
+            fuelConsumed: fuelConsumed,
             status: 'LOADING',
             remarks: `Created by AI Recommendation | Truck Fuel: ${truckFuelConsumptionPerKm} L/km | Excavator Fuel: ${excavatorFuelConsumptionPerHr} L/hr`,
           };

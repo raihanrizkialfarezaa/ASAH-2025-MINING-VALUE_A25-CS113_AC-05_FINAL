@@ -663,15 +663,46 @@ const ProductionList = () => {
   const handleUpdateManualHauling = async (tempId, field, value) => {
     const hauling = manualHaulingList.find((h) => h.tempId === tempId);
 
+    // Auto-complete status when loadWeight >= targetWeight
+    let autoCompleteStatus = false;
+    if (field === 'loadWeight' && value !== '') {
+      const loadWeightNum = parseFloat(value);
+      const targetWeightNum = parseFloat(hauling?.targetWeight) || 30;
+      if (loadWeightNum >= targetWeightNum) {
+        autoCompleteStatus = true;
+      }
+    }
+
     if (hauling?.isExisting && hauling.id && (field === 'loadWeight' || field === 'status')) {
       try {
         const updateData = {};
         if (field === 'loadWeight') {
           updateData.loadWeight = value !== '' ? parseFloat(value) : null;
+          // Auto-set status to COMPLETED if load >= target
+          if (autoCompleteStatus) {
+            updateData.status = 'COMPLETED';
+          }
         } else if (field === 'status') {
           updateData.status = value;
         }
         await haulingService.quickUpdate(hauling.id, updateData);
+
+        if (selectedProduction?.equipmentAllocation) {
+          const allocation = selectedProduction.equipmentAllocation;
+          const haulingActivityIds = allocation.hauling_activity_ids || [];
+          if (haulingActivityIds.length > 0) {
+            const achievementRes = await haulingService.calculateAchievement(allocation.truck_ids || [], allocation.excavator_ids || [], null, null, haulingActivityIds);
+            if (achievementRes.data) {
+              setHaulingAchievement(achievementRes.data);
+              // Auto-update actualProduction from completed haulings
+              const completedLoadWeight = achievementRes.data.totalLoadWeight || 0;
+              setFormData((prev) => ({
+                ...prev,
+                actualProduction: completedLoadWeight > 0 ? completedLoadWeight.toString() : prev.actualProduction,
+              }));
+            }
+          }
+        }
       } catch (error) {
         console.error('Failed to update hauling activity:', error);
       }
@@ -705,6 +736,15 @@ const ProductionList = () => {
           updated.roadSegmentName = rs?.name || 'N/A';
           updated.roadSegmentDistance = rs?.distance || updated.distance;
           updated.distance = rs?.distance || updated.distance;
+        }
+
+        // Auto-complete status when loadWeight >= targetWeight (for local state)
+        if (field === 'loadWeight' && value !== '') {
+          const loadWeightNum = parseFloat(value);
+          const targetWeightNum = parseFloat(updated.targetWeight) || 30;
+          if (loadWeightNum >= targetWeightNum) {
+            updated.status = 'COMPLETED';
+          }
         }
 
         return updated;
@@ -814,6 +854,7 @@ const ProductionList = () => {
             }));
             setManualHaulingList(existingHaulings);
 
+            const haulingActivityIds = allocation.hauling_activity_ids || [];
             const truckIds = allocation.truck_ids || [];
             const excavatorIds = allocation.excavator_ids || [];
             const recordDate = new Date(production.recordDate);
@@ -822,9 +863,17 @@ const ProductionList = () => {
             const endDate = new Date(recordDate);
             endDate.setHours(23, 59, 59, 999);
 
-            const achievementRes = await haulingService.calculateAchievement(truckIds, excavatorIds, startDate.toISOString(), endDate.toISOString());
+            const achievementRes = await haulingService.calculateAchievement(truckIds, excavatorIds, startDate.toISOString(), endDate.toISOString(), haulingActivityIds);
             if (achievementRes.data) {
               setHaulingAchievement(achievementRes.data);
+              // Auto-update actualProduction from total load weight
+              const totalLoadWeight = achievementRes.data.totalLoadWeight || 0;
+              if (totalLoadWeight > 0) {
+                setFormData((prev) => ({
+                  ...prev,
+                  actualProduction: totalLoadWeight.toString(),
+                }));
+              }
             }
           }
         } catch (error) {
@@ -855,6 +904,11 @@ const ProductionList = () => {
       const updateData = {};
       if (haulingEditForm.loadWeight !== '') {
         updateData.loadWeight = parseFloat(haulingEditForm.loadWeight);
+        // Auto-complete status when load >= target
+        const activity = relatedHaulingActivities.find((a) => a.id === activityId);
+        if (activity && updateData.loadWeight >= (activity.targetWeight || 30)) {
+          updateData.status = 'COMPLETED';
+        }
       }
       if (haulingEditForm.status) {
         updateData.status = haulingEditForm.status;
@@ -869,15 +923,24 @@ const ProductionList = () => {
         // Recalculate achievement
         if (selectedProduction?.equipmentAllocation) {
           const allocation = selectedProduction.equipmentAllocation;
+          const haulingActivityIds = allocation.hauling_activity_ids || [];
           const recordDate = new Date(selectedProduction.recordDate);
           const startDate = new Date(recordDate);
           startDate.setHours(0, 0, 0, 0);
           const endDate = new Date(recordDate);
           endDate.setHours(23, 59, 59, 999);
 
-          const achievementRes = await haulingService.calculateAchievement(allocation.truck_ids || [], allocation.excavator_ids || [], startDate.toISOString(), endDate.toISOString());
+          const achievementRes = await haulingService.calculateAchievement(allocation.truck_ids || [], allocation.excavator_ids || [], startDate.toISOString(), endDate.toISOString(), haulingActivityIds);
           if (achievementRes.data) {
             setHaulingAchievement(achievementRes.data);
+            // Auto-update actualProduction from total load weight
+            const totalLoadWeight = achievementRes.data.totalLoadWeight || 0;
+            if (totalLoadWeight > 0) {
+              setFormData((prev) => ({
+                ...prev,
+                actualProduction: totalLoadWeight.toString(),
+              }));
+            }
           }
         }
 
@@ -890,10 +953,38 @@ const ProductionList = () => {
     }
   };
 
-  const handleView = (production) => {
+  const handleView = async (production) => {
     setSelectedProduction(production);
     setModalMode('view');
+    setRelatedHaulingActivities([]);
+    setHaulingAchievement(null);
     setShowModal(true);
+
+    if (production.equipmentAllocation) {
+      const allocation = production.equipmentAllocation;
+      const haulingActivityIds = allocation.hauling_activity_ids || [];
+
+      if (haulingActivityIds.length > 0) {
+        setLoadingHaulingActivities(true);
+        try {
+          const [activitiesRes, achievementRes] = await Promise.all([
+            haulingService.getByIds(haulingActivityIds),
+            haulingService.calculateAchievement(allocation.truck_ids || [], allocation.excavator_ids || [], null, null, haulingActivityIds),
+          ]);
+
+          if (activitiesRes.data) {
+            setRelatedHaulingActivities(activitiesRes.data);
+          }
+          if (achievementRes.data) {
+            setHaulingAchievement(achievementRes.data);
+          }
+        } catch (error) {
+          console.error('Failed to fetch hauling data for view:', error);
+        } finally {
+          setLoadingHaulingActivities(false);
+        }
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -1056,13 +1147,24 @@ const ProductionList = () => {
           payload.remarks = `Manual hauling: ${manualHaulingList.length} trips | IDs: ${allHaulingIds.slice(0, 3).join(', ')}${allHaulingIds.length > 3 ? '...' : ''}`;
         }
       } else if (selectedTruckIds.length > 0 || selectedExcavatorIds.length > 0) {
+        // AI mode - include hauling_activity_ids if available from AI recommendation
+        const aiHaulingIds = haulingActivityInfo?.activityIds || [];
+
         payload.equipmentAllocation = {
           truck_ids: selectedTruckIds,
           excavator_ids: selectedExcavatorIds,
           truck_count: selectedTruckIds.length,
           excavator_count: selectedExcavatorIds.length,
-          created_from: formData.remarks?.includes('hauling activities') ? 'hauling_data' : 'ai_simulation',
+          hauling_activity_ids: aiHaulingIds,
+          created_from: aiHaulingIds.length > 0 ? 'ai_hauling_applied' : formData.remarks?.includes('hauling activities') ? 'hauling_data' : 'ai_simulation',
         };
+
+        console.log('[Production] AI mode equipmentAllocation:', {
+          truck_ids: selectedTruckIds.length,
+          excavator_ids: selectedExcavatorIds.length,
+          hauling_activity_ids: aiHaulingIds.length,
+          created_from: payload.equipmentAllocation.created_from,
+        });
       }
 
       if (modalMode === 'create') {
@@ -1111,91 +1213,165 @@ const ProductionList = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Production Records</h1>
-        <button onClick={handleCreate} className="btn-primary flex items-center space-x-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Production Records</h1>
+          <p className="text-gray-500 mt-1">Track and manage daily production activities</p>
+        </div>
+        <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 shadow-lg hover:shadow-xl transition-shadow">
           <Plus size={20} />
           <span>Add Production Record</span>
         </button>
       </div>
 
       {statistics && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="card">
-            <p className="text-sm text-gray-600 mb-1">Total Production</p>
-            <p className="text-2xl font-bold">{statistics.totalProduction?.toFixed(0) || 0} ton</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Total Production</p>
+                <p className="text-3xl font-bold mt-1">{(statistics.totalProduction / 1000000)?.toFixed(2) || 0}M</p>
+                <p className="text-blue-200 text-xs mt-1">ton</p>
+              </div>
+              <div className="bg-blue-400/30 p-3 rounded-lg">
+                <Package size={28} className="text-white" />
+              </div>
+            </div>
           </div>
-          <div className="card">
-            <p className="text-sm text-gray-600 mb-1">Average Achievement</p>
-            <p className="text-2xl font-bold">{statistics.avgAchievement?.toFixed(1) || 0}%</p>
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-5 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Average Achievement</p>
+                <p className="text-3xl font-bold mt-1">{statistics.avgAchievement?.toFixed(1) || 0}%</p>
+                <p className="text-green-200 text-xs mt-1">performance</p>
+              </div>
+              <div className="bg-green-400/30 p-3 rounded-lg">
+                <CheckCircle size={28} className="text-white" />
+              </div>
+            </div>
           </div>
-          <div className="card">
-            <p className="text-sm text-gray-600 mb-1">Total Trips</p>
-            <p className="text-2xl font-bold">{statistics.totalTrips || 0}</p>
+          <div className="bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl p-5 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium">Total Trips</p>
+                <p className="text-3xl font-bold mt-1">{(statistics.totalTrips / 1000)?.toFixed(1) || 0}K</p>
+                <p className="text-orange-200 text-xs mt-1">hauling trips</p>
+              </div>
+              <div className="bg-orange-400/30 p-3 rounded-lg">
+                <Truck size={28} className="text-white" />
+              </div>
+            </div>
           </div>
-          <div className="card">
-            <p className="text-sm text-gray-600 mb-1">Avg Cycle Time</p>
-            <p className="text-2xl font-bold">{statistics.avgCycleTime?.toFixed(1) || 0} min</p>
+          <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-5 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">Avg Cycle Time</p>
+                <p className="text-3xl font-bold mt-1">{statistics.avgCycleTime?.toFixed(1) || 0}</p>
+                <p className="text-purple-200 text-xs mt-1">minutes</p>
+              </div>
+              <div className="bg-purple-400/30 p-3 rounded-lg">
+                <RefreshCw size={28} className="text-white" />
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      <div className="card table-container">
-        <table className="data-table">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="table-header">ID</th>
-              <th className="table-header">Date</th>
-              <th className="table-header">Shift</th>
-              <th className="table-header">Mining Site</th>
-              <th className="table-header">Target (ton)</th>
-              <th className="table-header">Actual (ton)</th>
-              <th className="table-header">Achievement (%)</th>
-              <th className="table-header">Total Trips</th>
-              <th className="table-header">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {productions.length === 0 && (
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+          <h2 className="text-lg font-semibold text-gray-800">Production History</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <td colSpan="9" className="table-cell text-center text-gray-500 py-8">
-                  No production records found. Click "Add Production Record" to create one.
-                </td>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Shift</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Mining Site</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Target</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actual</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Achievement</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Trips</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
               </tr>
-            )}
-            {productions.map((production) => (
-              <tr key={production.id}>
-                <td className="table-cell">
-                  <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded" title={production.id}>
-                    {production.id.slice(0, 12)}...
-                  </span>
-                </td>
-                <td className="table-cell">{new Date(production.recordDate).toLocaleDateString()}</td>
-                <td className="table-cell">{production.shift}</td>
-                <td className="table-cell">{production.miningSite?.name || '-'}</td>
-                <td className="table-cell">{production.targetProduction.toFixed(0)}</td>
-                <td className="table-cell">{production.actualProduction.toFixed(0)}</td>
-                <td className="table-cell">
-                  <span className={`font-semibold ${production.achievement >= 100 ? 'text-green-600' : 'text-orange-600'}`}>{production.achievement.toFixed(1)}%</span>
-                </td>
-                <td className="table-cell">{production.totalTrips}</td>
-                <td className="table-cell">
-                  <div className="flex space-x-2">
-                    <button onClick={() => handleView(production)} className="text-blue-600 hover:text-blue-800">
-                      <Eye size={18} />
-                    </button>
-                    <button onClick={() => handleEdit(production)} className="text-green-600 hover:text-green-800">
-                      <Edit size={18} />
-                    </button>
-                    <button onClick={() => handleDelete(production.id)} className="text-red-600 hover:text-red-800">
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {productions.length === 0 && (
+                <tr>
+                  <td colSpan="9" className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center">
+                      <Package size={48} className="text-gray-300 mb-3" />
+                      <p className="text-gray-500 font-medium">No production records found</p>
+                      <p className="text-gray-400 text-sm mt-1">Click "Add Production Record" to create one</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {productions.map((production) => (
+                <tr key={production.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <span className="font-mono text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md" title={production.id}>
+                      {production.id.slice(0, 10)}...
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-800">{new Date(production.recordDate).toLocaleDateString('id-ID')}</span>
+                      <span className="text-xs text-gray-400">{new Date(production.recordDate).toLocaleDateString('id-ID', { weekday: 'short' })}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        production.shift === 'SHIFT_1' ? 'bg-yellow-100 text-yellow-700' : production.shift === 'SHIFT_2' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                      }`}
+                    >
+                      {production.shift?.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-800">{production.miningSite?.name || '-'}</span>
+                      <span className="text-xs text-gray-400">{production.miningSite?.siteType || ''}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <span className="font-medium text-gray-700">{production.targetProduction?.toLocaleString('id-ID', { maximumFractionDigits: 0 })}</span>
+                    <span className="text-xs text-gray-400 ml-1">t</span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <span className="font-medium text-gray-700">{production.actualProduction?.toLocaleString('id-ID', { maximumFractionDigits: 0 })}</span>
+                    <span className="text-xs text-gray-400 ml-1">t</span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex items-center justify-center">
+                      <div className={`px-3 py-1.5 rounded-lg ${production.achievement >= 100 ? 'bg-green-100' : production.achievement >= 80 ? 'bg-yellow-100' : 'bg-red-100'}`}>
+                        <span className={`text-sm font-bold ${production.achievement >= 100 ? 'text-green-700' : production.achievement >= 80 ? 'text-yellow-700' : 'text-red-700'}`}>{production.achievement?.toFixed(1)}%</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-700">{production.totalTrips}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-center space-x-1">
+                      <button onClick={() => handleView(production)} className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors" title="View Details">
+                        <Eye size={18} />
+                      </button>
+                      <button onClick={() => handleEdit(production)} className="p-2 rounded-lg text-green-600 hover:bg-green-50 transition-colors" title="Edit">
+                        <Edit size={18} />
+                      </button>
+                      <button onClick={() => handleDelete(production.id)} className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Delete">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <Pagination currentPage={pagination.page} totalPages={pagination.totalPages} onPageChange={(page) => setPagination((prev) => ({ ...prev, page }))} />
@@ -1203,22 +1379,192 @@ const ProductionList = () => {
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={modalMode === 'create' ? 'Add Production Record' : modalMode === 'edit' ? 'Edit Production Record' : 'Production Details'} size="2xl">
         {modalMode === 'view' && selectedProduction ? (
           <div className="space-y-6">
-            {/* View Mode Content (Same as before) */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Record Date</label>
-                <p className="text-lg">{new Date(selectedProduction.recordDate).toLocaleDateString()}</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-600">Record Date</span>
+                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">{selectedProduction.shift}</span>
+                </div>
+                <p className="text-xl font-bold text-gray-800">{new Date(selectedProduction.recordDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
               </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Shift</label>
-                <p className="text-lg">{selectedProduction.shift}</p>
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-100">
+                <span className="text-sm font-medium text-gray-600">Mining Site</span>
+                <p className="text-xl font-bold text-gray-800">{selectedProduction.miningSite?.name || '-'}</p>
+                <p className="text-xs text-gray-500 mt-1">{selectedProduction.miningSite?.siteType || ''}</p>
               </div>
-              <div className="col-span-2">
-                <label className="text-sm font-medium text-gray-600">Mining Site</label>
-                <p className="text-lg">{selectedProduction.miningSite?.name || '-'}</p>
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
+                <span className="text-sm font-medium text-gray-600">Achievement</span>
+                <p
+                  className={`text-3xl font-bold ${
+                    (haulingAchievement?.achievement ?? selectedProduction.achievement) >= 100 ? 'text-green-600' : (haulingAchievement?.achievement ?? selectedProduction.achievement) >= 80 ? 'text-orange-500' : 'text-red-500'
+                  }`}
+                >
+                  {(haulingAchievement?.achievement ?? selectedProduction.achievement)?.toFixed(1) || 0}%
+                </p>
               </div>
             </div>
-            {/* ... other view sections ... */}
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white rounded-lg p-4 border shadow-sm">
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Target Production</span>
+                <p className="text-2xl font-bold text-gray-800">{selectedProduction.targetProduction?.toFixed(1) || 0}</p>
+                <span className="text-sm text-gray-500">ton</span>
+              </div>
+              <div className="bg-white rounded-lg p-4 border shadow-sm">
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Actual Production</span>
+                <p className="text-2xl font-bold text-blue-600">{(haulingAchievement?.totalLoadWeight ?? selectedProduction.actualProduction)?.toFixed(1) || 0}</p>
+                <span className="text-sm text-gray-500">ton</span>
+              </div>
+              <div className="bg-white rounded-lg p-4 border shadow-sm">
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Total Trips</span>
+                <p className="text-2xl font-bold text-orange-600">{selectedProduction.totalTrips || 0}</p>
+                <span className="text-sm text-gray-500">trips</span>
+              </div>
+              <div className="bg-white rounded-lg p-4 border shadow-sm">
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Avg Cycle Time</span>
+                <p className="text-2xl font-bold text-purple-600">{selectedProduction.avgCycleTime?.toFixed(1) || 0}</p>
+                <span className="text-sm text-gray-500">minutes</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-50 rounded-lg p-3 border">
+                <span className="text-xs text-gray-500">Total Distance</span>
+                <p className="text-lg font-semibold">{selectedProduction.totalDistance?.toFixed(2) || 0} km</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 border">
+                <span className="text-xs text-gray-500">Total Fuel</span>
+                <p className="text-lg font-semibold">{selectedProduction.totalFuel?.toFixed(2) || 0} L</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 border">
+                <span className="text-xs text-gray-500">Trucks Operating</span>
+                <p className="text-lg font-semibold">
+                  {selectedProduction.trucksOperating || 0} <span className="text-xs text-gray-400">({selectedProduction.trucksBreakdown || 0} breakdown)</span>
+                </p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 border">
+                <span className="text-xs text-gray-500">Excavators Operating</span>
+                <p className="text-lg font-semibold">
+                  {selectedProduction.excavatorsOperating || 0} <span className="text-xs text-gray-400">({selectedProduction.excavatorsBreakdown || 0} breakdown)</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-50 rounded-lg p-3 border">
+                <span className="text-xs text-gray-500">Utilization Rate</span>
+                <p className="text-lg font-semibold">{selectedProduction.utilizationRate?.toFixed(1) || 0}%</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 border">
+                <span className="text-xs text-gray-500">Downtime Hours</span>
+                <p className="text-lg font-semibold">{selectedProduction.downtimeHours?.toFixed(1) || 0} hrs</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 border">
+                <span className="text-xs text-gray-500">Avg Calori</span>
+                <p className="text-lg font-semibold">{selectedProduction.avgCalori?.toFixed(0) || '-'}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 border">
+                <span className="text-xs text-gray-500">Avg Moisture</span>
+                <p className="text-lg font-semibold">{selectedProduction.avgMoisture?.toFixed(1) || '-'}%</p>
+              </div>
+            </div>
+
+            {haulingAchievement && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-semibold text-blue-800 text-sm flex items-center mb-3">
+                  <Package size={16} className="mr-2" />
+                  Hauling Achievement Details
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <div className="bg-white rounded p-3 text-center border border-blue-100">
+                    <span className={`text-2xl font-bold ${haulingAchievement.achievement >= 100 ? 'text-green-600' : 'text-orange-600'}`}>{haulingAchievement.achievement?.toFixed(1) || 0}%</span>
+                    <p className="text-xs text-gray-500 mt-1">Achievement</p>
+                  </div>
+                  <div className="bg-white rounded p-3 text-center border border-blue-100">
+                    <span className="text-2xl font-bold text-blue-600">
+                      {haulingAchievement.completedCount || 0}/{haulingAchievement.totalCount || 0}
+                    </span>
+                    <p className="text-xs text-gray-500 mt-1">Completed</p>
+                  </div>
+                  <div className="bg-white rounded p-3 text-center border border-blue-100">
+                    <span className="text-2xl font-bold text-green-600">{haulingAchievement.totalLoadWeight?.toFixed(1) || 0}</span>
+                    <p className="text-xs text-gray-500 mt-1">Ton Loaded</p>
+                  </div>
+                  <div className="bg-white rounded p-3 text-center border border-blue-100">
+                    <span className="text-2xl font-bold text-gray-600">{haulingAchievement.totalTargetWeight?.toFixed(1) || 0}</span>
+                    <p className="text-xs text-gray-500 mt-1">Target Weight</p>
+                  </div>
+                  <div className="bg-white rounded p-3 text-center border border-blue-100">
+                    <span className="text-2xl font-bold text-purple-600">{haulingAchievement.loadWeightProgress?.toFixed(1) || 0}%</span>
+                    <p className="text-xs text-gray-500 mt-1">Weight Progress</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {loadingHaulingActivities && (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-gray-600">Loading hauling activities...</span>
+              </div>
+            )}
+
+            {relatedHaulingActivities.length > 0 && (
+              <div className="border rounded-lg overflow-hidden">
+                <div className="bg-gray-50 px-4 py-2 border-b">
+                  <h4 className="font-semibold text-gray-700 flex items-center">
+                    <Truck size={16} className="mr-2" />
+                    Related Hauling Activities ({relatedHaulingActivities.length})
+                  </h4>
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100 sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Activity</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Truck</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Load/Target</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {relatedHaulingActivities.map((ha) => (
+                        <tr key={ha.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 font-mono text-xs">{ha.activityNumber}</td>
+                          <td className="px-3 py-2">{ha.truck?.code || '-'}</td>
+                          <td className="px-3 py-2">
+                            <span className={ha.loadWeight >= ha.targetWeight ? 'text-green-600 font-semibold' : ''}>{ha.loadWeight || 0}</span>
+                            <span className="text-gray-400">/{ha.targetWeight || 0}t</span>
+                          </td>
+                          <td className="px-3 py-2">
+                            <span
+                              className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                ha.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : ha.status === 'LOADING' ? 'bg-blue-100 text-blue-700' : ha.status === 'HAULING' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'
+                              }`}
+                            >
+                              {ha.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {selectedProduction.remarks && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <span className="text-xs text-yellow-700 font-medium uppercase tracking-wide">Remarks</span>
+                <p className="text-gray-700 mt-1">{selectedProduction.remarks}</p>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-4 border-t">
+              <button onClick={() => setShowModal(false)} className="btn-secondary">
+                Close
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -1856,8 +2202,19 @@ const ProductionList = () => {
               <h3 className="font-semibold mb-3">Actuals & Quality</h3>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Actual Production (ton) *</label>
-                  <input type="number" step="0.01" value={formData.actualProduction} onChange={(e) => setFormData({ ...formData, actualProduction: e.target.value })} className="input-field" required />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Actual Production (ton) *{isManualMode && manualHaulingList.length > 0 && <span className="text-xs text-blue-600 ml-2">(Auto-calculated from haulings)</span>}
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.actualProduction}
+                    onChange={(e) => setFormData({ ...formData, actualProduction: e.target.value })}
+                    className={`input-field ${isManualMode && manualHaulingList.length > 0 ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    required
+                    readOnly={isManualMode && manualHaulingList.length > 0}
+                    title={isManualMode && manualHaulingList.length > 0 ? 'Nilai ini otomatis dihitung dari total load weight hauling activities' : ''}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Utilization Rate (%)</label>
