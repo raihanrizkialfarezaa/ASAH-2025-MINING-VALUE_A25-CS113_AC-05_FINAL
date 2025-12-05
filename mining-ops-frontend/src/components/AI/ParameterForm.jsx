@@ -184,8 +184,12 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    const selectedSite = miningSites.find((s) => s.id === formData.miningSiteId);
+    const miningSiteName = selectedSite ? `${selectedSite.code} - ${selectedSite.name}` : '';
+
     const submitData = {
       ...formData,
+      miningSiteName: miningSiteName,
       selectedScheduleInfo: selectedScheduleInfo,
     };
 

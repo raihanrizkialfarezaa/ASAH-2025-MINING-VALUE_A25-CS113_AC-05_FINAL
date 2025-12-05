@@ -11,6 +11,7 @@ const AIRecommendations = () => {
   const [realtimeData, setRealtimeData] = useState(null);
   const [selectedStrategy, setSelectedStrategy] = useState(null);
   const [aiServiceHealth, setAiServiceHealth] = useState(null);
+  const [lastSelectedParams, setLastSelectedParams] = useState(null);
 
   useEffect(() => {
     loadInitialData();
@@ -53,8 +54,8 @@ const AIRecommendations = () => {
     setLoading(true);
     setRecommendations(null);
     setSelectedStrategy(null);
+    setLastSelectedParams(params);
 
-    // Extract financial parameters and structure them for the API
     const financialParams = {
       HargaJualBatuBara: params.coalPrice || 900000,
       HargaSolar: params.fuelPrice || 15000,
@@ -105,6 +106,10 @@ const AIRecommendations = () => {
               explanations: data.EXPLANATIONS || {},
               financial_breakdown: data.FINANCIAL_BREAKDOWN || {},
               raw_data: data.RAW_DATA || {},
+              miningSiteId: params.miningSiteId || null,
+              weatherCondition: params.weatherCondition || 'CERAH',
+              roadCondition: params.roadCondition || 'GOOD',
+              shift: params.shift || 'SHIFT_1',
               _uniqueId: `${Date.now()}_${index}`,
             };
 
@@ -194,7 +199,7 @@ const AIRecommendations = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {recommendations.map((rec, index) => (
-              <RecommendationCard key={index} rank={index + 1} recommendation={rec} isSelected={selectedStrategy === index} onSelect={() => handleSelectStrategy(index, rec)} />
+              <RecommendationCard key={index} rank={index + 1} recommendation={rec} isSelected={selectedStrategy === index} onSelect={() => handleSelectStrategy(index, rec)} selectedParams={lastSelectedParams} />
             ))}
           </div>
 

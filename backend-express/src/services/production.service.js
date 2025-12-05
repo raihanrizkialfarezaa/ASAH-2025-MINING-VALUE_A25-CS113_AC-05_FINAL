@@ -10,6 +10,40 @@ const normalizeRecordDate = (value) => {
   return date;
 };
 
+const calculateActualAchievement = async (record) => {
+  if (!record.equipmentAllocation) {
+    return {
+      ...record,
+      calculatedAchievement: record.achievement,
+      haulingBasedActual: record.actualProduction,
+    };
+  }
+
+  const haulingIds = record.equipmentAllocation.hauling_activity_ids || [];
+  if (haulingIds.length === 0) {
+    return {
+      ...record,
+      calculatedAchievement: record.achievement,
+      haulingBasedActual: record.actualProduction,
+    };
+  }
+
+  const haulingActivities = await prisma.haulingActivity.findMany({
+    where: { id: { in: haulingIds } },
+    select: { loadWeight: true, status: true },
+  });
+
+  const totalLoadWeight = haulingActivities.reduce((sum, h) => sum + (h.loadWeight || 0), 0);
+  const calculatedAchievement =
+    record.targetProduction > 0 ? (totalLoadWeight / record.targetProduction) * 100 : 0;
+
+  return {
+    ...record,
+    calculatedAchievement: parseFloat(calculatedAchievement.toFixed(2)),
+    haulingBasedActual: totalLoadWeight,
+  };
+};
+
 export const productionService = {
   async getAll(query) {
     const { page, limit, skip } = getPaginationParams(query);
@@ -25,6 +59,34 @@ export const productionService = {
       if (query.endDate) where.recordDate.lte = new Date(query.endDate);
     }
 
+    if (query.shift) {
+      where.shift = query.shift;
+    }
+
+    if (query.search) {
+      where.OR = [
+        { miningSite: { name: { contains: query.search, mode: 'insensitive' } } },
+        { miningSite: { code: { contains: query.search, mode: 'insensitive' } } },
+        { remarks: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
+
+    let orderBy = { recordDate: 'desc' };
+    if (query.sortBy) {
+      const direction = query.sortOrder === 'asc' ? 'asc' : 'desc';
+      const validSortFields = [
+        'recordDate',
+        'targetProduction',
+        'actualProduction',
+        'achievement',
+        'totalTrips',
+        'createdAt',
+      ];
+      if (validSortFields.includes(query.sortBy)) {
+        orderBy = { [query.sortBy]: direction };
+      }
+    }
+
     const [records, total] = await Promise.all([
       prisma.productionRecord.findMany({
         where,
@@ -36,16 +98,21 @@ export const productionService = {
               id: true,
               code: true,
               name: true,
+              siteType: true,
             },
           },
         },
-        orderBy: { recordDate: 'desc' },
+        orderBy,
       }),
       prisma.productionRecord.count({ where }),
     ]);
 
+    const recordsWithCalculatedAchievement = await Promise.all(
+      records.map((record) => calculateActualAchievement(record))
+    );
+
     return {
-      records,
+      records: recordsWithCalculatedAchievement,
       pagination: calculatePagination(page, limit, total),
     };
   },

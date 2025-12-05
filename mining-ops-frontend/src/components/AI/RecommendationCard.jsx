@@ -60,7 +60,7 @@ const InsightExpandable = ({ insight }) => {
   );
 };
 
-const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
+const RecommendationCard = ({ rank, recommendation, isSelected, onSelect, selectedParams }) => {
   const [showModal, setShowModal] = useState(false);
   const [showHaulingConfirmModal, setShowHaulingConfirmModal] = useState(false);
   const [isApplyingHauling, setIsApplyingHauling] = useState(false);
@@ -121,6 +121,10 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
       haulingActivityIds: recommendation.hauling_data?.hauling_analysis?.hauling_activity_ids || [],
       haulingAggregated: recommendation.hauling_data?.hauling_analysis?.aggregated || null,
       equipmentAllocation: recommendation.hauling_data?.hauling_analysis?.equipment_allocation || null,
+      miningSiteId: recommendation.miningSiteId || selectedParams?.miningSiteId || null,
+      weatherCondition: recommendation.weatherCondition || selectedParams?.weatherCondition || 'CERAH',
+      roadCondition: recommendation.roadCondition || selectedParams?.roadCondition || 'GOOD',
+      shift: recommendation.shift || selectedParams?.shift || 'SHIFT_1',
     };
 
     sessionStorage.setItem('selectedStrategy', JSON.stringify(strategyData));
@@ -212,18 +216,19 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
             total_tonase: params.totalProductionTarget,
             total_trips: truckCount,
             total_distance_km: distance * 2 * truckCount,
-            total_fuel_liter: totalFuelLiter, // Using backend-calculated value
+            total_fuel_liter: totalFuelLiter,
             avg_cycle_time_minutes: avgCycleTimeMinutes,
-            avg_load_weight: 0, // Load weight kosong, admin akan mengisi
+            avg_load_weight: 0,
             target_weight_per_hauling: targetWeightPerHauling,
             trucks_operating: truckCount,
             excavators_operating: excavatorCount,
             utilization_rate_percent: utilizationRate,
             shift: params.shift,
-            // Actual equipment fuel consumption rates used
+            weatherCondition: recommendation.weatherCondition || selectedParams?.weatherCondition || 'CERAH',
+            roadCondition: recommendation.roadCondition || selectedParams?.roadCondition || 'GOOD',
             calculation_params: {
-              truck_fuel_rate_lkm: truckFuelRate, // From actual truck data (L/km)
-              excavator_fuel_rate_lhr: excavatorFuelRate, // From actual excavator data (L/hr)
+              truck_fuel_rate_lkm: truckFuelRate,
+              excavator_fuel_rate_lhr: excavatorFuelRate,
               speed_loaded_kmh: firstActivity?.truck?.averageSpeed || 20,
               speed_empty_kmh: 30,
               production_target: params.totalProductionTarget,
@@ -237,6 +242,10 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
           },
           haulingApplied: true,
           haulingResult: result.data,
+          miningSiteId: recommendation.miningSiteId || selectedParams?.miningSiteId || null,
+          weatherCondition: recommendation.weatherCondition || selectedParams?.weatherCondition || 'CERAH',
+          roadCondition: recommendation.roadCondition || selectedParams?.roadCondition || 'GOOD',
+          shift: recommendation.shift || selectedParams?.shift || 'SHIFT_1',
         };
 
         sessionStorage.setItem('selectedStrategy', JSON.stringify(strategyData));
@@ -269,6 +278,23 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect }) => {
 
         {/* Content */}
         <div className="p-6 space-y-4">
+          {selectedParams?.miningSiteId && (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+              <div className="flex items-center text-sm">
+                <span className="text-blue-600 mr-2">📍</span>
+                <span className="text-blue-800 font-medium">Mining Site:</span>
+                <span className="ml-2 text-blue-700">{selectedParams.miningSiteName || selectedParams.miningSiteId}</span>
+              </div>
+              {selectedParams?.weatherCondition && (
+                <div className="flex items-center text-sm mt-1">
+                  <span className="text-blue-600 mr-2">🌤️</span>
+                  <span className="text-blue-800 font-medium">Weather:</span>
+                  <span className="ml-2 text-blue-700">{selectedParams.weatherCondition}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Scenario Details */}
           <div className="bg-gray-50 p-4 rounded-md">
             <h4 className="font-semibold text-gray-700 mb-2">Configuration</h4>

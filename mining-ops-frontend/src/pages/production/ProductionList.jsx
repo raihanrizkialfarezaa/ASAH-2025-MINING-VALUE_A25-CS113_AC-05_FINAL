@@ -42,6 +42,14 @@ const ProductionList = () => {
   const [modalMode, setModalMode] = useState('view');
   const [miningSites, setMiningSites] = useState([]);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterSiteId, setFilterSiteId] = useState('');
+  const [filterShift, setFilterShift] = useState('');
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
+  const [sortBy, setSortBy] = useState('recordDate');
+  const [sortOrder, setSortOrder] = useState('desc');
+
   // Equipment State
   const [trucks, setTrucks] = useState([]);
   const [excavators, setExcavators] = useState([]);
@@ -133,20 +141,68 @@ const ProductionList = () => {
       }
     };
     loadData();
-  }, [pagination.page, pagination.limit]);
+  }, []);
+
+  useEffect(() => {
+    const fetchFilteredProductions = async () => {
+      setLoading(true);
+      try {
+        const params = {
+          page: pagination.page,
+          limit: pagination.limit,
+          sortBy,
+          sortOrder,
+        };
+        if (searchQuery) params.search = searchQuery;
+        if (filterSiteId) params.miningSiteId = filterSiteId;
+        if (filterShift) params.shift = filterShift;
+        if (filterStartDate) params.startDate = filterStartDate;
+        if (filterEndDate) params.endDate = filterEndDate;
+
+        const prodRes = await productionService.getAll(params);
+        setProductions(prodRes.data || []);
+        setPagination((prev) => ({ ...prev, totalPages: prodRes.meta?.totalPages || 1 }));
+      } catch (error) {
+        console.error('Failed to fetch filtered productions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(() => {
+      fetchFilteredProductions();
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [pagination.page, pagination.limit, searchQuery, filterSiteId, filterShift, filterStartDate, filterEndDate, sortBy, sortOrder]);
 
   const isAiPopulated = React.useRef(false);
 
   useEffect(() => {
-    const checkForStrategyImplementation = () => {
+    const checkForStrategyImplementation = async () => {
       const strategyData = sessionStorage.getItem('selectedStrategy');
       if (strategyData) {
         try {
-          const { recommendation, useHaulingData, haulingAggregated, equipmentAllocation, haulingActivityIds, haulingResult, haulingApplied } = JSON.parse(strategyData);
+          const parsedStrategy = JSON.parse(strategyData);
+          const {
+            recommendation,
+            useHaulingData,
+            haulingAggregated,
+            equipmentAllocation,
+            haulingActivityIds,
+            haulingResult,
+            haulingApplied,
+            miningSiteId: strategyMiningSiteId,
+            weatherCondition: strategyWeatherCondition,
+            roadCondition: strategyRoadCondition,
+            shift: strategyShift,
+          } = parsedStrategy;
           const raw = recommendation.raw_data || {};
 
-          setIsManualMode(false);
-          setManualHaulingList([]);
+          const effectiveMiningSiteId = strategyMiningSiteId || recommendation.miningSiteId || raw.miningSiteId || null;
+          const effectiveWeatherCondition = strategyWeatherCondition || recommendation.weatherCondition || haulingAggregated?.weatherCondition || raw.weatherCondition || 'CERAH';
+          const effectiveRoadCondition = strategyRoadCondition || recommendation.roadCondition || haulingAggregated?.roadCondition || raw.roadCondition || 'GOOD';
+          const effectiveShift = strategyShift || recommendation.shift || haulingAggregated?.shift || raw.shift || 'SHIFT_1';
 
           if (haulingApplied && haulingResult) {
             setHaulingActivityInfo({
@@ -159,7 +215,55 @@ const ProductionList = () => {
               strategyRank: recommendation.rank,
               strategyObjective: raw.strategy_objective || recommendation.strategy_objective || 'AI Recommended',
             });
+
+            if (haulingActivityIds && haulingActivityIds.length > 0) {
+              try {
+                const response = await haulingService.getByIds(haulingActivityIds);
+                if (response.data && response.data.length > 0) {
+                  const existingHaulings = response.data.map((ha) => ({
+                    tempId: ha.id,
+                    id: ha.id,
+                    isExisting: true,
+                    truckId: ha.truckId,
+                    excavatorId: ha.excavatorId,
+                    operatorId: ha.operatorId,
+                    loadingPointId: ha.loadingPointId,
+                    dumpingPointId: ha.dumpingPointId,
+                    roadSegmentId: ha.roadSegmentId || '',
+                    truckCode: ha.truck?.code || 'N/A',
+                    truckCapacity: ha.truck?.capacity || 0,
+                    excavatorCode: ha.excavator?.code || 'N/A',
+                    excavatorModel: ha.excavator?.name || '',
+                    operatorName: ha.operator?.user?.fullName || ha.operator?.employeeNumber || 'N/A',
+                    loadingPointName: ha.loadingPoint?.name || 'N/A',
+                    dumpingPointName: ha.dumpingPoint?.name || 'N/A',
+                    roadSegmentName: ha.roadSegment?.name || 'N/A',
+                    roadSegmentDistance: ha.roadSegment?.distance || ha.distance || 3,
+                    loadWeight: ha.loadWeight !== null ? ha.loadWeight.toString() : '',
+                    targetWeight: ha.targetWeight || 30,
+                    status: ha.status || 'LOADING',
+                    distance: ha.distance || 3,
+                    activityNumber: ha.activityNumber,
+                  }));
+                  setManualHaulingList(existingHaulings);
+                  setIsManualMode(true);
+
+                  const achievementRes = await haulingService.calculateAchievement([], [], null, null, haulingActivityIds);
+                  if (achievementRes.data) {
+                    setHaulingAchievement(achievementRes.data);
+                  }
+                }
+              } catch (fetchError) {
+                console.error('[ProductionList] Failed to fetch hauling activities:', fetchError);
+                setIsManualMode(false);
+                setManualHaulingList([]);
+              }
+            }
+          } else {
+            setIsManualMode(false);
+            setManualHaulingList([]);
           }
+
           if (useHaulingData && haulingAggregated) {
             console.log('[ProductionList] Using actual hauling data for production creation');
             console.log('[ProductionList] haulingAggregated:', haulingAggregated);
@@ -170,8 +274,6 @@ const ProductionList = () => {
             const trucksOperating = parseInt(haulingAggregated.trucks_operating) || 1;
             const excavatorsOperating = parseInt(haulingAggregated.excavators_operating) || 1;
             const avgLoadWeight = parseFloat(haulingAggregated.avg_load_weight) || 28.5;
-            const shiftValue = haulingAggregated.shift || 'SHIFT_1';
-            const targetWeightPerHauling = parseFloat(haulingAggregated.target_weight_per_hauling) || 30;
 
             let totalFuel = parseFloat(haulingAggregated.total_fuel_liter) || 0;
             if (totalFuel <= 0 && totalDistance > 0) {
@@ -229,15 +331,17 @@ const ProductionList = () => {
               remarks += ` | Vessel: ${recommendation.vessel_info.name}`;
             }
 
+            const validMiningSiteId = effectiveMiningSiteId && miningSites.find((s) => s.id === effectiveMiningSiteId) ? effectiveMiningSiteId : miningSites[0]?.id || '';
+
             setFormData({
               recordDate: new Date().toISOString().split('T')[0],
-              shift: shiftValue,
-              miningSiteId: raw.miningSiteId && miningSites.find((s) => s.id === raw.miningSiteId) ? raw.miningSiteId : miningSites[0]?.id || '',
+              shift: effectiveShift,
+              miningSiteId: validMiningSiteId,
               targetProduction: totalTonase.toFixed(2),
               actualProduction: totalTonase.toFixed(2),
               haulDistance: haulDistance.toFixed(2),
-              weatherCondition: haulingAggregated.weatherCondition || 'CERAH',
-              roadCondition: haulingAggregated.roadCondition || 'GOOD',
+              weatherCondition: effectiveWeatherCondition,
+              roadCondition: effectiveRoadCondition,
               riskLevel: raw.delay_risk_level || 'LOW',
               avgCalori: '',
               avgAshContent: '',
@@ -266,10 +370,8 @@ const ProductionList = () => {
           // Fallback to simulation-based creation (existing logic)
           const truckCount = parseInt(raw.alokasi_truk) || parseInt(recommendation.skenario?.alokasi_truk) || 0;
           const excavatorCount = parseInt(raw.jumlah_excavator) || parseInt(recommendation.skenario?.jumlah_excavator) || 0;
-          const weatherCondition = raw.weatherCondition || recommendation.skenario?.weatherCondition || 'CERAH';
-          const roadCondition = raw.roadCondition || recommendation.skenario?.roadCondition || 'GOOD';
 
-          const shiftRaw = raw.shift || recommendation.skenario?.shift || 'SHIFT_1';
+          const shiftRaw = raw.shift || recommendation.skenario?.shift || effectiveShift || 'SHIFT_1';
           const shiftMapping = {
             PAGI: 'SHIFT_1',
             SIANG: 'SHIFT_2',
@@ -325,15 +427,17 @@ const ProductionList = () => {
               routeInfo = ` | Route: ${recommendation.skenario.route}`;
             }
 
+            const fallbackMiningSiteId = effectiveMiningSiteId && miningSites.find((s) => s.id === effectiveMiningSiteId) ? effectiveMiningSiteId : miningSites[0]?.id || '';
+
             setFormData({
               recordDate: new Date().toISOString().split('T')[0],
               shift: shiftValue,
-              miningSiteId: raw.miningSiteId && miningSites.find((s) => s.id === raw.miningSiteId) ? raw.miningSiteId : miningSites[0]?.id || '',
+              miningSiteId: fallbackMiningSiteId,
               targetProduction: totalTonase.toFixed(2),
               actualProduction: totalTonase.toFixed(2),
               haulDistance: roadDistance.toFixed(2),
-              weatherCondition: weatherCondition,
-              roadCondition: roadCondition,
+              weatherCondition: effectiveWeatherCondition,
+              roadCondition: effectiveRoadCondition,
               riskLevel: raw.delay_risk_level || recommendation.shipment_analysis?.delay_risk_level || 'LOW',
               avgCalori: '',
               avgAshContent: '',
@@ -385,7 +489,19 @@ const ProductionList = () => {
   const fetchProductions = async () => {
     setLoading(true);
     try {
-      const res = await productionService.getAll({ page: pagination.page, limit: pagination.limit });
+      const params = {
+        page: pagination.page,
+        limit: pagination.limit,
+        sortBy,
+        sortOrder,
+      };
+      if (searchQuery) params.search = searchQuery;
+      if (filterSiteId) params.miningSiteId = filterSiteId;
+      if (filterShift) params.shift = filterShift;
+      if (filterStartDate) params.startDate = filterStartDate;
+      if (filterEndDate) params.endDate = filterEndDate;
+
+      const res = await productionService.getAll(params);
       setProductions(res.data || []);
       setPagination((prev) => ({ ...prev, totalPages: res.meta?.totalPages || 1 }));
     } catch (error) {
@@ -990,6 +1106,17 @@ const ProductionList = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      if (modalMode === 'create') {
+        const existingRecord = productions.find((p) => new Date(p.recordDate).toISOString().split('T')[0] === formData.recordDate && p.shift === formData.shift && p.miningSiteId === formData.miningSiteId);
+        if (existingRecord) {
+          const siteName = miningSites.find((s) => s.id === formData.miningSiteId)?.name || formData.miningSiteId;
+          const confirmed = window.confirm(`Production record untuk tanggal ${formData.recordDate}, shift ${formData.shift}, dan site ${siteName} sudah ada.\n\nData yang ada akan di-UPDATE dengan data baru ini.\n\nLanjutkan?`);
+          if (!confirmed) {
+            return;
+          }
+        }
+      }
+
       let createdHaulingActivityIds = [];
       let existingHaulingActivityIds = [];
       let manualHaulingTotalFuel = 0;
@@ -1137,13 +1264,13 @@ const ProductionList = () => {
           truck_count: new Set(manualHaulingList.map((h) => h.truckId)).size,
           excavator_count: new Set(manualHaulingList.map((h) => h.excavatorId)).size,
           hauling_activity_ids: allHaulingIds,
-          created_from: modalMode === 'edit' ? 'manual_edit' : 'manual',
+          created_from: haulingActivityInfo?.activityIds?.length > 0 ? 'ai_hauling_applied' : modalMode === 'edit' ? 'manual_edit' : 'manual',
         };
 
         payload.trucksOperating = new Set(manualHaulingList.map((h) => h.truckId)).size;
         payload.excavatorsOperating = new Set(manualHaulingList.map((h) => h.excavatorId)).size;
 
-        if (modalMode === 'create') {
+        if (modalMode === 'create' && !haulingActivityInfo?.activityIds?.length) {
           payload.remarks = `Manual hauling: ${manualHaulingList.length} trips | IDs: ${allHaulingIds.slice(0, 3).join(', ')}${allHaulingIds.length > 3 ? '...' : ''}`;
         }
       } else if (selectedTruckIds.length > 0 || selectedExcavatorIds.length > 0) {
@@ -1279,7 +1406,106 @@ const ProductionList = () => {
 
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-          <h2 className="text-lg font-semibold text-gray-800">Production History</h2>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <h2 className="text-lg font-semibold text-gray-800">Production History</h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search site, remarks..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setPagination((prev) => ({ ...prev, page: 1 }));
+                  }}
+                  className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-48"
+                />
+              </div>
+              <select
+                value={filterSiteId}
+                onChange={(e) => {
+                  setFilterSiteId(e.target.value);
+                  setPagination((prev) => ({ ...prev, page: 1 }));
+                }}
+                className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All Sites</option>
+                {miningSites.map((site) => (
+                  <option key={site.id} value={site.id}>
+                    {site.code} - {site.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={filterShift}
+                onChange={(e) => {
+                  setFilterShift(e.target.value);
+                  setPagination((prev) => ({ ...prev, page: 1 }));
+                }}
+                className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All Shifts</option>
+                <option value="SHIFT_1">Shift 1 (Pagi)</option>
+                <option value="SHIFT_2">Shift 2 (Siang)</option>
+                <option value="SHIFT_3">Shift 3 (Malam)</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 mt-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">From:</span>
+              <input
+                type="date"
+                value={filterStartDate}
+                onChange={(e) => {
+                  setFilterStartDate(e.target.value);
+                  setPagination((prev) => ({ ...prev, page: 1 }));
+                }}
+                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">To:</span>
+              <input
+                type="date"
+                value={filterEndDate}
+                onChange={(e) => {
+                  setFilterEndDate(e.target.value);
+                  setPagination((prev) => ({ ...prev, page: 1 }));
+                }}
+                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">Sort:</span>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="recordDate">Date</option>
+                <option value="targetProduction">Target</option>
+                <option value="actualProduction">Actual</option>
+                <option value="achievement">Achievement</option>
+                <option value="totalTrips">Trips</option>
+              </select>
+              <button onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="p-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors" title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}>
+                {sortOrder === 'asc' ? '↑' : '↓'}
+              </button>
+            </div>
+            {(searchQuery || filterSiteId || filterShift || filterStartDate || filterEndDate) && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilterSiteId('');
+                  setFilterShift('');
+                  setFilterStartDate('');
+                  setFilterEndDate('');
+                  setPagination((prev) => ({ ...prev, page: 1 }));
+                }}
+                className="text-xs text-red-600 hover:text-red-700 underline"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -1303,7 +1529,7 @@ const ProductionList = () => {
                     <div className="flex flex-col items-center">
                       <Package size={48} className="text-gray-300 mb-3" />
                       <p className="text-gray-500 font-medium">No production records found</p>
-                      <p className="text-gray-400 text-sm mt-1">Click "Add Production Record" to create one</p>
+                      <p className="text-gray-400 text-sm mt-1">{searchQuery || filterSiteId || filterShift || filterStartDate || filterEndDate ? 'Try adjusting your filters' : 'Click "Add Production Record" to create one'}</p>
                     </div>
                   </td>
                 </tr>
@@ -1341,13 +1567,25 @@ const ProductionList = () => {
                     <span className="text-xs text-gray-400 ml-1">t</span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <span className="font-medium text-gray-700">{production.actualProduction?.toLocaleString('id-ID', { maximumFractionDigits: 0 })}</span>
-                    <span className="text-xs text-gray-400 ml-1">t</span>
+                    <div className="flex flex-col items-end">
+                      <span className="font-medium text-gray-700">{(production.haulingBasedActual ?? production.actualProduction)?.toLocaleString('id-ID', { maximumFractionDigits: 0 })}</span>
+                      <span className="text-xs text-gray-400">t</span>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center">
-                      <div className={`px-3 py-1.5 rounded-lg ${production.achievement >= 100 ? 'bg-green-100' : production.achievement >= 80 ? 'bg-yellow-100' : 'bg-red-100'}`}>
-                        <span className={`text-sm font-bold ${production.achievement >= 100 ? 'text-green-700' : production.achievement >= 80 ? 'text-yellow-700' : 'text-red-700'}`}>{production.achievement?.toFixed(1)}%</span>
+                      <div
+                        className={`px-3 py-1.5 rounded-lg ${
+                          (production.calculatedAchievement ?? production.achievement) >= 100 ? 'bg-green-100' : (production.calculatedAchievement ?? production.achievement) >= 80 ? 'bg-yellow-100' : 'bg-red-100'
+                        }`}
+                      >
+                        <span
+                          className={`text-sm font-bold ${
+                            (production.calculatedAchievement ?? production.achievement) >= 100 ? 'text-green-700' : (production.calculatedAchievement ?? production.achievement) >= 80 ? 'text-yellow-700' : 'text-red-700'
+                          }`}
+                        >
+                          {(production.calculatedAchievement ?? production.achievement)?.toFixed(1)}%
+                        </span>
                       </div>
                     </div>
                   </td>
