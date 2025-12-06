@@ -1,0 +1,153 @@
+# ==========================================
+# ENVIRONMENT FILES (RAHASIA/SENSITIF)
+# ==========================================
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+*.env
+
+# ==========================================
+# NODE.JS / NPM / YARN DEPENDENCIES
+# ==========================================
+node_modules/
+.npm/
+.pnp/
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ==========================================
+# PYTHON DEPENDENCIES & VIRTUAL ENVIRONMENTS
+# ==========================================
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ==========================================
+# BUILD OUTPUTS
+# ==========================================
+dist/
+build/
+*.egg-info/
+.eggs/
+*.egg
+
+# ==========================================
+# IDE / EDITOR FILES
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+
+# ==========================================
+# OS FILES
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# LOGS
+# ==========================================
+logs/
+*.log
+npm-debug.log*
+
+# ==========================================
+# TESTING & COVERAGE
+# ==========================================
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+
+# ==========================================
+# ML MODELS & DATA BESAR
+# ==========================================
+*.joblib
+*.pkl
+*.h5
+*.hdf5
+*.onnx
+models/*.joblib
+models/*.pkl
+
+# Data files (keep small config files)
+data/*.csv
+!data/trucks.csv
+!data/excavators.csv
+!data/operators.csv
+!data/road_segments.csv
+!data/maintenance_logs.csv
+
+# ==========================================
+# CACHE & TEMPORARY FILES
+# ==========================================
+.cache/
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# ==========================================
+# DOCKER (optional)
+# ==========================================
+# Uncomment if you don't want to include docker files
+# docker-compose.override.yml
+
+# ==========================================
+# DATABASE FILES
+# ==========================================
+*.sqlite
+*.sqlite3
+*.db
+
+# ==========================================
+# EXPORTS & GENERATED FILES
+# ==========================================
+exports/*.csv
+exports/*.xlsx
+exports/*.json
+
+# ==========================================
+# PRISMA (keep schema, ignore manual migrations)
+# ==========================================
+prisma/migrations/*_migration_manual/
+
+# ==========================================
+# ARCHIVES
+# ==========================================
+*.zip
+*.tar.gz
+*.rar
+*.7z
