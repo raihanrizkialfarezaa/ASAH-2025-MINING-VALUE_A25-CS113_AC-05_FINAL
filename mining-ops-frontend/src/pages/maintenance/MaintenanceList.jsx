@@ -353,14 +353,14 @@ const MaintenanceList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center space-x-3">
-            <Settings className="text-orange-600" size={36} />
+          <h1 className="text-3xl font-bold text-slate-100 flex items-center space-x-3">
+            <Settings className="text-sky-500" size={36} />
             <span>Maintenance Management</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Monitor and manage equipment maintenance operations</p>
+          <p className="text-sm text-slate-400 mt-1">Monitor and manage equipment maintenance operations</p>
         </div>
         <div className="flex space-x-3">
-          <button onClick={fetchMaintenances} className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border shadow-sm text-gray-700 font-medium transition-colors flex items-center space-x-2">
+          <button onClick={fetchMaintenances} className="bg-slate-800/50 hover:bg-slate-700/50 px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm text-slate-300 font-medium transition-colors flex items-center space-x-2">
             <RefreshCw size={18} />
             <span>Refresh</span>
           </button>
@@ -374,47 +374,47 @@ const MaintenanceList = () => {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <div className="card bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+        <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Total Maintenances</p>
-              <p className="text-3xl font-bold text-blue-600">{allMaintenances.length}</p>
+              <p className="text-sm text-slate-400 mb-1">Total Maintenances</p>
+              <p className="text-3xl font-bold text-sky-400">{allMaintenances.length}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Settings className="text-blue-600" size={28} />
+            <div className="p-3 bg-sky-900/30 rounded-xl">
+              <Settings className="text-sky-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200">
+        <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">In Progress</p>
-              <p className="text-3xl font-bold text-yellow-600">{allMaintenances.filter((m) => m.status === 'IN_PROGRESS').length}</p>
+              <p className="text-sm text-slate-400 mb-1">In Progress</p>
+              <p className="text-3xl font-bold text-amber-400">{allMaintenances.filter((m) => m.status === 'IN_PROGRESS').length}</p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-xl">
-              <Clock className="text-yellow-600" size={28} />
+            <div className="p-3 bg-amber-900/30 rounded-xl">
+              <Clock className="text-amber-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Completed</p>
-              <p className="text-3xl font-bold text-green-600">{allMaintenances.filter((m) => m.status === 'COMPLETED').length}</p>
+              <p className="text-sm text-slate-400 mb-1">Completed</p>
+              <p className="text-3xl font-bold text-emerald-400">{allMaintenances.filter((m) => m.status === 'COMPLETED').length}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-xl">
-              <CheckCircle className="text-green-600" size={28} />
+            <div className="p-3 bg-emerald-900/30 rounded-xl">
+              <CheckCircle className="text-emerald-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200">
+        <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Scheduled</p>
-              <p className="text-3xl font-bold text-purple-600">{allMaintenances.filter((m) => m.status === 'SCHEDULED').length}</p>
+              <p className="text-sm text-slate-400 mb-1">Scheduled</p>
+              <p className="text-3xl font-bold text-violet-400">{allMaintenances.filter((m) => m.status === 'SCHEDULED').length}</p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-xl">
-              <Calendar className="text-purple-600" size={28} />
+            <div className="p-3 bg-violet-900/30 rounded-xl">
+              <Calendar className="text-violet-400" size={28} />
             </div>
           </div>
         </div>
@@ -425,7 +425,7 @@ const MaintenanceList = () => {
           <div className="flex items-center justify-between">
             <div className="flex-1 flex items-center space-x-3">
               <div className="relative" style={{ minWidth: '320px', maxWidth: '450px', flex: '1' }}>
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" size={20} />
                 <input
                   type="text"
                   placeholder="Search by number, description, mechanic, or equipment..."
@@ -437,24 +437,24 @@ const MaintenanceList = () => {
                     paddingLeft: '44px',
                     paddingRight: '44px',
                     fontSize: '14px',
-                    color: '#1f2937',
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #d1d5db',
+                    color: '#cbd5e1',
+                    backgroundColor: '#0f172a',
+                    border: '1px solid rgba(51, 65, 85, 0.5)',
                     borderRadius: '8px',
                     outline: 'none',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#3b82f6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)';
+                    e.target.style.borderColor = '#0ea5e9';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.15)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#d1d5db';
-                    e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+                    e.target.style.borderColor = 'rgba(51, 65, 85, 0.5)';
+                    e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.2)';
                   }}
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-300">
                     <X size={18} />
                   </button>
                 )}
@@ -486,14 +486,14 @@ const MaintenanceList = () => {
               </select>
 
               {activeFiltersCount > 0 && (
-                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 font-medium transition-colors flex items-center space-x-2">
+                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-rose-500/30 bg-rose-900/20 text-rose-400 hover:bg-rose-800/30 font-medium transition-colors flex items-center space-x-2">
                   <X size={18} />
                   <span>Clear</span>
                 </button>
               )}
             </div>
 
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <div className="flex items-center space-x-2 text-sm text-slate-400">
               <span>
                 Showing {maintenances.length} of {allMaintenances.length} records
               </span>
@@ -504,95 +504,95 @@ const MaintenanceList = () => {
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+          <table className="min-w-full divide-y divide-slate-800/50">
+            <thead className="bg-gradient-to-r from-slate-800/70 to-slate-900/70">
               <tr>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('maintenanceNumber')}>
+                <th className="table-header cursor-pointer hover:bg-slate-700/50 transition-colors group" onClick={() => handleSort('maintenanceNumber')}>
                   <div className="flex items-center justify-between">
                     <span>Maintenance #</span>
-                    {sortField === 'maintenanceNumber' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'maintenanceNumber' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
                 <th className="table-header">Equipment</th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('maintenanceType')}>
+                <th className="table-header cursor-pointer hover:bg-slate-700/50 transition-colors group" onClick={() => handleSort('maintenanceType')}>
                   <div className="flex items-center justify-between">
                     <span>Type</span>
-                    {sortField === 'maintenanceType' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'maintenanceType' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('actualDate')}>
+                <th className="table-header cursor-pointer hover:bg-slate-700/50 transition-colors group" onClick={() => handleSort('actualDate')}>
                   <div className="flex items-center justify-between">
                     <span>Actual Date</span>
-                    {sortField === 'actualDate' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'actualDate' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
                 <th className="table-header">Duration</th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('cost')}>
+                <th className="table-header cursor-pointer hover:bg-slate-700/50 transition-colors group" onClick={() => handleSort('cost')}>
                   <div className="flex items-center justify-between">
                     <span>Cost</span>
-                    {sortField === 'cost' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'cost' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
                 <th className="table-header">Mechanic</th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('status')}>
+                <th className="table-header cursor-pointer hover:bg-slate-700/50 transition-colors group" onClick={() => handleSort('status')}>
                   <div className="flex items-center justify-between">
                     <span>Status</span>
-                    {sortField === 'status' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'status' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
                 <th className="table-header">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-slate-800/50 bg-slate-900/30">
               {maintenances.length === 0 ? (
                 <tr>
                   <td colSpan="9" className="text-center py-12">
                     <div className="flex flex-col items-center space-y-3">
-                      <Settings className="text-gray-400" size={48} />
-                      <p className="text-gray-500 font-medium">No maintenance records found</p>
-                      <p className="text-sm text-gray-400">Try adjusting your filters or search query</p>
+                      <Settings className="text-slate-600" size={48} />
+                      <p className="text-slate-400 font-medium">No maintenance records found</p>
+                      <p className="text-sm text-slate-500">Try adjusting your filters or search query</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 maintenances.map((maintenance) => (
-                  <tr key={maintenance.id} className="hover:bg-orange-50 transition-colors">
+                  <tr key={maintenance.id} className="hover:bg-slate-800/30 transition-colors">
                     <td className="table-cell">
-                      <span className="font-bold text-orange-600">{maintenance.maintenanceNumber}</span>
+                      <span className="font-bold text-sky-400">{maintenance.maintenanceNumber}</span>
                     </td>
                     <td className="table-cell">
                       <div className="flex flex-col">
-                        <span className="font-medium text-gray-900">{maintenance.truck?.code || maintenance.excavator?.code || maintenance.supportEquipment?.code || '-'}</span>
-                        <span className="text-xs text-gray-500">{maintenance.truck?.name || maintenance.excavator?.name || maintenance.supportEquipment?.name || '-'}</span>
+                        <span className="font-medium text-slate-200">{maintenance.truck?.code || maintenance.excavator?.code || maintenance.supportEquipment?.code || '-'}</span>
+                        <span className="text-xs text-slate-500">{maintenance.truck?.name || maintenance.excavator?.name || maintenance.supportEquipment?.name || '-'}</span>
                       </div>
                     </td>
                     <td className="table-cell">
-                      <span className="px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800">{maintenance.maintenanceType}</span>
+                      <span className="px-2 py-1 rounded-md text-xs font-medium bg-sky-900/30 text-sky-400">{maintenance.maintenanceType}</span>
                     </td>
-                    <td className="table-cell text-gray-700">{new Date(maintenance.actualDate).toLocaleDateString()}</td>
+                    <td className="table-cell text-slate-300">{new Date(maintenance.actualDate).toLocaleDateString()}</td>
                     <td className="table-cell">
-                      <span className="font-medium text-gray-900">{maintenance.duration || '-'}</span>
-                      {maintenance.duration && <span className="text-gray-500 ml-1 text-xs">hrs</span>}
+                      <span className="font-medium text-slate-200">{maintenance.duration || '-'}</span>
+                      {maintenance.duration && <span className="text-slate-500 ml-1 text-xs">hrs</span>}
                     </td>
                     <td className="table-cell">
-                      <span className="font-semibold text-green-600">{maintenance.cost ? `Rp ${maintenance.cost.toLocaleString('id-ID')}` : '-'}</span>
+                      <span className="font-semibold text-emerald-400">{maintenance.cost ? `Rp ${maintenance.cost.toLocaleString('id-ID')}` : '-'}</span>
                     </td>
-                    <td className="table-cell text-gray-700">{maintenance.mechanicName || '-'}</td>
+                    <td className="table-cell text-slate-300">{maintenance.mechanicName || '-'}</td>
                     <td className="table-cell">
                       <StatusBadge status={maintenance.status} />
                     </td>
                     <td className="table-cell">
                       <div className="flex space-x-1">
-                        <button onClick={() => handleView(maintenance)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
+                        <button onClick={() => handleView(maintenance)} className="p-2 text-sky-400 hover:bg-sky-900/30 rounded-lg transition-colors" title="View Details">
                           <Eye size={18} />
                         </button>
                         {canEdit && (
-                          <button onClick={() => handleEdit(maintenance)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
+                          <button onClick={() => handleEdit(maintenance)} className="p-2 text-emerald-400 hover:bg-emerald-900/30 rounded-lg transition-colors" title="Edit">
                             <Edit size={18} />
                           </button>
                         )}
                         {canEdit && (
-                          <button onClick={() => handleDelete(maintenance.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(maintenance.id)} className="p-2 text-rose-400 hover:bg-rose-900/30 rounded-lg transition-colors" title="Delete">
                             <Trash2 size={18} />
                           </button>
                         )}
@@ -608,7 +608,7 @@ const MaintenanceList = () => {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <label className="text-sm text-gray-600 flex items-center space-x-2">
+          <label className="text-sm text-slate-400 flex items-center space-x-2">
             <span>Items per page:</span>
             <select value={pagination.limit} onChange={(e) => setPagination((prev) => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))} className="input-field py-1 px-2">
               <option value="10">10</option>
@@ -628,24 +628,24 @@ const MaintenanceList = () => {
         title={
           modalMode === 'create' ? (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Plus className="text-orange-600" size={24} />
+              <div className="p-2 bg-sky-900/30 rounded-lg">
+                <Plus className="text-sky-400" size={24} />
               </div>
-              <span>Add New Maintenance</span>
+              <span className="text-slate-100">Add New Maintenance</span>
             </div>
           ) : modalMode === 'edit' ? (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Edit className="text-green-600" size={24} />
+              <div className="p-2 bg-emerald-900/30 rounded-lg">
+                <Edit className="text-emerald-400" size={24} />
               </div>
-              <span>Edit Maintenance</span>
+              <span className="text-slate-100">Edit Maintenance</span>
             </div>
           ) : (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Eye className="text-blue-600" size={24} />
+              <div className="p-2 bg-sky-900/30 rounded-lg">
+                <Eye className="text-sky-400" size={24} />
               </div>
-              <span>Maintenance Details</span>
+              <span className="text-slate-100">Maintenance Details</span>
             </div>
           )
         }
@@ -653,11 +653,11 @@ const MaintenanceList = () => {
       >
         {modalMode === 'view' && selectedMaintenance ? (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-orange-50 to-red-50 p-6 rounded-xl border border-orange-200">
+            <div className="bg-gradient-to-r from-sky-900/30 to-slate-900/50 p-6 rounded-xl border border-sky-500/20">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900">{selectedMaintenance.maintenanceNumber}</h3>
-                  <p className="text-gray-600 mt-1">
+                  <h3 className="text-2xl font-bold text-slate-100">{selectedMaintenance.maintenanceNumber}</h3>
+                  <p className="text-slate-400 mt-1">
                     {selectedMaintenance.truck?.code || selectedMaintenance.excavator?.code || selectedMaintenance.supportEquipment?.code} -{' '}
                     {selectedMaintenance.truck?.name || selectedMaintenance.excavator?.name || selectedMaintenance.supportEquipment?.name}
                   </p>
@@ -667,116 +667,116 @@ const MaintenanceList = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-6">
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Wrench className="text-blue-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Maintenance Type</label>
+                  <Wrench className="text-sky-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Maintenance Type</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{selectedMaintenance.maintenanceType}</p>
+                <p className="text-lg font-medium text-slate-200">{selectedMaintenance.maintenanceType}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <User className="text-purple-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Mechanic</label>
+                  <User className="text-violet-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Mechanic</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{selectedMaintenance.mechanicName || '-'}</p>
+                <p className="text-lg font-medium text-slate-200">{selectedMaintenance.mechanicName || '-'}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Calendar className="text-green-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Scheduled Date</label>
+                  <Calendar className="text-emerald-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Scheduled Date</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{selectedMaintenance.scheduledDate ? new Date(selectedMaintenance.scheduledDate).toLocaleDateString() : '-'}</p>
+                <p className="text-lg font-medium text-slate-200">{selectedMaintenance.scheduledDate ? new Date(selectedMaintenance.scheduledDate).toLocaleDateString() : '-'}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Calendar className="text-blue-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Actual Date</label>
+                  <Calendar className="text-sky-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Actual Date</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{new Date(selectedMaintenance.actualDate).toLocaleDateString()}</p>
+                <p className="text-lg font-medium text-slate-200">{new Date(selectedMaintenance.actualDate).toLocaleDateString()}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <CheckCircle className="text-green-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Completion Date</label>
+                  <CheckCircle className="text-emerald-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Completion Date</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{selectedMaintenance.completionDate ? new Date(selectedMaintenance.completionDate).toLocaleDateString() : '-'}</p>
+                <p className="text-lg font-medium text-slate-200">{selectedMaintenance.completionDate ? new Date(selectedMaintenance.completionDate).toLocaleDateString() : '-'}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Clock className="text-indigo-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Duration</label>
+                  <Clock className="text-violet-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Duration</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">
+                <p className="text-lg font-medium text-slate-200">
                   {selectedMaintenance.duration || '-'} {selectedMaintenance.duration && <span className="text-sm">hours</span>}
                 </p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <DollarSign className="text-green-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Cost</label>
+                  <DollarSign className="text-emerald-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Cost</label>
                 </div>
-                <p className="text-2xl font-bold text-green-600">{selectedMaintenance.cost ? `Rp ${selectedMaintenance.cost.toLocaleString('id-ID')}` : '-'}</p>
+                <p className="text-2xl font-bold text-emerald-400">{selectedMaintenance.cost ? `Rp ${selectedMaintenance.cost.toLocaleString('id-ID')}` : '-'}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <AlertCircle className="text-red-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Downtime Hours</label>
+                  <AlertCircle className="text-rose-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Downtime Hours</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">
+                <p className="text-lg font-medium text-slate-200">
                   {selectedMaintenance.downtimeHours || 0} <span className="text-sm">hours</span>
                 </p>
               </div>
 
-              <div className="col-span-2 bg-white p-4 rounded-lg border border-gray-200">
+              <div className="col-span-2 bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <FileText className="text-blue-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Description</label>
+                  <FileText className="text-sky-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Description</label>
                 </div>
-                <p className="text-gray-900">{selectedMaintenance.description}</p>
+                <p className="text-slate-200">{selectedMaintenance.description}</p>
               </div>
 
               {selectedMaintenance.partsReplaced && (
-                <div className="col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="col-span-2 bg-sky-900/20 p-4 rounded-lg border border-sky-500/20">
                   <div className="flex items-center space-x-2 mb-2">
-                    <Package className="text-blue-600" size={18} />
-                    <label className="text-sm font-semibold text-gray-600">Parts Replaced</label>
+                    <Package className="text-sky-400" size={18} />
+                    <label className="text-sm font-semibold text-slate-400">Parts Replaced</label>
                   </div>
-                  <pre className="text-sm text-gray-900 whitespace-pre-wrap">{JSON.stringify(selectedMaintenance.partsReplaced, null, 2)}</pre>
+                  <pre className="text-sm text-slate-200 whitespace-pre-wrap">{JSON.stringify(selectedMaintenance.partsReplaced, null, 2)}</pre>
                 </div>
               )}
 
               {selectedMaintenance.remarks && (
-                <div className="col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="col-span-2 bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                   <div className="flex items-center space-x-2 mb-2">
-                    <FileText className="text-gray-600" size={18} />
-                    <label className="text-sm font-semibold text-gray-600">Remarks</label>
+                    <FileText className="text-slate-400" size={18} />
+                    <label className="text-sm font-semibold text-slate-400">Remarks</label>
                   </div>
-                  <p className="text-gray-900">{selectedMaintenance.remarks}</p>
+                  <p className="text-slate-200">{selectedMaintenance.remarks}</p>
                 </div>
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-              <div className="text-sm text-gray-500">
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700/50">
+              <div className="text-sm text-slate-500">
                 <span className="font-medium">Created At:</span> {new Date(selectedMaintenance.createdAt).toLocaleString()}
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-slate-500">
                 <span className="font-medium">Updated At:</span> {new Date(selectedMaintenance.updatedAt).toLocaleString()}
               </div>
             </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-              <p className="text-sm text-orange-800">
+            <div className="bg-sky-900/20 p-4 rounded-lg border border-sky-500/20">
+              <p className="text-sm text-sky-300">
                 <strong>Note:</strong> Fields marked with * are required. Make sure to enter valid data for accurate maintenance tracking.
               </p>
             </div>
@@ -784,7 +784,7 @@ const MaintenanceList = () => {
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-semibold text-gray-700">Maintenance Number *</label>
+                  <label className="text-sm font-semibold text-slate-300">Maintenance Number *</label>
                   {modalMode === 'create' && (
                     <div className="flex items-center space-x-2">
                       <button
@@ -796,7 +796,7 @@ const MaintenanceList = () => {
                             setFormData((prev) => ({ ...prev, maintenanceNumber: auto }));
                           }
                         }}
-                        className="text-xs px-2 py-1 rounded border bg-white text-gray-700 hover:bg-gray-50 transition"
+                        className="text-xs px-2 py-1 rounded border border-slate-600 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 transition"
                       >
                         {maintenanceNumberEditable ? 'Auto' : 'Edit'}
                       </button>
@@ -815,7 +815,7 @@ const MaintenanceList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Equipment Type *</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Equipment Type *</label>
                 <select value={formData.equipmentType} onChange={(e) => setFormData({ ...formData, equipmentType: e.target.value, truckId: '', excavatorId: '', supportEquipmentId: '' })} className="input-field" required>
                   <option value="truck">Truck</option>
                   <option value="excavator">Excavator</option>
@@ -825,7 +825,7 @@ const MaintenanceList = () => {
 
               {formData.equipmentType === 'truck' && (
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Truck *</label>
+                  <label className="block text-sm font-semibold text-slate-300 mb-2">Truck *</label>
                   <select value={formData.truckId} onChange={(e) => setFormData({ ...formData, truckId: e.target.value })} className="input-field" required>
                     <option value="">Select Truck</option>
                     {trucks.map((truck) => (
@@ -839,7 +839,7 @@ const MaintenanceList = () => {
 
               {formData.equipmentType === 'excavator' && (
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Excavator *</label>
+                  <label className="block text-sm font-semibold text-slate-300 mb-2">Excavator *</label>
                   <select value={formData.excavatorId} onChange={(e) => setFormData({ ...formData, excavatorId: e.target.value })} className="input-field" required>
                     <option value="">Select Excavator</option>
                     {excavators.map((excavator) => (
@@ -853,7 +853,7 @@ const MaintenanceList = () => {
 
               {formData.equipmentType === 'support' && (
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Support Equipment *</label>
+                  <label className="block text-sm font-semibold text-slate-300 mb-2">Support Equipment *</label>
                   <select value={formData.supportEquipmentId} onChange={(e) => setFormData({ ...formData, supportEquipmentId: e.target.value })} className="input-field" required>
                     <option value="">Select Support Equipment</option>
                     {supportEquipments.map((equip) => (
@@ -866,7 +866,7 @@ const MaintenanceList = () => {
               )}
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Maintenance Type *</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Maintenance Type *</label>
                 <select value={formData.maintenanceType} onChange={(e) => setFormData({ ...formData, maintenanceType: e.target.value })} className="input-field" required>
                   {typeOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -877,7 +877,7 @@ const MaintenanceList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Status *</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Status *</label>
                 <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="input-field" required>
                   {statusOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -888,58 +888,58 @@ const MaintenanceList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Scheduled Date</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Scheduled Date</label>
                 <input type="date" value={formData.scheduledDate} onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })} className="input-field" />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Actual Date *</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Actual Date *</label>
                 <input type="date" value={formData.actualDate} onChange={(e) => setFormData({ ...formData, actualDate: e.target.value })} className="input-field" required />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Completion Date</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Completion Date</label>
                 <input type="date" value={formData.completionDate} onChange={(e) => setFormData({ ...formData, completionDate: e.target.value })} className="input-field" />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Duration (hours)</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Duration (hours)</label>
                 <input type="number" step="1" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: e.target.value })} className="input-field" placeholder="0" min="0" />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Cost (Rp)</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Cost (Rp)</label>
                 <input type="number" step="1" value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} className="input-field" placeholder="0" min="0" />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Downtime Hours</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Downtime Hours</label>
                 <input type="number" step="0.1" value={formData.downtimeHours} onChange={(e) => setFormData({ ...formData, downtimeHours: e.target.value })} className="input-field" placeholder="0.0" min="0" />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Mechanic Name</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Mechanic Name</label>
                 <input type="text" value={formData.mechanicName} onChange={(e) => setFormData({ ...formData, mechanicName: e.target.value })} className="input-field" placeholder="John Doe" />
               </div>
 
               <div className="col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Description *</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Description *</label>
                 <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input-field" rows="3" required placeholder="Enter maintenance details..." />
               </div>
 
               <div className="col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Parts Replaced (JSON or text)</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Parts Replaced (JSON or text)</label>
                 <textarea value={formData.partsReplaced} onChange={(e) => setFormData({ ...formData, partsReplaced: e.target.value })} className="input-field" rows="3" placeholder='{"parts": ["Oil Filter", "Air Filter"]}' />
               </div>
 
               <div className="col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Remarks</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Remarks</label>
                 <textarea value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} className="input-field" rows="2" placeholder="Additional notes..." />
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4 border-t">
-              <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+            <div className="flex justify-end space-x-3 pt-4 border-t border-slate-700/50">
+              <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 border border-slate-600 rounded-lg text-slate-300 font-medium hover:bg-slate-700/50 transition-colors">
                 Cancel
               </button>
               <button type="submit" className="btn-primary px-6 py-2.5 flex items-center space-x-2">

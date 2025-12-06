@@ -326,14 +326,14 @@ const VesselList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center space-x-3">
-            <Ship className="text-blue-600" size={36} />
+          <h1 className="text-3xl font-bold text-slate-100 flex items-center space-x-3">
+            <Ship className="text-sky-400" size={36} />
             <span>Vessels Management</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Manage and monitor maritime fleet operations</p>
+          <p className="text-sm text-slate-400 mt-1">Manage and monitor maritime fleet operations</p>
         </div>
         <div className="flex space-x-3">
-          <button onClick={fetchVessels} className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border shadow-sm text-gray-700 font-medium transition-colors flex items-center space-x-2">
+          <button onClick={fetchVessels} className="bg-slate-800/50 hover:bg-slate-700/50 px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm text-slate-300 font-medium transition-colors flex items-center space-x-2">
             <RefreshCw size={18} />
             <span>Refresh</span>
           </button>
@@ -347,58 +347,58 @@ const VesselList = () => {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <div className="card bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+        <div className="rounded-xl border border-sky-500/20 bg-gradient-to-br from-sky-900/20 to-sky-950/20 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Total Vessels</p>
-              <p className="text-3xl font-bold text-blue-600">{allVessels.length}</p>
+              <p className="text-sm text-slate-400 mb-1">Total Vessels</p>
+              <p className="text-3xl font-bold text-sky-400">{allVessels.length}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Ship className="text-blue-600" size={28} />
+            <div className="p-3 bg-sky-500/20 rounded-xl">
+              <Ship className="text-sky-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-900/20 to-emerald-950/20 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Available</p>
-              <p className="text-3xl font-bold text-green-600">{allVessels.filter((v) => v.status === 'AVAILABLE').length}</p>
+              <p className="text-sm text-slate-400 mb-1">Available</p>
+              <p className="text-3xl font-bold text-emerald-400">{allVessels.filter((v) => v.status === 'AVAILABLE').length}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-xl">
-              <CheckCircle className="text-green-600" size={28} />
+            <div className="p-3 bg-emerald-500/20 rounded-xl">
+              <CheckCircle className="text-emerald-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
+        <div className="rounded-xl border border-violet-500/20 bg-gradient-to-br from-violet-900/20 to-violet-950/20 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Sailing</p>
-              <p className="text-3xl font-bold text-purple-600">{allVessels.filter((v) => ['LOADING', 'SAILING', 'DISCHARGING'].includes(v.status)).length}</p>
+              <p className="text-sm text-slate-400 mb-1">Sailing</p>
+              <p className="text-3xl font-bold text-violet-400">{allVessels.filter((v) => ['LOADING', 'SAILING', 'DISCHARGING'].includes(v.status)).length}</p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-xl">
-              <Activity className="text-purple-600" size={28} />
+            <div className="p-3 bg-violet-500/20 rounded-xl">
+              <Activity className="text-violet-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-red-50 to-rose-50 border-red-200">
+        <div className="rounded-xl border border-rose-500/20 bg-gradient-to-br from-rose-900/20 to-rose-950/20 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Maintenance</p>
-              <p className="text-3xl font-bold text-red-600">{allVessels.filter((v) => v.status === 'MAINTENANCE').length}</p>
+              <p className="text-sm text-slate-400 mb-1">Maintenance</p>
+              <p className="text-3xl font-bold text-rose-400">{allVessels.filter((v) => v.status === 'MAINTENANCE').length}</p>
             </div>
-            <div className="p-3 bg-red-100 rounded-xl">
-              <AlertCircle className="text-red-600" size={28} />
+            <div className="p-3 bg-rose-500/20 rounded-xl">
+              <AlertCircle className="text-rose-400" size={28} />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="card">
+      <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-5">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex-1 flex items-center space-x-3">
               <div className="relative" style={{ minWidth: '320px', maxWidth: '450px', flex: '1' }}>
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" size={20} />
                 <input
                   type="text"
                   placeholder="Search by code, name, owner, or location..."
@@ -410,30 +410,30 @@ const VesselList = () => {
                     paddingLeft: '44px',
                     paddingRight: '44px',
                     fontSize: '14px',
-                    color: '#1f2937',
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #d1d5db',
+                    color: '#f1f5f9',
+                    backgroundColor: '#0f172a',
+                    border: '1px solid #334155',
                     borderRadius: '8px',
                     outline: 'none',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                    boxShadow: 'none',
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#3b82f6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)';
+                    e.target.style.borderColor = '#0ea5e9';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.15)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#d1d5db';
-                    e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+                    e.target.style.borderColor = '#334155';
+                    e.target.style.boxShadow = 'none';
                   }}
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-200">
                     <X size={18} />
                   </button>
                 )}
               </div>
 
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input-field min-w-[180px]">
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input-field min-w-[180px] bg-slate-900/50 border-slate-700 text-slate-200">
                 <option value="">All Status</option>
                 {statusOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -445,24 +445,24 @@ const VesselList = () => {
               <button
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                 className={`px-4 py-2 rounded-lg border font-medium transition-colors flex items-center space-x-2 ${
-                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-sky-500/20 border-sky-500/30 text-sky-300' : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-700/50'
                 }`}
               >
                 <Filter size={18} />
                 <span>Filters</span>
-                {activeFiltersCount > 0 && <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">{activeFiltersCount}</span>}
+                {activeFiltersCount > 0 && <span className="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">{activeFiltersCount}</span>}
                 <ChevronDown className={`transform transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} size={16} />
               </button>
 
               {activeFiltersCount > 0 && (
-                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 font-medium transition-colors flex items-center space-x-2">
+                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-slate-700/50 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 font-medium transition-colors flex items-center space-x-2">
                   <X size={18} />
                   <span>Clear</span>
                 </button>
               )}
             </div>
 
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <div className="flex items-center space-x-2 text-sm text-slate-400">
               <span>
                 Showing {vessels.length} of {allVessels.length} vessels
               </span>
@@ -470,15 +470,15 @@ const VesselList = () => {
           </div>
 
           {showAdvancedFilters && (
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
+            <div className="bg-slate-800/30 p-4 rounded-lg border border-slate-700/50">
+              <h3 className="font-semibold text-slate-200 mb-3 flex items-center space-x-2">
                 <Filter size={18} />
                 <span>Advanced Filters</span>
               </h3>
               <div className="grid grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Vessel Type</label>
-                  <select value={filters.vesselType} onChange={(e) => setFilters({ ...filters, vesselType: e.target.value })} className="input-field">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Vessel Type</label>
+                  <select value={filters.vesselType} onChange={(e) => setFilters({ ...filters, vesselType: e.target.value })} className="input-field bg-slate-900/50 border-slate-700 text-slate-200">
                     <option value="">All Types</option>
                     {vesselTypeOptions.map((type) => (
                       <option key={type.value} value={type.value}>
@@ -488,8 +488,8 @@ const VesselList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Owner</label>
-                  <select value={filters.owner} onChange={(e) => setFilters({ ...filters, owner: e.target.value })} className="input-field">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Owner</label>
+                  <select value={filters.owner} onChange={(e) => setFilters({ ...filters, owner: e.target.value })} className="input-field bg-slate-900/50 border-slate-700 text-slate-200">
                     <option value="">All Owners</option>
                     {uniqueOwners.map((owner) => (
                       <option key={owner} value={owner}>
@@ -499,19 +499,19 @@ const VesselList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Ownership</label>
-                  <select value={filters.isOwned} onChange={(e) => setFilters({ ...filters, isOwned: e.target.value })} className="input-field">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Ownership</label>
+                  <select value={filters.isOwned} onChange={(e) => setFilters({ ...filters, isOwned: e.target.value })} className="input-field bg-slate-900/50 border-slate-700 text-slate-200">
                     <option value="">All</option>
                     <option value="true">Owned</option>
                     <option value="false">Chartered</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Capacity Range (ton)</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Capacity Range (ton)</label>
                   <div className="flex items-center space-x-2">
-                    <input type="number" value={filters.minCapacity} onChange={(e) => setFilters({ ...filters, minCapacity: e.target.value })} placeholder="Min" className="input-field" />
-                    <span className="text-gray-500">-</span>
-                    <input type="number" value={filters.maxCapacity} onChange={(e) => setFilters({ ...filters, maxCapacity: e.target.value })} placeholder="Max" className="input-field" />
+                    <input type="number" value={filters.minCapacity} onChange={(e) => setFilters({ ...filters, minCapacity: e.target.value })} placeholder="Min" className="input-field bg-slate-900/50 border-slate-700 text-slate-200" />
+                    <span className="text-slate-500">-</span>
+                    <input type="number" value={filters.maxCapacity} onChange={(e) => setFilters({ ...filters, maxCapacity: e.target.value })} placeholder="Max" className="input-field bg-slate-900/50 border-slate-700 text-slate-200" />
                   </div>
                 </div>
               </div>
@@ -520,70 +520,70 @@ const VesselList = () => {
         </div>
       </div>
 
-      <div className="card overflow-hidden">
+      <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+          <table className="min-w-full divide-y divide-slate-700/50">
+            <thead className="bg-gradient-to-r from-slate-800/80 to-slate-900/80">
               <tr>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('code')}>
+                <th className="table-header cursor-pointer hover:bg-slate-700/50 transition-colors group" onClick={() => handleSort('code')}>
                   <div className="flex items-center justify-between">
                     <span>Code</span>
-                    {sortField === 'code' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'code' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('name')}>
+                <th className="table-header cursor-pointer hover:bg-slate-700/50 transition-colors group" onClick={() => handleSort('name')}>
                   <div className="flex items-center justify-between">
                     <span>Name</span>
-                    {sortField === 'name' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'name' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
                 <th className="table-header">Type</th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('capacity')}>
+                <th className="table-header cursor-pointer hover:bg-slate-700/50 transition-colors group" onClick={() => handleSort('capacity')}>
                   <div className="flex items-center justify-between">
                     <span>Capacity</span>
-                    {sortField === 'capacity' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'capacity' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
                 <th className="table-header">GT / DWT</th>
                 <th className="table-header">Owner</th>
                 <th className="table-header">Location</th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('status')}>
+                <th className="table-header cursor-pointer hover:bg-slate-700/50 transition-colors group" onClick={() => handleSort('status')}>
                   <div className="flex items-center justify-between">
                     <span>Status</span>
-                    {sortField === 'status' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'status' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
                 <th className="table-header">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-slate-700/50 bg-slate-900/30">
               {vessels.length === 0 ? (
                 <tr>
                   <td colSpan="9" className="text-center py-12">
                     <div className="flex flex-col items-center space-y-3">
-                      <Ship className="text-gray-400" size={48} />
-                      <p className="text-gray-500 font-medium">No vessels found</p>
-                      <p className="text-sm text-gray-400">Try adjusting your filters or search query</p>
+                      <Ship className="text-slate-500" size={48} />
+                      <p className="text-slate-400 font-medium">No vessels found</p>
+                      <p className="text-sm text-slate-500">Try adjusting your filters or search query</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 vessels.map((vessel) => (
-                  <tr key={vessel.id} className="hover:bg-blue-50 transition-colors">
+                  <tr key={vessel.id} className="hover:bg-slate-800/50 transition-colors">
                     <td className="table-cell">
-                      <span className="font-bold text-blue-600">{vessel.code}</span>
+                      <span className="font-bold text-sky-400">{vessel.code}</span>
                     </td>
                     <td className="table-cell">
-                      <span className="font-medium text-gray-900">{vessel.name}</span>
+                      <span className="font-medium text-slate-200">{vessel.name}</span>
                     </td>
                     <td className="table-cell">
-                      <span className="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-800 font-medium">{vessel.vesselType === 'MOTHER_VESSEL' ? 'Mother Vessel' : vessel.vesselType === 'TUG_BOAT' ? 'Tug Boat' : 'Barge'}</span>
+                      <span className="text-xs px-2 py-1 rounded-full bg-violet-500/20 text-violet-300 font-medium">{vessel.vesselType === 'MOTHER_VESSEL' ? 'Mother Vessel' : vessel.vesselType === 'TUG_BOAT' ? 'Tug Boat' : 'Barge'}</span>
                     </td>
                     <td className="table-cell">
-                      <span className="font-semibold text-gray-900">{vessel.capacity?.toFixed(2) || 0}</span>
-                      <span className="text-gray-500 ml-1">ton</span>
+                      <span className="font-semibold text-slate-200">{vessel.capacity?.toFixed(2) || 0}</span>
+                      <span className="text-slate-500 ml-1">ton</span>
                     </td>
-                    <td className="table-cell text-sm text-gray-700">
+                    <td className="table-cell text-sm text-slate-300">
                       <div className="flex flex-col space-y-0.5">
                         <span>GT: {vessel.gt?.toFixed(2) || '-'}</span>
                         <span>DWT: {vessel.dwt?.toFixed(2) || '-'}</span>
@@ -591,13 +591,13 @@ const VesselList = () => {
                     </td>
                     <td className="table-cell">
                       <div className="flex flex-col">
-                        <span className="text-gray-900 font-medium">{vessel.owner || '-'}</span>
-                        {vessel.isOwned !== undefined && <span className={`text-xs ${vessel.isOwned ? 'text-green-600' : 'text-yellow-600'}`}>{vessel.isOwned ? '● Owned' : '○ Chartered'}</span>}
+                        <span className="text-slate-200 font-medium">{vessel.owner || '-'}</span>
+                        {vessel.isOwned !== undefined && <span className={`text-xs ${vessel.isOwned ? 'text-emerald-400' : 'text-amber-400'}`}>{vessel.isOwned ? 'Owned' : 'Chartered'}</span>}
                       </div>
                     </td>
                     <td className="table-cell">
-                      <div className="flex items-center space-x-1 text-gray-700">
-                        <MapPin size={14} className="text-gray-400" />
+                      <div className="flex items-center space-x-1 text-slate-300">
+                        <MapPin size={14} className="text-slate-500" />
                         <span className="text-sm">{vessel.currentLocation || '-'}</span>
                       </div>
                     </td>
@@ -606,16 +606,16 @@ const VesselList = () => {
                     </td>
                     <td className="table-cell">
                       <div className="flex space-x-1">
-                        <button onClick={() => handleView(vessel)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
+                        <button onClick={() => handleView(vessel)} className="p-2 text-sky-400 hover:bg-sky-500/20 rounded-lg transition-colors" title="View Details">
                           <Eye size={18} />
                         </button>
                         {canEdit && (
-                          <button onClick={() => handleEdit(vessel)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
+                          <button onClick={() => handleEdit(vessel)} className="p-2 text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-colors" title="Edit">
                             <Edit size={18} />
                           </button>
                         )}
                         {canEdit && (
-                          <button onClick={() => handleDelete(vessel.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(vessel.id)} className="p-2 text-rose-400 hover:bg-rose-500/20 rounded-lg transition-colors" title="Delete">
                             <Trash2 size={18} />
                           </button>
                         )}
@@ -631,9 +631,9 @@ const VesselList = () => {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <label className="text-sm text-gray-600 flex items-center space-x-2">
+          <label className="text-sm text-slate-400 flex items-center space-x-2">
             <span>Items per page:</span>
-            <select value={pagination.limit} onChange={(e) => setPagination((prev) => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))} className="input-field py-1 px-2">
+            <select value={pagination.limit} onChange={(e) => setPagination((prev) => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))} className="input-field py-1 px-2 bg-slate-900/50 border-slate-700 text-slate-200">
               <option value="10">10</option>
               <option value="15">15</option>
               <option value="25">25</option>
@@ -651,24 +651,24 @@ const VesselList = () => {
         title={
           mode === 'create' ? (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Plus className="text-blue-600" size={24} />
+              <div className="p-2 bg-sky-500/20 rounded-lg">
+                <Plus className="text-sky-400" size={24} />
               </div>
-              <span>Add New Vessel</span>
+              <span className="text-slate-100">Add New Vessel</span>
             </div>
           ) : mode === 'edit' ? (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Edit className="text-green-600" size={24} />
+              <div className="p-2 bg-emerald-500/20 rounded-lg">
+                <Edit className="text-emerald-400" size={24} />
               </div>
-              <span>Edit Vessel</span>
+              <span className="text-slate-100">Edit Vessel</span>
             </div>
           ) : (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Eye className="text-purple-600" size={24} />
+              <div className="p-2 bg-violet-500/20 rounded-lg">
+                <Eye className="text-violet-400" size={24} />
               </div>
-              <span>Vessel Details</span>
+              <span className="text-slate-100">Vessel Details</span>
             </div>
           )
         }
@@ -676,98 +676,98 @@ const VesselList = () => {
       >
         {mode === 'view' && selected ? (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
+            <div className="bg-gradient-to-r from-sky-900/30 to-sky-950/30 p-6 rounded-xl border border-sky-500/20">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900">{selected.code}</h3>
-                  <p className="text-gray-600 mt-1">{selected.name}</p>
+                  <h3 className="text-2xl font-bold text-slate-100">{selected.code}</h3>
+                  <p className="text-slate-400 mt-1">{selected.name}</p>
                 </div>
                 <StatusBadge status={selected.status} />
               </div>
               <div className="flex items-center space-x-4 text-sm">
-                <span className="px-3 py-1 bg-white rounded-full text-indigo-700 font-medium">{selected.vesselType === 'MOTHER_VESSEL' ? 'Mother Vessel' : selected.vesselType === 'TUG_BOAT' ? 'Tug Boat' : 'Barge'}</span>
-                {selected.isOwned !== undefined && <span className={`px-3 py-1 bg-white rounded-full font-medium ${selected.isOwned ? 'text-green-700' : 'text-yellow-700'}`}>{selected.isOwned ? '● Owned' : '○ Chartered'}</span>}
+                <span className="px-3 py-1 bg-slate-800/50 rounded-full text-violet-300 font-medium">{selected.vesselType === 'MOTHER_VESSEL' ? 'Mother Vessel' : selected.vesselType === 'TUG_BOAT' ? 'Tug Boat' : 'Barge'}</span>
+                {selected.isOwned !== undefined && <span className={`px-3 py-1 bg-slate-800/50 rounded-full font-medium ${selected.isOwned ? 'text-emerald-300' : 'text-amber-300'}`}>{selected.isOwned ? 'Owned' : 'Chartered'}</span>}
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Package className="text-blue-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Capacity</label>
+                  <Package className="text-sky-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Capacity</label>
                 </div>
-                <p className="text-2xl font-bold text-blue-600">
+                <p className="text-2xl font-bold text-sky-400">
                   {selected.capacity?.toFixed(2) || 0} <span className="text-lg">ton</span>
                 </p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Anchor className="text-green-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Gross Tonnage (GT)</label>
+                  <Anchor className="text-emerald-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Gross Tonnage (GT)</label>
                 </div>
-                <p className="text-2xl font-bold text-green-600">{selected.gt?.toFixed(2) || '-'}</p>
+                <p className="text-2xl font-bold text-emerald-400">{selected.gt?.toFixed(2) || '-'}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <BarChart3 className="text-purple-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Deadweight Tonnage (DWT)</label>
+                  <BarChart3 className="text-violet-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Deadweight Tonnage (DWT)</label>
                 </div>
-                <p className="text-2xl font-bold text-purple-600">{selected.dwt?.toFixed(2) || '-'}</p>
+                <p className="text-2xl font-bold text-violet-400">{selected.dwt?.toFixed(2) || '-'}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <TrendingUp className="text-orange-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Length Overall (LOA)</label>
+                  <TrendingUp className="text-amber-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Length Overall (LOA)</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">
+                <p className="text-lg font-medium text-slate-200">
                   {selected.loa?.toFixed(2) || '-'} {selected.loa ? <span className="text-sm">m</span> : ''}
                 </p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <User className="text-indigo-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Owner</label>
+                  <User className="text-sky-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Owner</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{selected.owner || '-'}</p>
+                <p className="text-lg font-medium text-slate-200">{selected.owner || '-'}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <MapPin className="text-red-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Current Location</label>
+                  <MapPin className="text-rose-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Current Location</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{selected.currentLocation || '-'}</p>
+                <p className="text-lg font-medium text-slate-200">{selected.currentLocation || '-'}</p>
               </div>
             </div>
 
             {selected.remarks && (
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <label className="text-sm font-semibold text-gray-600 mb-2 block">Remarks</label>
-                <p className="text-gray-900">{selected.remarks}</p>
+              <div className="bg-slate-800/30 p-4 rounded-lg border border-slate-700/50">
+                <label className="text-sm font-semibold text-slate-400 mb-2 block">Remarks</label>
+                <p className="text-slate-200">{selected.remarks}</p>
               </div>
             )}
 
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="bg-sky-500/10 p-4 rounded-lg border border-sky-500/20">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-600">Created:</span>
-                  <span className="ml-2 font-medium text-gray-900">{selected.createdAt ? new Date(selected.createdAt).toLocaleDateString() : '-'}</span>
+                  <span className="text-slate-400">Created:</span>
+                  <span className="ml-2 font-medium text-slate-200">{selected.createdAt ? new Date(selected.createdAt).toLocaleDateString() : '-'}</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Last Updated:</span>
-                  <span className="ml-2 font-medium text-gray-900">{selected.updatedAt ? new Date(selected.updatedAt).toLocaleDateString() : '-'}</span>
+                  <span className="text-slate-400">Last Updated:</span>
+                  <span className="ml-2 font-medium text-slate-200">{selected.updatedAt ? new Date(selected.updatedAt).toLocaleDateString() : '-'}</span>
                 </div>
               </div>
             </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-800">
+            <div className="bg-sky-500/10 p-4 rounded-lg border border-sky-500/20">
+              <p className="text-sm text-sky-300">
                 <strong>Note:</strong> Fields marked with * are required. Make sure to enter valid data for vessel specifications.
               </p>
             </div>
@@ -775,7 +775,7 @@ const VesselList = () => {
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-semibold text-gray-700">Code *</label>
+                  <label className="text-sm font-semibold text-slate-300">Code *</label>
                   {mode === 'create' ? (
                     <div className="flex items-center space-x-2">
                       <button
@@ -787,20 +787,20 @@ const VesselList = () => {
                             setFormData((prev) => ({ ...prev, code: auto }));
                           }
                         }}
-                        className="text-xs px-2 py-1 rounded border bg-white text-gray-700 hover:bg-gray-50 transition"
+                        className="text-xs px-2 py-1 rounded border border-slate-600 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 transition"
                       >
                         {codeEditable ? 'Auto' : 'Edit'}
                       </button>
                     </div>
                   ) : (
-                    <span className="text-xs font-normal text-gray-500">(e.g., MV-0001, BRG-0001)</span>
+                    <span className="text-xs font-normal text-slate-500">(e.g., MV-0001, BRG-0001)</span>
                   )}
                 </div>
                 <input
                   type="text"
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  className="input-field"
+                  className="input-field bg-slate-900/50 border-slate-700 text-slate-200"
                   required
                   placeholder="MV-0001"
                   disabled={mode === 'edit' || (mode === 'create' && !codeEditable)}
@@ -808,19 +808,19 @@ const VesselList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Name *</label>
-                <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field" required placeholder="MV Borneo Utama" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Name *</label>
+                <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field bg-slate-900/50 border-slate-700 text-slate-200" required placeholder="MV Borneo Utama" />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Vessel Type *</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Vessel Type *</label>
                 <select
                   value={formData.vesselType}
                   onChange={(e) => {
                     const newType = e.target.value;
                     setFormData((prev) => ({ ...prev, vesselType: newType, code: mode === 'create' && !codeEditable ? generateAutoCodeForType(newType) : prev.code }));
                   }}
-                  className="input-field"
+                  className="input-field bg-slate-900/50 border-slate-700 text-slate-200"
                 >
                   <option value="MOTHER_VESSEL">Mother Vessel</option>
                   <option value="BARGE">Barge</option>
@@ -829,34 +829,69 @@ const VesselList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Owner *</label>
-                <input type="text" value={formData.owner} onChange={(e) => setFormData({ ...formData, owner: e.target.value })} className="input-field" placeholder="PT Marine Services" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Owner *</label>
+                <input type="text" value={formData.owner} onChange={(e) => setFormData({ ...formData, owner: e.target.value })} className="input-field bg-slate-900/50 border-slate-700 text-slate-200" placeholder="PT Marine Services" />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Capacity (ton) *</label>
-                <input type="number" step="0.01" value={formData.capacity} onChange={(e) => setFormData({ ...formData, capacity: e.target.value })} className="input-field" required placeholder="10000.00" min="0" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Capacity (ton) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.capacity}
+                  onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                  className="input-field bg-slate-900/50 border-slate-700 text-slate-200"
+                  required
+                  placeholder="10000.00"
+                  min="0"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Gross Tonnage (GT) *</label>
-                <input type="number" step="0.01" value={formData.gt} onChange={(e) => setFormData({ ...formData, gt: e.target.value })} className="input-field" required placeholder="8000.00" min="0" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Gross Tonnage (GT) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.gt}
+                  onChange={(e) => setFormData({ ...formData, gt: e.target.value })}
+                  className="input-field bg-slate-900/50 border-slate-700 text-slate-200"
+                  required
+                  placeholder="8000.00"
+                  min="0"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Deadweight Tonnage (DWT) *</label>
-                <input type="number" step="0.01" value={formData.dwt} onChange={(e) => setFormData({ ...formData, dwt: e.target.value })} className="input-field" required placeholder="9000.00" min="0" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Deadweight Tonnage (DWT) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.dwt}
+                  onChange={(e) => setFormData({ ...formData, dwt: e.target.value })}
+                  className="input-field bg-slate-900/50 border-slate-700 text-slate-200"
+                  required
+                  placeholder="9000.00"
+                  min="0"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Length Overall (LOA) in meters</label>
-                <input type="number" step="0.01" value={formData.loa} onChange={(e) => setFormData({ ...formData, loa: e.target.value })} className="input-field" placeholder="150.00" min="0" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Length Overall (LOA) in meters</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.loa}
+                  onChange={(e) => setFormData({ ...formData, loa: e.target.value })}
+                  className="input-field bg-slate-900/50 border-slate-700 text-slate-200"
+                  placeholder="150.00"
+                  min="0"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Current Location</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Current Location</label>
                 {dumpingPoints && dumpingPoints.length ? (
-                  <select value={formData.currentLocation} onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })} className="input-field">
+                  <select value={formData.currentLocation} onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })} className="input-field bg-slate-900/50 border-slate-700 text-slate-200">
                     <option value="">Select dumping point</option>
                     {dumpingPoints.map((d) => (
                       <option key={d.id} value={d.name || d.code || ''}>
@@ -865,25 +900,43 @@ const VesselList = () => {
                     ))}
                   </select>
                 ) : (
-                  <input type="text" value={formData.currentLocation} onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })} className="input-field" placeholder="Muara Pantai" />
+                  <input
+                    type="text"
+                    value={formData.currentLocation}
+                    onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })}
+                    className="input-field bg-slate-900/50 border-slate-700 text-slate-200"
+                    placeholder="Muara Pantai"
+                  />
                 )}
               </div>
 
               <div className="flex items-center space-x-2">
-                <input type="checkbox" id="isOwned" checked={formData.isOwned} onChange={(e) => setFormData({ ...formData, isOwned: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
-                <label htmlFor="isOwned" className="text-sm font-semibold text-gray-700">
+                <input
+                  type="checkbox"
+                  id="isOwned"
+                  checked={formData.isOwned}
+                  onChange={(e) => setFormData({ ...formData, isOwned: e.target.checked })}
+                  className="w-4 h-4 text-sky-500 rounded focus:ring-sky-500 bg-slate-800 border-slate-600"
+                />
+                <label htmlFor="isOwned" className="text-sm font-semibold text-slate-300">
                   Owned by Company
                 </label>
               </div>
 
               <div className="col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Remarks</label>
-                <textarea value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} className="input-field" rows="3" placeholder="Additional notes or remarks about the vessel..."></textarea>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Remarks</label>
+                <textarea
+                  value={formData.remarks}
+                  onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                  className="input-field bg-slate-900/50 border-slate-700 text-slate-200"
+                  rows="3"
+                  placeholder="Additional notes or remarks about the vessel..."
+                ></textarea>
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4 border-t">
-              <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+            <div className="flex justify-end space-x-3 pt-4 border-t border-slate-700/50">
+              <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 border border-slate-600 rounded-lg text-slate-300 font-medium hover:bg-slate-700/50 transition-colors">
                 Cancel
               </button>
               <button type="submit" className="btn-primary px-6 py-2.5 flex items-center space-x-2">

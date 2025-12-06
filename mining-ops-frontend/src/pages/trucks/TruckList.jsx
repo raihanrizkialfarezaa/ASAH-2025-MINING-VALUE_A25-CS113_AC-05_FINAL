@@ -391,21 +391,27 @@ const TruckList = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header Section */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center space-x-3">
-            <TruckIcon className="text-blue-600" size={36} />
+          <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-sky-500/20 border border-sky-500/30">
+              <TruckIcon className="text-sky-400" size={28} />
+            </div>
             <span>Trucks Management</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Manage and monitor fleet operations in real-time</p>
+          <p className="text-sm text-slate-400 mt-1 ml-14">Manage and monitor fleet operations in real-time</p>
         </div>
-        <div className="flex space-x-3">
-          <button onClick={fetchTrucks} className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border shadow-sm text-gray-700 font-medium transition-colors flex items-center space-x-2">
+        <div className="flex gap-3">
+          <button onClick={fetchTrucks} className="px-4 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-300 font-medium hover:bg-slate-700/60 transition-colors flex items-center gap-2">
             <RefreshCw size={18} />
             <span>Refresh</span>
           </button>
           {canEdit && (
-            <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
+            <button
+              onClick={handleCreate}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 text-white font-semibold shadow-lg shadow-sky-500/25 transition-all duration-300 flex items-center gap-2"
+            >
               <Plus size={20} />
               <span>Add Truck</span>
             </button>
@@ -413,94 +419,80 @@ const TruckList = () => {
         </div>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="card bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+        <div className="rounded-xl border border-sky-500/30 bg-gradient-to-br from-slate-900 to-slate-950 p-5 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Total Trucks</p>
-              <p className="text-3xl font-bold text-blue-600">{allTrucks.length}</p>
+              <p className="text-sm text-slate-400 mb-1">Total Trucks</p>
+              <p className="text-3xl font-bold text-sky-400">{allTrucks.length}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <TruckIcon className="text-blue-600" size={28} />
+            <div className="p-3 rounded-xl bg-sky-500/20 border border-sky-500/30">
+              <TruckIcon className="text-sky-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        <div className="rounded-xl border border-emerald-500/30 bg-gradient-to-br from-slate-900 to-slate-950 p-5 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Operating</p>
-              <p className="text-3xl font-bold text-green-600">{allTrucks.filter((t) => ['HAULING', 'LOADING', 'DUMPING'].includes(t.status)).length}</p>
+              <p className="text-sm text-slate-400 mb-1">Operating</p>
+              <p className="text-3xl font-bold text-emerald-400">{allTrucks.filter((t) => ['HAULING', 'LOADING', 'DUMPING'].includes(t.status)).length}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-xl">
-              <Activity className="text-green-600" size={28} />
+            <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
+              <Activity className="text-emerald-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200">
+        <div className="rounded-xl border border-amber-500/30 bg-gradient-to-br from-slate-900 to-slate-950 p-5 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Idle</p>
-              <p className="text-3xl font-bold text-yellow-600">{allTrucks.filter((t) => t.status === 'IDLE').length}</p>
+              <p className="text-sm text-slate-400 mb-1">Idle</p>
+              <p className="text-3xl font-bold text-amber-400">{allTrucks.filter((t) => t.status === 'IDLE').length}</p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-xl">
-              <Clock className="text-yellow-600" size={28} />
+            <div className="p-3 rounded-xl bg-amber-500/20 border border-amber-500/30">
+              <Clock className="text-amber-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-red-50 to-rose-50 border-red-200">
+        <div className="rounded-xl border border-rose-500/30 bg-gradient-to-br from-slate-900 to-slate-950 p-5 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Maintenance</p>
-              <p className="text-3xl font-bold text-red-600">{allTrucks.filter((t) => t.status === 'MAINTENANCE').length}</p>
+              <p className="text-sm text-slate-400 mb-1">Maintenance</p>
+              <p className="text-3xl font-bold text-rose-400">{allTrucks.filter((t) => t.status === 'MAINTENANCE').length}</p>
             </div>
-            <div className="p-3 bg-red-100 rounded-xl">
-              <Settings className="text-red-600" size={28} />
+            <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/30">
+              <Settings className="text-rose-400" size={28} />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="card">
+      {/* Search & Filters Card */}
+      <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 shadow-xl">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex-1 flex items-center space-x-3">
+            <div className="flex-1 flex items-center gap-3">
               <div className="relative" style={{ minWidth: '320px', maxWidth: '450px', flex: '1' }}>
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" size={20} />
                 <input
                   type="text"
                   placeholder="Search by code, name, brand, or model..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    height: '44px',
-                    paddingLeft: '44px',
-                    paddingRight: '44px',
-                    fontSize: '14px',
-                    color: '#1f2937',
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    outline: 'none',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#3b82f6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#d1d5db';
-                    e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-                  }}
+                  className="w-full h-11 pl-11 pr-11 text-sm text-slate-100 bg-slate-800/80 border border-slate-700 rounded-xl outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 transition-all placeholder-slate-500"
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-200">
                     <X size={18} />
                   </button>
                 )}
               </div>
 
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input-field min-w-[180px]">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all min-w-[180px]"
+              >
                 <option value="">All Status</option>
                 {statusOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -511,25 +503,25 @@ const TruckList = () => {
 
               <button
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className={`px-4 py-2 rounded-lg border font-medium transition-colors flex items-center space-x-2 ${
-                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                className={`px-4 py-2.5 rounded-xl border font-medium transition-colors flex items-center gap-2 ${
+                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-sky-500/20 border-sky-500/30 text-sky-400' : 'bg-slate-800/60 border-slate-700/50 text-slate-300 hover:bg-slate-700/60'
                 }`}
               >
                 <Filter size={18} />
                 <span>Filters</span>
-                {activeFiltersCount > 0 && <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">{activeFiltersCount}</span>}
+                {activeFiltersCount > 0 && <span className="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">{activeFiltersCount}</span>}
                 <ChevronDown className={`transform transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} size={16} />
               </button>
 
               {activeFiltersCount > 0 && (
-                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 font-medium transition-colors flex items-center space-x-2">
+                <button onClick={handleClearFilters} className="px-4 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-300 hover:bg-slate-700/60 font-medium transition-colors flex items-center gap-2">
                   <X size={18} />
                   <span>Clear</span>
                 </button>
               )}
             </div>
 
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-slate-400">
               <span>
                 Showing {trucks.length} of {allTrucks.length} trucks
               </span>
@@ -537,15 +529,19 @@ const TruckList = () => {
           </div>
 
           {showAdvancedFilters && (
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
-                <Filter size={18} />
+            <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+              <h3 className="font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                <Filter size={18} className="text-sky-400" />
                 <span>Advanced Filters</span>
               </h3>
               <div className="grid grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
-                  <select value={filters.brand} onChange={(e) => setFilters({ ...filters, brand: e.target.value })} className="input-field">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Brand</label>
+                  <select
+                    value={filters.brand}
+                    onChange={(e) => setFilters({ ...filters, brand: e.target.value })}
+                    className="w-full h-10 px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all"
+                  >
                     <option value="">All Brands</option>
                     {uniqueBrands.map((brand) => (
                       <option key={brand} value={brand}>
@@ -555,19 +551,43 @@ const TruckList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Min Capacity (ton)</label>
-                  <input type="number" value={filters.minCapacity} onChange={(e) => setFilters({ ...filters, minCapacity: e.target.value })} placeholder="0" className="input-field" />
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Min Capacity (ton)</label>
+                  <input
+                    type="number"
+                    value={filters.minCapacity}
+                    onChange={(e) => setFilters({ ...filters, minCapacity: e.target.value })}
+                    placeholder="0"
+                    className="w-full h-10 px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Max Capacity (ton)</label>
-                  <input type="number" value={filters.maxCapacity} onChange={(e) => setFilters({ ...filters, maxCapacity: e.target.value })} placeholder="100" className="input-field" />
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Max Capacity (ton)</label>
+                  <input
+                    type="number"
+                    value={filters.maxCapacity}
+                    onChange={(e) => setFilters({ ...filters, maxCapacity: e.target.value })}
+                    placeholder="100"
+                    className="w-full h-10 px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Year Range</label>
-                  <div className="flex items-center space-x-2">
-                    <input type="number" value={filters.minYear} onChange={(e) => setFilters({ ...filters, minYear: e.target.value })} placeholder="From" className="input-field" />
-                    <span className="text-gray-500">-</span>
-                    <input type="number" value={filters.maxYear} onChange={(e) => setFilters({ ...filters, maxYear: e.target.value })} placeholder="To" className="input-field" />
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Year Range</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={filters.minYear}
+                      onChange={(e) => setFilters({ ...filters, minYear: e.target.value })}
+                      placeholder="From"
+                      className="w-full h-10 px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                    />
+                    <span className="text-slate-500">-</span>
+                    <input
+                      type="number"
+                      value={filters.maxYear}
+                      onChange={(e) => setFilters({ ...filters, maxYear: e.target.value })}
+                      placeholder="To"
+                      className="w-full h-10 px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                    />
                   </div>
                 </div>
               </div>
@@ -576,96 +596,97 @@ const TruckList = () => {
         </div>
       </div>
 
-      <div className="card overflow-hidden">
+      {/* Data Table */}
+      <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 shadow-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+          <table className="min-w-full">
+            <thead className="bg-slate-800/50 border-b border-slate-700/50">
               <tr>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('code')}>
+                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('code')}>
                   <div className="flex items-center justify-between">
                     <span>Code</span>
-                    {sortField === 'code' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'code' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('name')}>
+                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('name')}>
                   <div className="flex items-center justify-between">
                     <span>Name</span>
-                    {sortField === 'name' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'name' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('brand')}>
+                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('brand')}>
                   <div className="flex items-center justify-between">
                     <span>Brand</span>
-                    {sortField === 'brand' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'brand' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header">Model</th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('capacity')}>
+                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Model</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('capacity')}>
                   <div className="flex items-center justify-between">
                     <span>Capacity</span>
-                    {sortField === 'capacity' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'capacity' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('yearManufacture')}>
+                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('yearManufacture')}>
                   <div className="flex items-center justify-between">
                     <span>Year</span>
-                    {sortField === 'yearManufacture' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'yearManufacture' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('status')}>
+                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('status')}>
                   <div className="flex items-center justify-between">
                     <span>Status</span>
-                    {sortField === 'status' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'status' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header">Actions</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-slate-800/50">
               {trucks.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="text-center py-12">
-                    <div className="flex flex-col items-center space-y-3">
-                      <TruckIcon className="text-gray-400" size={48} />
-                      <p className="text-gray-500 font-medium">No trucks found</p>
-                      <p className="text-sm text-gray-400">Try adjusting your filters or search query</p>
+                    <div className="flex flex-col items-center gap-3">
+                      <TruckIcon className="text-slate-600" size={48} />
+                      <p className="text-slate-400 font-medium">No trucks found</p>
+                      <p className="text-sm text-slate-500">Try adjusting your filters or search query</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 trucks.map((truck) => (
-                  <tr key={truck.id} className="hover:bg-blue-50 transition-colors">
-                    <td className="table-cell">
-                      <span className="font-bold text-blue-600">{truck.code}</span>
+                  <tr key={truck.id} className="hover:bg-slate-800/30 transition-colors">
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className="font-bold text-sky-400">{truck.code}</span>
                     </td>
-                    <td className="table-cell">
-                      <span className="font-medium text-gray-900">{truck.name}</span>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className="font-medium text-slate-200">{truck.name}</span>
                     </td>
-                    <td className="table-cell text-gray-700">{truck.brand || '-'}</td>
-                    <td className="table-cell text-gray-700">{truck.model || '-'}</td>
-                    <td className="table-cell">
-                      <span className="font-semibold text-gray-900">{truck.capacity}</span>
-                      <span className="text-gray-500 ml-1">ton</span>
+                    <td className="px-4 py-4 whitespace-nowrap text-slate-400">{truck.brand || '-'}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-slate-400">{truck.model || '-'}</td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className="font-semibold text-slate-200">{truck.capacity}</span>
+                      <span className="text-slate-500 ml-1">ton</span>
                     </td>
-                    <td className="table-cell text-gray-700">{truck.yearManufacture || '-'}</td>
-                    <td className="table-cell">
+                    <td className="px-4 py-4 whitespace-nowrap text-slate-400">{truck.yearManufacture || '-'}</td>
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <StatusBadge status={truck.status} />
                     </td>
-                    <td className="table-cell">
-                      <div className="flex space-x-1">
-                        <button onClick={() => handleView(truck)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="flex gap-1">
+                        <button onClick={() => handleView(truck)} className="p-2 text-sky-400 hover:bg-sky-500/20 rounded-lg transition-colors" title="View Details">
                           <Eye size={18} />
                         </button>
                         {canEdit && (
-                          <button onClick={() => handleEdit(truck)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
+                          <button onClick={() => handleEdit(truck)} className="p-2 text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-colors" title="Edit">
                             <Edit size={18} />
                           </button>
                         )}
-                        <button onClick={() => handlePerformance(truck)} className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors" title="Performance">
+                        <button onClick={() => handlePerformance(truck)} className="p-2 text-violet-400 hover:bg-violet-500/20 rounded-lg transition-colors" title="Performance">
                           <Activity size={18} />
                         </button>
                         {canEdit && (
-                          <button onClick={() => handleDelete(truck.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(truck.id)} className="p-2 text-rose-400 hover:bg-rose-500/20 rounded-lg transition-colors" title="Delete">
                             <Trash2 size={18} />
                           </button>
                         )}
@@ -679,11 +700,16 @@ const TruckList = () => {
         </div>
       </div>
 
+      {/* Pagination */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <label className="text-sm text-gray-600 flex items-center space-x-2">
+        <div className="flex items-center gap-4">
+          <label className="text-sm text-slate-400 flex items-center gap-2">
             <span>Items per page:</span>
-            <select value={pagination.limit} onChange={(e) => setPagination((prev) => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))} className="input-field py-1 px-2">
+            <select
+              value={pagination.limit}
+              onChange={(e) => setPagination((prev) => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+              className="h-9 px-3 rounded-lg bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:outline-none transition-all"
+            >
               <option value="10">10</option>
               <option value="15">15</option>
               <option value="25">25</option>
@@ -700,25 +726,25 @@ const TruckList = () => {
         onClose={() => setShowModal(false)}
         title={
           modalMode === 'create' ? (
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Plus className="text-blue-600" size={24} />
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-sky-500/20 border border-sky-500/30">
+                <Plus className="text-sky-400" size={24} />
               </div>
-              <span>Add New Truck</span>
+              <span className="text-slate-100">Add New Truck</span>
             </div>
           ) : modalMode === 'edit' ? (
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Edit className="text-green-600" size={24} />
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
+                <Edit className="text-emerald-400" size={24} />
               </div>
-              <span>Edit Truck</span>
+              <span className="text-slate-100">Edit Truck</span>
             </div>
           ) : (
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Eye className="text-purple-600" size={24} />
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-violet-500/20 border border-violet-500/30">
+                <Eye className="text-violet-400" size={24} />
               </div>
-              <span>Truck Details</span>
+              <span className="text-slate-100">Truck Details</span>
             </div>
           )
         }
@@ -726,133 +752,133 @@ const TruckList = () => {
       >
         {modalMode === 'view' && selectedTruck ? (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
+            <div className="p-6 rounded-xl bg-gradient-to-br from-sky-500/10 to-slate-900 border border-sky-500/20">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900">{selectedTruck.code}</h3>
-                  <p className="text-gray-600 mt-1">{selectedTruck.name}</p>
+                  <h3 className="text-2xl font-bold text-slate-100">{selectedTruck.code}</h3>
+                  <p className="text-slate-400 mt-1">{selectedTruck.name}</p>
                 </div>
                 <StatusBadge status={selectedTruck.status} />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <TruckIcon className="text-blue-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Brand & Model</label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                <div className="flex items-center gap-2 mb-2">
+                  <TruckIcon className="text-sky-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Brand & Model</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{selectedTruck.brand || '-'}</p>
-                <p className="text-sm text-gray-600">{selectedTruck.model || '-'}</p>
+                <p className="text-lg font-medium text-slate-200">{selectedTruck.brand || '-'}</p>
+                <p className="text-sm text-slate-400">{selectedTruck.model || '-'}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Gauge className="text-green-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Capacity</label>
+              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                <div className="flex items-center gap-2 mb-2">
+                  <Gauge className="text-emerald-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Capacity</label>
                 </div>
-                <p className="text-2xl font-bold text-green-600">
-                  {selectedTruck.capacity} <span className="text-lg">ton</span>
+                <p className="text-2xl font-bold text-emerald-400">
+                  {selectedTruck.capacity} <span className="text-lg text-slate-400">ton</span>
                 </p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Calendar className="text-purple-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Year of Manufacture</label>
+              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="text-violet-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Year of Manufacture</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{selectedTruck.yearManufacture || '-'}</p>
+                <p className="text-lg font-medium text-slate-200">{selectedTruck.yearManufacture || '-'}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Fuel className="text-orange-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Fuel Capacity</label>
+              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                <div className="flex items-center gap-2 mb-2">
+                  <Fuel className="text-amber-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Fuel Capacity</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">
-                  {selectedTruck.fuelCapacity || '-'} <span className="text-sm">L</span>
+                <p className="text-lg font-medium text-slate-200">
+                  {selectedTruck.fuelCapacity || '-'} <span className="text-sm text-slate-400">L</span>
                 </p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Clock className="text-indigo-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Total Hours</label>
+              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="text-cyan-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Total Hours</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">
-                  {selectedTruck.totalHours || 0} <span className="text-sm">hours</span>
+                <p className="text-lg font-medium text-slate-200">
+                  {selectedTruck.totalHours || 0} <span className="text-sm text-slate-400">hours</span>
                 </p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <MapPin className="text-red-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Total Distance</label>
+              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin className="text-rose-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Total Distance</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">
-                  {selectedTruck.totalDistance || 0} <span className="text-sm">km</span>
+                <p className="text-lg font-medium text-slate-200">
+                  {selectedTruck.totalDistance || 0} <span className="text-sm text-slate-400">km</span>
                 </p>
               </div>
 
               {selectedTruck.currentOperator && (
-                <div className="col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <User className="text-blue-600" size={18} />
-                    <label className="text-sm font-semibold text-gray-600">Current Operator</label>
+                <div className="col-span-2 p-4 rounded-xl bg-sky-500/10 border border-sky-500/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <User className="text-sky-400" size={18} />
+                    <label className="text-sm font-semibold text-slate-400">Current Operator</label>
                   </div>
-                  <p className="text-lg font-medium text-gray-900">{selectedTruck.currentOperator?.user?.fullName || selectedTruck.currentOperator?.employeeNumber || 'N/A'}</p>
+                  <p className="text-lg font-medium text-slate-200">{selectedTruck.currentOperator?.user?.fullName || selectedTruck.currentOperator?.employeeNumber || 'N/A'}</p>
                 </div>
               )}
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Fuel className="text-orange-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Fuel Consumption</label>
+              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                <div className="flex items-center gap-2 mb-2">
+                  <Fuel className="text-amber-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Fuel Consumption</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">
-                  {selectedTruck.fuelConsumption ?? '-'} <span className="text-sm">L/km</span>
+                <p className="text-lg font-medium text-slate-200">
+                  {selectedTruck.fuelConsumption ?? '-'} <span className="text-sm text-slate-400">L/km</span>
                 </p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Gauge className="text-purple-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Average Speed</label>
+              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                <div className="flex items-center gap-2 mb-2">
+                  <Gauge className="text-violet-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Average Speed</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">
-                  {selectedTruck.averageSpeed ?? '-'} <span className="text-sm">km/h</span>
+                <p className="text-lg font-medium text-slate-200">
+                  {selectedTruck.averageSpeed ?? '-'} <span className="text-sm text-slate-400">km/h</span>
                 </p>
               </div>
 
-              <div className="col-span-2 bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <MapPin className="text-red-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Current Location</label>
+              <div className="col-span-2 p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin className="text-rose-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Current Location</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{selectedTruck.currentLocation || '-'}</p>
+                <p className="text-lg font-medium text-slate-200">{selectedTruck.currentLocation || '-'}</p>
               </div>
             </div>
 
             {selectedTruck.remarks && (
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <label className="text-sm font-semibold text-gray-600 mb-2 block">Remarks</label>
-                <p className="text-gray-900">{selectedTruck.remarks}</p>
+              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                <label className="text-sm font-semibold text-slate-400 mb-2 block">Remarks</label>
+                <p className="text-slate-200">{selectedTruck.remarks}</p>
               </div>
             )}
 
             {selectedTruck.haulingActivities && selectedTruck.haulingActivities.length > 0 && (
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">Recent Hauling Activities</h4>
+              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                <h4 className="text-sm font-semibold text-slate-300 mb-3">Recent Hauling Activities</h4>
                 <div className="space-y-3">
                   {selectedTruck.haulingActivities.map((h) => (
-                    <div key={h.id} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <div key={h.id} className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/30">
                       <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-700 font-medium">
+                        <div className="text-sm text-slate-300 font-medium">
                           {h.loadingPoint?.name || h.loadingPoint?.code || '-'} → {h.dumpingPoint?.name || h.dumpingPoint?.code || '-'}
                         </div>
-                        <div className="text-xs text-gray-500">{h.status || '-'}</div>
+                        <div className="text-xs text-slate-500">{h.status || '-'}</div>
                       </div>
-                      <div className="text-xs text-gray-500 mt-1 flex items-center space-x-3">
+                      <div className="text-xs text-slate-500 mt-1 flex items-center gap-3">
                         <div>Load: {h.loadWeight ?? '-'} ton</div>
                         <div>Cycle: {h.totalCycleTime ?? '-'} min</div>
                         <div>Fuel: {h.fuelConsumed ?? '-'} L</div>
@@ -864,16 +890,16 @@ const TruckList = () => {
             )}
 
             {selectedTruck.maintenanceLogs && selectedTruck.maintenanceLogs.length > 0 && (
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">Recent Maintenance</h4>
-                <div className="space-y-3 text-sm text-gray-700">
+              <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                <h4 className="text-sm font-semibold text-slate-300 mb-3">Recent Maintenance</h4>
+                <div className="space-y-3 text-sm text-slate-300">
                   {selectedTruck.maintenanceLogs.map((m) => (
-                    <div key={m.id} className="p-3 bg-gray-50 rounded-lg border border-gray-100 flex items-start justify-between">
+                    <div key={m.id} className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/30 flex items-start justify-between">
                       <div>
                         <div className="font-medium">{m.title || m.type || 'Maintenance'}</div>
-                        <div className="text-xs text-gray-500">{m.actualDate ? new Date(m.actualDate).toLocaleString() : '-'}</div>
+                        <div className="text-xs text-slate-500">{m.actualDate ? new Date(m.actualDate).toLocaleString() : '-'}</div>
                       </div>
-                      <div className="text-xs text-gray-500">{m.notes || '-'}</div>
+                      <div className="text-xs text-slate-500">{m.notes || '-'}</div>
                     </div>
                   ))}
                 </div>
@@ -882,18 +908,18 @@ const TruckList = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-800">
+            <div className="p-4 rounded-xl bg-sky-500/10 border border-sky-500/20">
+              <p className="text-sm text-sky-400">
                 <strong>Note:</strong> Fields marked with * are required. Make sure to enter valid data.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-semibold text-gray-700">Code *</label>
+                  <label className="text-sm font-semibold text-slate-300">Code *</label>
                   {modalMode === 'create' ? (
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => {
@@ -903,20 +929,20 @@ const TruckList = () => {
                             setFormData((prev) => ({ ...prev, code: auto }));
                           }
                         }}
-                        className="text-xs px-2 py-1 rounded border bg-white text-gray-700 hover:bg-gray-50 transition"
+                        className="text-xs px-2 py-1 rounded-lg border border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
                       >
                         {codeEditable ? 'Auto' : 'Edit'}
                       </button>
                     </div>
                   ) : (
-                    <span className="text-xs font-normal text-gray-500">(e.g., HD-0001)</span>
+                    <span className="text-xs font-normal text-slate-500">(e.g., HD-0001)</span>
                   )}
                 </div>
                 <input
                   type="text"
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  className="input-field"
+                  className="w-full h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500 disabled:opacity-50"
                   required
                   placeholder="HD-0001"
                   disabled={modalMode === 'edit' || (modalMode === 'create' && !codeEditable)}
@@ -924,37 +950,73 @@ const TruckList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Name *</label>
-                <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field" required placeholder="Volvo FMX500" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Name *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                  required
+                  placeholder="Volvo FMX500"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Brand</label>
-                <input type="text" value={formData.brand} onChange={(e) => setFormData({ ...formData, brand: e.target.value })} className="input-field" placeholder="Volvo" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Brand</label>
+                <input
+                  type="text"
+                  value={formData.brand}
+                  onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                  placeholder="Volvo"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Model</label>
-                <input type="text" value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} className="input-field" placeholder="FMX500" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Model</label>
+                <input
+                  type="text"
+                  value={formData.model}
+                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                  placeholder="FMX500"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Capacity (ton) *</label>
-                <input type="number" step="0.1" value={formData.capacity} onChange={(e) => setFormData({ ...formData, capacity: e.target.value })} className="input-field" required placeholder="20.0" min="0" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Capacity (ton) *</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.capacity}
+                  onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                  required
+                  placeholder="20.0"
+                  min="0"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Fuel Capacity (liter)</label>
-                <input type="number" step="0.1" value={formData.fuelCapacity} onChange={(e) => setFormData({ ...formData, fuelCapacity: e.target.value })} className="input-field" placeholder="500" min="0" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Fuel Capacity (liter)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.fuelCapacity}
+                  onChange={(e) => setFormData({ ...formData, fuelCapacity: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                  placeholder="500"
+                  min="0"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Year of Manufacture</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Year of Manufacture</label>
                 <input
                   type="number"
                   value={formData.yearManufacture}
                   onChange={(e) => setFormData({ ...formData, yearManufacture: e.target.value })}
-                  className="input-field"
+                  className="w-full h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
                   placeholder="2024"
                   min="1900"
                   max={new Date().getFullYear() + 1}
@@ -962,19 +1024,39 @@ const TruckList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Fuel Consumption (L/km)</label>
-                <input type="number" step="0.01" value={formData.fuelConsumption} onChange={(e) => setFormData({ ...formData, fuelConsumption: e.target.value })} className="input-field" placeholder="1.0" min="0" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Fuel Consumption (L/km)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.fuelConsumption}
+                  onChange={(e) => setFormData({ ...formData, fuelConsumption: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                  placeholder="1.0"
+                  min="0"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Average Speed (km/h)</label>
-                <input type="number" step="0.1" value={formData.averageSpeed} onChange={(e) => setFormData({ ...formData, averageSpeed: e.target.value })} className="input-field" placeholder="30.0" min="0" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Average Speed (km/h)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.averageSpeed}
+                  onChange={(e) => setFormData({ ...formData, averageSpeed: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                  placeholder="30.0"
+                  min="0"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Current Location</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Current Location</label>
                 {locationOptions && locationOptions.length ? (
-                  <select value={formData.currentLocation} onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })} className="input-field">
+                  <select
+                    value={formData.currentLocation}
+                    onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })}
+                    className="w-full h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all"
+                  >
                     <option value="">Select location</option>
                     {locationOptions.map((loc) => (
                       <option key={loc.id} value={loc.name || ''}>
@@ -983,16 +1065,22 @@ const TruckList = () => {
                     ))}
                   </select>
                 ) : (
-                  <input type="text" value={formData.currentLocation} onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })} className="input-field" placeholder="Current location" />
+                  <input
+                    type="text"
+                    value={formData.currentLocation}
+                    onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })}
+                    className="w-full h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                    placeholder="Current location"
+                  />
                 )}
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4 border-t">
-              <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800/50">
+              <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 rounded-xl border border-slate-600 text-slate-300 font-medium hover:bg-slate-800 transition-colors">
                 Cancel
               </button>
-              <button type="submit" className="btn-primary px-6 py-2.5 flex items-center space-x-2">
+              <button type="submit" className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 text-white font-semibold shadow-lg shadow-sky-500/25 transition-all flex items-center gap-2">
                 {modalMode === 'create' ? (
                   <>
                     <Plus size={18} />
@@ -1010,91 +1098,91 @@ const TruckList = () => {
         )}
       </Modal>
 
-      <Modal isOpen={showPerformanceModal} onClose={() => setShowPerformanceModal(false)} title={`Performance Metrics: ${selectedTruck?.code}`} size="lg">
+      <Modal isOpen={showPerformanceModal} onClose={() => setShowPerformanceModal(false)} title={<span className="text-slate-100">Performance Metrics: {selectedTruck?.code}</span>} size="lg">
         {performanceData ? (
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-              <div className="flex items-center space-x-2 mb-4">
-                <BarChart3 className="text-blue-600" size={20} />
-                <h3 className="text-lg font-semibold text-gray-900">Production Metrics</h3>
+            <div className="p-4 rounded-xl bg-gradient-to-br from-sky-500/10 to-slate-900 border border-sky-500/20">
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="text-sky-400" size={20} />
+                <h3 className="text-lg font-semibold text-slate-100">Production Metrics</h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white p-4 rounded-lg shadow-sm">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <TrendingUp className="text-blue-600" size={18} />
-                    <p className="text-sm font-medium text-gray-600">Total Trips</p>
+                <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/40">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="text-sky-400" size={18} />
+                    <p className="text-sm font-medium text-slate-400">Total Trips</p>
                   </div>
-                  <p className="text-2xl font-bold text-blue-700">{performanceData.totalTrips || 0}</p>
-                  <p className="text-xs text-gray-500 mt-1">hauling operations</p>
+                  <p className="text-2xl font-bold text-sky-400">{performanceData.totalTrips || 0}</p>
+                  <p className="text-xs text-slate-500 mt-1">hauling operations</p>
                 </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Package className="text-green-600" size={18} />
-                    <p className="text-sm font-medium text-gray-600">Total Production</p>
+                <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/40">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Package className="text-emerald-400" size={18} />
+                    <p className="text-sm font-medium text-slate-400">Total Production</p>
                   </div>
-                  <p className="text-2xl font-bold text-green-700">{performanceData.totalProduction || 0}</p>
-                  <p className="text-xs text-gray-500 mt-1">metric tons</p>
+                  <p className="text-2xl font-bold text-emerald-400">{performanceData.totalProduction || 0}</p>
+                  <p className="text-xs text-slate-500 mt-1">metric tons</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
-              <div className="flex items-center space-x-2 mb-4">
-                <Fuel className="text-orange-600" size={20} />
-                <h3 className="text-lg font-semibold text-gray-900">Fuel Consumption</h3>
+            <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-slate-900 border border-amber-500/20">
+              <div className="flex items-center gap-2 mb-4">
+                <Fuel className="text-amber-400" size={20} />
+                <h3 className="text-lg font-semibold text-slate-100">Fuel Consumption</h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white p-4 rounded-lg shadow-sm">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Fuel className="text-orange-600" size={18} />
-                    <p className="text-sm font-medium text-gray-600">Total Fuel Used</p>
+                <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/40">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Fuel className="text-amber-400" size={18} />
+                    <p className="text-sm font-medium text-slate-400">Total Fuel Used</p>
                   </div>
-                  <p className="text-2xl font-bold text-orange-700">{performanceData.totalFuel || 0}</p>
-                  <p className="text-xs text-gray-500 mt-1">liters</p>
+                  <p className="text-2xl font-bold text-amber-400">{performanceData.totalFuel || 0}</p>
+                  <p className="text-xs text-slate-500 mt-1">liters</p>
                 </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Gauge className="text-purple-600" size={18} />
-                    <p className="text-sm font-medium text-gray-600">Fuel Efficiency</p>
+                <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/40">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Gauge className="text-violet-400" size={18} />
+                    <p className="text-sm font-medium text-slate-400">Fuel Efficiency</p>
                   </div>
-                  <p className="text-2xl font-bold text-purple-700">{performanceData.totalProduction > 0 ? (performanceData.totalFuel / performanceData.totalProduction).toFixed(2) : 0}</p>
-                  <p className="text-xs text-gray-500 mt-1">L/ton</p>
+                  <p className="text-2xl font-bold text-violet-400">{performanceData.totalProduction > 0 ? (performanceData.totalFuel / performanceData.totalProduction).toFixed(2) : 0}</p>
+                  <p className="text-xs text-slate-500 mt-1">L/ton</p>
                 </div>
               </div>
             </div>
 
             {performanceData.totalTrips > 0 && (
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
-                <div className="flex items-center space-x-2 mb-4">
-                  <Activity className="text-purple-600" size={20} />
-                  <h3 className="text-lg font-semibold text-gray-900">Performance Indicators</h3>
+              <div className="p-4 rounded-xl bg-gradient-to-br from-violet-500/10 to-slate-900 border border-violet-500/20">
+                <div className="flex items-center gap-2 mb-4">
+                  <Activity className="text-violet-400" size={20} />
+                  <h3 className="text-lg font-semibold text-slate-100">Performance Indicators</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white p-4 rounded-lg shadow-sm">
-                    <p className="text-sm font-medium text-gray-600 mb-2">Avg. Production per Trip</p>
-                    <p className="text-xl font-bold text-purple-700">{(performanceData.totalProduction / performanceData.totalTrips).toFixed(2)}</p>
-                    <p className="text-xs text-gray-500 mt-1">tons/trip</p>
+                  <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/40">
+                    <p className="text-sm font-medium text-slate-400 mb-2">Avg. Production per Trip</p>
+                    <p className="text-xl font-bold text-violet-400">{(performanceData.totalProduction / performanceData.totalTrips).toFixed(2)}</p>
+                    <p className="text-xs text-slate-500 mt-1">tons/trip</p>
                   </div>
-                  <div className="bg-white p-4 rounded-lg shadow-sm">
-                    <p className="text-sm font-medium text-gray-600 mb-2">Avg. Fuel per Trip</p>
-                    <p className="text-xl font-bold text-blue-700">{(performanceData.totalFuel / performanceData.totalTrips).toFixed(2)}</p>
-                    <p className="text-xs text-gray-500 mt-1">L/trip</p>
+                  <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/40">
+                    <p className="text-sm font-medium text-slate-400 mb-2">Avg. Fuel per Trip</p>
+                    <p className="text-xl font-bold text-sky-400">{(performanceData.totalFuel / performanceData.totalTrips).toFixed(2)}</p>
+                    <p className="text-xs text-slate-500 mt-1">L/trip</p>
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <p className="text-xs text-gray-600">
-                <strong>Note:</strong> Performance metrics are calculated from actual hauling operations. Data is updated in real-time based on recorded trips and fuel consumption.
+            <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+              <p className="text-xs text-slate-400">
+                <strong className="text-slate-300">Note:</strong> Performance metrics are calculated from actual hauling operations. Data is updated in real-time based on recorded trips and fuel consumption.
               </p>
             </div>
           </div>
         ) : (
           <div className="text-center py-12">
-            <AlertCircle className="mx-auto text-gray-400 mb-4" size={48} />
-            <p className="text-gray-600">No performance data available for this truck.</p>
-            <p className="text-sm text-gray-500 mt-2">Data will appear once hauling operations are recorded.</p>
+            <AlertCircle className="mx-auto text-slate-600 mb-4" size={48} />
+            <p className="text-slate-300">No performance data available for this truck.</p>
+            <p className="text-sm text-slate-500 mt-2">Data will appear once hauling operations are recorded.</p>
           </div>
         )}
       </Modal>

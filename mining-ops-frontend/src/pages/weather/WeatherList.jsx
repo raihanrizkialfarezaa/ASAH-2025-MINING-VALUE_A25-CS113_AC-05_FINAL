@@ -380,14 +380,14 @@ const WeatherList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center space-x-3">
-            <Cloud className="text-sky-600" size={36} />
+          <h1 className="text-3xl font-bold text-slate-100 flex items-center space-x-3">
+            <Cloud className="text-sky-500" size={36} />
             <span>Weather Monitoring System</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Real-time weather tracking and operational safety assessment</p>
+          <p className="text-sm text-slate-400 mt-1">Real-time weather tracking and operational safety assessment</p>
         </div>
         <div className="flex space-x-3">
-          <button onClick={fetchWeathers} className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border shadow-sm text-gray-700 font-medium transition-colors flex items-center space-x-2">
+          <button onClick={fetchWeathers} className="bg-slate-800/50 hover:bg-slate-700/50 px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm text-slate-300 font-medium transition-colors flex items-center space-x-2">
             <RefreshCw size={18} />
             <span>Refresh</span>
           </button>
@@ -401,58 +401,58 @@ const WeatherList = () => {
       </div>
 
       <div className="grid grid-cols-5 gap-4">
-        <div className="card bg-gradient-to-br from-sky-50 to-blue-50 border-sky-200">
+        <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Total Logs</p>
-              <p className="text-3xl font-bold text-sky-600">{allWeathers.length}</p>
+              <p className="text-sm text-slate-400 mb-1">Total Logs</p>
+              <p className="text-3xl font-bold text-sky-400">{allWeathers.length}</p>
             </div>
-            <div className="p-3 bg-sky-100 rounded-xl">
-              <Cloud className="text-sky-600" size={28} />
+            <div className="p-3 bg-sky-900/30 rounded-xl">
+              <Cloud className="text-sky-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Operational</p>
-              <p className="text-3xl font-bold text-green-600">{allWeathers.filter((w) => w.isOperational).length}</p>
+              <p className="text-sm text-slate-400 mb-1">Operational</p>
+              <p className="text-3xl font-bold text-emerald-400">{allWeathers.filter((w) => w.isOperational).length}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-xl">
-              <CheckCircle className="text-green-600" size={28} />
+            <div className="p-3 bg-emerald-900/30 rounded-xl">
+              <CheckCircle className="text-emerald-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-red-50 to-rose-50 border-red-200">
+        <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Non-Operational</p>
-              <p className="text-3xl font-bold text-red-600">{allWeathers.filter((w) => !w.isOperational).length}</p>
+              <p className="text-sm text-slate-400 mb-1">Non-Operational</p>
+              <p className="text-3xl font-bold text-rose-400">{allWeathers.filter((w) => !w.isOperational).length}</p>
             </div>
-            <div className="p-3 bg-red-100 rounded-xl">
-              <AlertTriangle className="text-red-600" size={28} />
+            <div className="p-3 bg-rose-900/30 rounded-xl">
+              <AlertTriangle className="text-rose-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200">
+        <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">High Risk</p>
-              <p className="text-3xl font-bold text-orange-600">{allWeathers.filter((w) => w.riskLevel === 'HIGH' || w.riskLevel === 'CRITICAL').length}</p>
+              <p className="text-sm text-slate-400 mb-1">High Risk</p>
+              <p className="text-3xl font-bold text-amber-400">{allWeathers.filter((w) => w.riskLevel === 'HIGH' || w.riskLevel === 'CRITICAL').length}</p>
             </div>
-            <div className="p-3 bg-orange-100 rounded-xl">
-              <AlertTriangle className="text-orange-600" size={28} />
+            <div className="p-3 bg-amber-900/30 rounded-xl">
+              <AlertTriangle className="text-amber-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+        <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Rainy Conditions</p>
-              <p className="text-3xl font-bold text-blue-600">{allWeathers.filter((w) => ['HUJAN_RINGAN', 'HUJAN_SEDANG', 'HUJAN_LEBAT'].includes(w.condition)).length}</p>
+              <p className="text-sm text-slate-400 mb-1">Rainy Conditions</p>
+              <p className="text-3xl font-bold text-cyan-400">{allWeathers.filter((w) => ['HUJAN_RINGAN', 'HUJAN_SEDANG', 'HUJAN_LEBAT'].includes(w.condition)).length}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <CloudRain className="text-blue-600" size={28} />
+            <div className="p-3 bg-cyan-900/30 rounded-xl">
+              <CloudRain className="text-cyan-400" size={28} />
             </div>
           </div>
         </div>
@@ -463,7 +463,7 @@ const WeatherList = () => {
           <div className="flex items-center justify-between">
             <div className="flex-1 flex items-center space-x-3">
               <div className="relative" style={{ minWidth: '380px', maxWidth: '500px', flex: '1' }}>
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" size={20} />
                 <input
                   type="text"
                   placeholder="Search by mining site, condition, or wind direction..."
@@ -475,24 +475,24 @@ const WeatherList = () => {
                     paddingLeft: '44px',
                     paddingRight: '44px',
                     fontSize: '14px',
-                    color: '#1f2937',
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #d1d5db',
+                    color: '#cbd5e1',
+                    backgroundColor: '#0f172a',
+                    border: '1px solid rgba(51, 65, 85, 0.5)',
                     borderRadius: '8px',
                     outline: 'none',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#3b82f6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)';
+                    e.target.style.borderColor = '#0ea5e9';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.15)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#d1d5db';
-                    e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+                    e.target.style.borderColor = 'rgba(51, 65, 85, 0.5)';
+                    e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.2)';
                   }}
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-300">
                     <X size={18} />
                   </button>
                 )}
@@ -519,24 +519,24 @@ const WeatherList = () => {
               <button
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                 className={`px-4 py-2 rounded-lg border font-medium transition-colors flex items-center space-x-2 ${
-                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-sky-900/30 border-sky-500/30 text-sky-400' : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-700/50'
                 }`}
               >
                 <Filter size={18} />
                 <span>Filters</span>
-                {activeFiltersCount > 0 && <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">{activeFiltersCount}</span>}
+                {activeFiltersCount > 0 && <span className="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">{activeFiltersCount}</span>}
                 <ChevronDown className={`transform transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} size={16} />
               </button>
 
               {activeFiltersCount > 0 && (
-                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 font-medium transition-colors flex items-center space-x-2">
+                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-rose-500/30 bg-rose-900/20 text-rose-400 hover:bg-rose-800/30 font-medium transition-colors flex items-center space-x-2">
                   <X size={18} />
                   <span>Clear</span>
                 </button>
               )}
             </div>
 
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <div className="flex items-center space-x-2 text-sm text-slate-400">
               <span>
                 Showing {weathers.length} of {allWeathers.length} logs
               </span>
@@ -544,14 +544,14 @@ const WeatherList = () => {
           </div>
 
           {showAdvancedFilters && (
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
+            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
+              <h3 className="font-semibold text-slate-200 mb-3 flex items-center space-x-2">
                 <Filter size={18} />
                 <span>Advanced Filters</span>
               </h3>
               <div className="grid grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Mining Site</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Mining Site</label>
                   <select value={filters.miningSiteId} onChange={(e) => setFilters({ ...filters, miningSiteId: e.target.value })} className="input-field">
                     <option value="">All Sites</option>
                     {miningSites.map((site) => (
@@ -562,7 +562,7 @@ const WeatherList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Visibility</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Visibility</label>
                   <select value={filters.visibility} onChange={(e) => setFilters({ ...filters, visibility: e.target.value })} className="input-field">
                     <option value="">All Visibility</option>
                     {visibilityOptions.map((opt) => (
@@ -573,7 +573,7 @@ const WeatherList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Operational Status</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Operational Status</label>
                   <select value={filters.isOperational} onChange={(e) => setFilters({ ...filters, isOperational: e.target.value })} className="input-field">
                     <option value="">All</option>
                     <option value="true">Operational</option>
@@ -581,19 +581,19 @@ const WeatherList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Min Temperature (°C)</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Min Temperature (C)</label>
                   <input type="number" value={filters.minTemperature} onChange={(e) => setFilters({ ...filters, minTemperature: e.target.value })} placeholder="0" className="input-field" step="0.1" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Max Temperature (°C)</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Max Temperature (C)</label>
                   <input type="number" value={filters.maxTemperature} onChange={(e) => setFilters({ ...filters, maxTemperature: e.target.value })} placeholder="50" className="input-field" step="0.1" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Min Rainfall (mm)</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Min Rainfall (mm)</label>
                   <input type="number" value={filters.minRainfall} onChange={(e) => setFilters({ ...filters, minRainfall: e.target.value })} placeholder="0" className="input-field" step="0.1" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Max Rainfall (mm)</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Max Rainfall (mm)</label>
                   <input type="number" value={filters.maxRainfall} onChange={(e) => setFilters({ ...filters, maxRainfall: e.target.value })} placeholder="100" className="input-field" step="0.1" />
                 </div>
               </div>
@@ -604,27 +604,27 @@ const WeatherList = () => {
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+          <table className="min-w-full divide-y divide-slate-800/50">
+            <thead className="bg-gradient-to-r from-slate-800/70 to-slate-900/70">
               <tr>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('timestamp')}>
+                <th className="table-header cursor-pointer hover:bg-slate-700/50 transition-colors group" onClick={() => handleSort('timestamp')}>
                   <div className="flex items-center justify-between">
                     <span>Timestamp</span>
-                    {sortField === 'timestamp' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'timestamp' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
                 <th className="table-header">Mining Site</th>
                 <th className="table-header">Condition</th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('temperature')}>
+                <th className="table-header cursor-pointer hover:bg-slate-700/50 transition-colors group" onClick={() => handleSort('temperature')}>
                   <div className="flex items-center justify-between">
-                    <span>Temp (°C)</span>
-                    {sortField === 'temperature' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    <span>Temp (C)</span>
+                    {sortField === 'temperature' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('rainfall')}>
+                <th className="table-header cursor-pointer hover:bg-slate-700/50 transition-colors group" onClick={() => handleSort('rainfall')}>
                   <div className="flex items-center justify-between">
                     <span>Rainfall (mm)</span>
-                    {sortField === 'rainfall' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'rainfall' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
                 <th className="table-header">Visibility</th>
@@ -633,14 +633,14 @@ const WeatherList = () => {
                 <th className="table-header">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-slate-800/50 bg-slate-900/30">
               {weathers.length === 0 ? (
                 <tr>
                   <td colSpan="9" className="text-center py-12">
                     <div className="flex flex-col items-center space-y-3">
-                      <Cloud className="text-gray-400" size={48} />
-                      <p className="text-gray-500 font-medium">No weather logs found</p>
-                      <p className="text-sm text-gray-400">Try adjusting your filters or search query</p>
+                      <Cloud className="text-slate-600" size={48} />
+                      <p className="text-slate-400 font-medium">No weather logs found</p>
+                      <p className="text-sm text-slate-500">Try adjusting your filters or search query</p>
                     </div>
                   </td>
                 </tr>
@@ -648,48 +648,48 @@ const WeatherList = () => {
                 weathers.map((weather) => {
                   const ConditionIcon = getConditionIcon(weather.condition);
                   return (
-                    <tr key={weather.id} className="hover:bg-blue-50 transition-colors">
+                    <tr key={weather.id} className="hover:bg-slate-800/30 transition-colors">
                       <td className="table-cell">
-                        <span className="text-sm font-medium text-gray-900">{new Date(weather.timestamp).toLocaleDateString()}</span>
-                        <p className="text-xs text-gray-500">{new Date(weather.timestamp).toLocaleTimeString()}</p>
+                        <span className="text-sm font-medium text-slate-200">{new Date(weather.timestamp).toLocaleDateString()}</span>
+                        <p className="text-xs text-slate-500">{new Date(weather.timestamp).toLocaleTimeString()}</p>
                       </td>
                       <td className="table-cell">
-                        <span className="font-medium text-gray-900">{weather.miningSite?.code || '-'}</span>
-                        <p className="text-xs text-gray-500">{weather.miningSite?.name || ''}</p>
+                        <span className="font-medium text-slate-200">{weather.miningSite?.code || '-'}</span>
+                        <p className="text-xs text-slate-500">{weather.miningSite?.name || ''}</p>
                       </td>
                       <td className="table-cell">
                         <div className="flex items-center space-x-2">
-                          <ConditionIcon size={18} className={`text-${getConditionColor(weather.condition)}-600`} />
-                          <span className={`text-${getConditionColor(weather.condition)}-700 font-medium`}>{conditionOptions.find((opt) => opt.value === weather.condition)?.label || weather.condition}</span>
+                          <ConditionIcon size={18} className="text-sky-400" />
+                          <span className="text-sky-400 font-medium">{conditionOptions.find((opt) => opt.value === weather.condition)?.label || weather.condition}</span>
                         </div>
                       </td>
                       <td className="table-cell">
-                        <span className="font-semibold text-gray-900">{weather.temperature?.toFixed(1) || '-'}</span>
+                        <span className="font-semibold text-slate-200">{weather.temperature?.toFixed(1) || '-'}</span>
                       </td>
                       <td className="table-cell">
-                        <span className="font-semibold text-blue-600">{weather.rainfall?.toFixed(1) || '0'}</span>
+                        <span className="font-semibold text-cyan-400">{weather.rainfall?.toFixed(1) || '0'}</span>
                       </td>
                       <td className="table-cell">
-                        <span className="text-gray-700">{weather.visibility}</span>
+                        <span className="text-slate-300">{weather.visibility}</span>
                       </td>
                       <td className="table-cell">
                         <StatusBadge status={weather.riskLevel} />
                       </td>
                       <td className="table-cell">
-                        <span className={`badge ${weather.isOperational ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{weather.isOperational ? 'Yes' : 'No'}</span>
+                        <span className={`badge ${weather.isOperational ? 'bg-emerald-900/30 text-emerald-400' : 'bg-rose-900/30 text-rose-400'}`}>{weather.isOperational ? 'Yes' : 'No'}</span>
                       </td>
                       <td className="table-cell">
                         <div className="flex space-x-1">
-                          <button onClick={() => handleView(weather)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
+                          <button onClick={() => handleView(weather)} className="p-2 text-sky-400 hover:bg-sky-900/30 rounded-lg transition-colors" title="View Details">
                             <Eye size={18} />
                           </button>
                           {canEdit && (
-                            <button onClick={() => handleEdit(weather)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
+                            <button onClick={() => handleEdit(weather)} className="p-2 text-emerald-400 hover:bg-emerald-900/30 rounded-lg transition-colors" title="Edit">
                               <Edit size={18} />
                             </button>
                           )}
                           {canEdit && (
-                            <button onClick={() => handleDelete(weather.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
+                            <button onClick={() => handleDelete(weather.id)} className="p-2 text-rose-400 hover:bg-rose-900/30 rounded-lg transition-colors" title="Delete">
                               <Trash2 size={18} />
                             </button>
                           )}
@@ -706,7 +706,7 @@ const WeatherList = () => {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <label className="text-sm text-gray-600 flex items-center space-x-2">
+          <label className="text-sm text-slate-400 flex items-center space-x-2">
             <span>Items per page:</span>
             <select value={pagination.limit} onChange={(e) => setPagination((prev) => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))} className="input-field py-1 px-2">
               <option value="10">10</option>
@@ -726,24 +726,24 @@ const WeatherList = () => {
         title={
           modalMode === 'create' ? (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Plus className="text-blue-600" size={24} />
+              <div className="p-2 bg-sky-900/30 rounded-lg">
+                <Plus className="text-sky-400" size={24} />
               </div>
-              <span>Add New Weather Log</span>
+              <span className="text-slate-100">Add New Weather Log</span>
             </div>
           ) : modalMode === 'edit' ? (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Edit className="text-green-600" size={24} />
+              <div className="p-2 bg-emerald-900/30 rounded-lg">
+                <Edit className="text-emerald-400" size={24} />
               </div>
-              <span>Edit Weather Log</span>
+              <span className="text-slate-100">Edit Weather Log</span>
             </div>
           ) : (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Eye className="text-purple-600" size={24} />
+              <div className="p-2 bg-violet-900/30 rounded-lg">
+                <Eye className="text-violet-400" size={24} />
               </div>
-              <span>Weather Log Details</span>
+              <span className="text-slate-100">Weather Log Details</span>
             </div>
           )
         }

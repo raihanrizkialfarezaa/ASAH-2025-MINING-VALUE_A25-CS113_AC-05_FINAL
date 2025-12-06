@@ -1346,8 +1346,8 @@ const ProductionList = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Production Records</h1>
-          <p className="text-gray-500 mt-1">Track and manage daily production activities</p>
+          <h1 className="text-3xl font-bold text-slate-100">Production Records</h1>
+          <p className="text-slate-400 mt-1">Track and manage daily production activities</p>
         </div>
         {canEdit && (
           <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 shadow-lg hover:shadow-xl transition-shadow">
@@ -1359,64 +1359,64 @@ const ProductionList = () => {
 
       {statistics && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg">
+          <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-sky-900/20 to-sky-950/20 p-5 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100 text-sm font-medium">Total Production</p>
-                <p className="text-3xl font-bold mt-1">{(statistics.totalProduction / 1000000)?.toFixed(2) || 0}M</p>
-                <p className="text-blue-200 text-xs mt-1">ton</p>
+                <p className="text-slate-400 text-sm font-medium">Total Production</p>
+                <p className="text-3xl font-bold mt-1 text-slate-100">{(statistics.totalProduction / 1000000)?.toFixed(2) || 0}M</p>
+                <p className="text-slate-500 text-xs mt-1">ton</p>
               </div>
-              <div className="bg-blue-400/30 p-3 rounded-lg">
-                <Package size={28} className="text-white" />
+              <div className="bg-sky-500/20 p-3 rounded-lg">
+                <Package size={28} className="text-sky-400" />
               </div>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-5 text-white shadow-lg">
+          <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-b from-emerald-900/20 to-emerald-950/20 p-5 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-sm font-medium">Average Achievement</p>
-                <p className="text-3xl font-bold mt-1">{statistics.avgAchievement?.toFixed(1) || 0}%</p>
-                <p className="text-green-200 text-xs mt-1">performance</p>
+                <p className="text-slate-400 text-sm font-medium">Average Achievement</p>
+                <p className="text-3xl font-bold mt-1 text-slate-100">{statistics.avgAchievement?.toFixed(1) || 0}%</p>
+                <p className="text-slate-500 text-xs mt-1">performance</p>
               </div>
-              <div className="bg-green-400/30 p-3 rounded-lg">
-                <CheckCircle size={28} className="text-white" />
+              <div className="bg-emerald-500/20 p-3 rounded-lg">
+                <CheckCircle size={28} className="text-emerald-400" />
               </div>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl p-5 text-white shadow-lg">
+          <div className="rounded-xl border border-amber-500/20 bg-gradient-to-b from-amber-900/20 to-amber-950/20 p-5 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-sm font-medium">Total Trips</p>
-                <p className="text-3xl font-bold mt-1">{(statistics.totalTrips / 1000)?.toFixed(1) || 0}K</p>
-                <p className="text-orange-200 text-xs mt-1">hauling trips</p>
+                <p className="text-slate-400 text-sm font-medium">Total Trips</p>
+                <p className="text-3xl font-bold mt-1 text-slate-100">{(statistics.totalTrips / 1000)?.toFixed(1) || 0}K</p>
+                <p className="text-slate-500 text-xs mt-1">hauling trips</p>
               </div>
-              <div className="bg-orange-400/30 p-3 rounded-lg">
-                <Truck size={28} className="text-white" />
+              <div className="bg-amber-500/20 p-3 rounded-lg">
+                <Truck size={28} className="text-amber-400" />
               </div>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-5 text-white shadow-lg">
+          <div className="rounded-xl border border-violet-500/20 bg-gradient-to-b from-violet-900/20 to-violet-950/20 p-5 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-sm font-medium">Avg Cycle Time</p>
-                <p className="text-3xl font-bold mt-1">{statistics.avgCycleTime?.toFixed(1) || 0}</p>
-                <p className="text-purple-200 text-xs mt-1">minutes</p>
+                <p className="text-slate-400 text-sm font-medium">Avg Cycle Time</p>
+                <p className="text-3xl font-bold mt-1 text-slate-100">{statistics.avgCycleTime?.toFixed(1) || 0}</p>
+                <p className="text-slate-500 text-xs mt-1">minutes</p>
               </div>
-              <div className="bg-purple-400/30 p-3 rounded-lg">
-                <RefreshCw size={28} className="text-white" />
+              <div className="bg-violet-500/20 p-3 rounded-lg">
+                <RefreshCw size={28} className="text-violet-400" />
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+      <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 shadow-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/80 to-slate-900/80">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <h2 className="text-lg font-semibold text-gray-800">Production History</h2>
+            <h2 className="text-lg font-semibold text-slate-100">Production History</h2>
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
                 <input
                   type="text"
                   placeholder="Search site, remarks..."
@@ -1425,7 +1425,8 @@ const ProductionList = () => {
                     setSearchQuery(e.target.value);
                     setPagination((prev) => ({ ...prev, page: 1 }));
                   }}
-                  className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-48"
+                  style={{ backgroundColor: '#0f172a' }}
+                  className="pl-9 pr-4 py-2 text-sm border border-slate-700/50 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 w-48 text-slate-200 placeholder-slate-500"
                 />
               </div>
               <select
@@ -1434,7 +1435,8 @@ const ProductionList = () => {
                   setFilterSiteId(e.target.value);
                   setPagination((prev) => ({ ...prev, page: 1 }));
                 }}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                style={{ backgroundColor: '#0f172a' }}
+                className="text-sm border border-slate-700/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200"
               >
                 <option value="">All Sites</option>
                 {miningSites.map((site) => (
@@ -1449,7 +1451,8 @@ const ProductionList = () => {
                   setFilterShift(e.target.value);
                   setPagination((prev) => ({ ...prev, page: 1 }));
                 }}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                style={{ backgroundColor: '#0f172a' }}
+                className="text-sm border border-slate-700/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200"
               >
                 <option value="">All Shifts</option>
                 <option value="SHIFT_1">Shift 1 (Pagi)</option>
@@ -1460,7 +1463,7 @@ const ProductionList = () => {
           </div>
           <div className="flex flex-wrap items-center gap-3 mt-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">From:</span>
+              <span className="text-xs text-slate-500">From:</span>
               <input
                 type="date"
                 value={filterStartDate}
@@ -1468,11 +1471,12 @@ const ProductionList = () => {
                   setFilterStartDate(e.target.value);
                   setPagination((prev) => ({ ...prev, page: 1 }));
                 }}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                style={{ backgroundColor: '#0f172a' }}
+                className="text-sm border border-slate-700/50 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200"
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">To:</span>
+              <span className="text-xs text-slate-500">To:</span>
               <input
                 type="date"
                 value={filterEndDate}
@@ -1480,19 +1484,29 @@ const ProductionList = () => {
                   setFilterEndDate(e.target.value);
                   setPagination((prev) => ({ ...prev, page: 1 }));
                 }}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                style={{ backgroundColor: '#0f172a' }}
+                className="text-sm border border-slate-700/50 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200"
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">Sort:</span>
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <span className="text-xs text-slate-500">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                style={{ backgroundColor: '#0f172a' }}
+                className="text-sm border border-slate-700/50 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200"
+              >
                 <option value="recordDate">Date</option>
                 <option value="targetProduction">Target</option>
                 <option value="actualProduction">Actual</option>
                 <option value="achievement">Achievement</option>
                 <option value="totalTrips">Trips</option>
               </select>
-              <button onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="p-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors" title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}>
+              <button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="p-1.5 border border-slate-700/50 rounded-lg hover:bg-slate-700/50 transition-colors text-slate-300"
+                title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+              >
                 {sortOrder === 'asc' ? '↑' : '↓'}
               </button>
             </div>
@@ -1506,7 +1520,7 @@ const ProductionList = () => {
                   setFilterEndDate('');
                   setPagination((prev) => ({ ...prev, page: 1 }));
                 }}
-                className="text-xs text-red-600 hover:text-red-700 underline"
+                className="text-xs text-rose-400 hover:text-rose-300 underline"
               >
                 Clear Filters
               </button>
@@ -1515,48 +1529,48 @@ const ProductionList = () => {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gradient-to-r from-slate-800/80 to-slate-900/80 border-b border-slate-700/50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Shift</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Mining Site</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Target</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actual</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Achievement</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Trips</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Shift</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Mining Site</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Target</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Actual</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">Achievement</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">Trips</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-slate-700/50">
               {productions.length === 0 && (
                 <tr>
                   <td colSpan="9" className="px-4 py-12 text-center">
                     <div className="flex flex-col items-center">
-                      <Package size={48} className="text-gray-300 mb-3" />
-                      <p className="text-gray-500 font-medium">No production records found</p>
-                      <p className="text-gray-400 text-sm mt-1">{searchQuery || filterSiteId || filterShift || filterStartDate || filterEndDate ? 'Try adjusting your filters' : 'Click "Add Production Record" to create one'}</p>
+                      <Package size={48} className="text-slate-600 mb-3" />
+                      <p className="text-slate-400 font-medium">No production records found</p>
+                      <p className="text-slate-500 text-sm mt-1">{searchQuery || filterSiteId || filterShift || filterStartDate || filterEndDate ? 'Try adjusting your filters' : 'Click "Add Production Record" to create one'}</p>
                     </div>
                   </td>
                 </tr>
               )}
               {productions.map((production) => (
-                <tr key={production.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={production.id} className="hover:bg-sky-900/20 transition-colors">
                   <td className="px-4 py-3">
-                    <span className="font-mono text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md" title={production.id}>
+                    <span className="font-mono text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded-md" title={production.id}>
                       {production.id.slice(0, 10)}...
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col">
-                      <span className="font-medium text-gray-800">{new Date(production.recordDate).toLocaleDateString('id-ID')}</span>
-                      <span className="text-xs text-gray-400">{new Date(production.recordDate).toLocaleDateString('id-ID', { weekday: 'short' })}</span>
+                      <span className="font-medium text-slate-200">{new Date(production.recordDate).toLocaleDateString('id-ID')}</span>
+                      <span className="text-xs text-slate-500">{new Date(production.recordDate).toLocaleDateString('id-ID', { weekday: 'short' })}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        production.shift === 'SHIFT_1' ? 'bg-yellow-100 text-yellow-700' : production.shift === 'SHIFT_2' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                        production.shift === 'SHIFT_1' ? 'bg-amber-900/30 text-amber-400' : production.shift === 'SHIFT_2' ? 'bg-sky-900/30 text-sky-400' : 'bg-violet-900/30 text-violet-400'
                       }`}
                     >
                       {production.shift?.replace('_', ' ')}
@@ -1564,30 +1578,30 @@ const ProductionList = () => {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col">
-                      <span className="font-medium text-gray-800">{production.miningSite?.name || '-'}</span>
-                      <span className="text-xs text-gray-400">{production.miningSite?.siteType || ''}</span>
+                      <span className="font-medium text-slate-200">{production.miningSite?.name || '-'}</span>
+                      <span className="text-xs text-slate-500">{production.miningSite?.siteType || ''}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <span className="font-medium text-gray-700">{production.targetProduction?.toLocaleString('id-ID', { maximumFractionDigits: 0 })}</span>
-                    <span className="text-xs text-gray-400 ml-1">t</span>
+                    <span className="font-medium text-slate-300">{production.targetProduction?.toLocaleString('id-ID', { maximumFractionDigits: 0 })}</span>
+                    <span className="text-xs text-slate-500 ml-1">t</span>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex flex-col items-end">
-                      <span className="font-medium text-gray-700">{(production.haulingBasedActual ?? production.actualProduction)?.toLocaleString('id-ID', { maximumFractionDigits: 0 })}</span>
-                      <span className="text-xs text-gray-400">t</span>
+                      <span className="font-medium text-slate-300">{(production.haulingBasedActual ?? production.actualProduction)?.toLocaleString('id-ID', { maximumFractionDigits: 0 })}</span>
+                      <span className="text-xs text-slate-500">t</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center">
                       <div
                         className={`px-3 py-1.5 rounded-lg ${
-                          (production.calculatedAchievement ?? production.achievement) >= 100 ? 'bg-green-100' : (production.calculatedAchievement ?? production.achievement) >= 80 ? 'bg-yellow-100' : 'bg-red-100'
+                          (production.calculatedAchievement ?? production.achievement) >= 100 ? 'bg-emerald-900/30' : (production.calculatedAchievement ?? production.achievement) >= 80 ? 'bg-amber-900/30' : 'bg-rose-900/30'
                         }`}
                       >
                         <span
                           className={`text-sm font-bold ${
-                            (production.calculatedAchievement ?? production.achievement) >= 100 ? 'text-green-700' : (production.calculatedAchievement ?? production.achievement) >= 80 ? 'text-yellow-700' : 'text-red-700'
+                            (production.calculatedAchievement ?? production.achievement) >= 100 ? 'text-emerald-400' : (production.calculatedAchievement ?? production.achievement) >= 80 ? 'text-amber-400' : 'text-rose-400'
                           }`}
                         >
                           {(production.calculatedAchievement ?? production.achievement)?.toFixed(1)}%
@@ -1596,20 +1610,20 @@ const ProductionList = () => {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-700">{production.totalTrips}</span>
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium bg-sky-900/30 text-sky-400">{production.totalTrips}</span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center space-x-1">
-                      <button onClick={() => handleView(production)} className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors" title="View Details">
+                      <button onClick={() => handleView(production)} className="p-2 rounded-lg text-sky-400 hover:bg-sky-900/30 transition-colors" title="View Details">
                         <Eye size={18} />
                       </button>
                       {canEdit && (
-                        <button onClick={() => handleEdit(production)} className="p-2 rounded-lg text-green-600 hover:bg-green-50 transition-colors" title="Edit">
+                        <button onClick={() => handleEdit(production)} className="p-2 rounded-lg text-emerald-400 hover:bg-emerald-900/30 transition-colors" title="Edit">
                           <Edit size={18} />
                         </button>
                       )}
                       {canEdit && (
-                        <button onClick={() => handleDelete(production.id)} className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Delete">
+                        <button onClick={() => handleDelete(production.id)} className="p-2 rounded-lg text-rose-400 hover:bg-rose-900/30 transition-colors" title="Delete">
                           <Trash2 size={18} />
                         </button>
                       )}
@@ -1628,23 +1642,23 @@ const ProductionList = () => {
         {modalMode === 'view' && selectedProduction ? (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
+              <div className="bg-gradient-to-b from-sky-900/20 to-sky-950/20 rounded-lg p-4 border border-sky-500/30">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-600">Record Date</span>
-                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">{selectedProduction.shift}</span>
+                  <span className="text-sm font-medium text-slate-400">Record Date</span>
+                  <span className="px-2 py-0.5 bg-sky-900/30 text-sky-400 rounded text-xs font-medium">{selectedProduction.shift}</span>
                 </div>
-                <p className="text-xl font-bold text-gray-800">{new Date(selectedProduction.recordDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <p className="text-xl font-bold text-slate-100">{new Date(selectedProduction.recordDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
               </div>
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-100">
-                <span className="text-sm font-medium text-gray-600">Mining Site</span>
-                <p className="text-xl font-bold text-gray-800">{selectedProduction.miningSite?.name || '-'}</p>
-                <p className="text-xs text-gray-500 mt-1">{selectedProduction.miningSite?.siteType || ''}</p>
+              <div className="bg-gradient-to-b from-emerald-900/20 to-emerald-950/20 rounded-lg p-4 border border-emerald-500/30">
+                <span className="text-sm font-medium text-slate-400">Mining Site</span>
+                <p className="text-xl font-bold text-slate-100">{selectedProduction.miningSite?.name || '-'}</p>
+                <p className="text-xs text-slate-500 mt-1">{selectedProduction.miningSite?.siteType || ''}</p>
               </div>
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
-                <span className="text-sm font-medium text-gray-600">Achievement</span>
+              <div className="bg-gradient-to-b from-violet-900/20 to-violet-950/20 rounded-lg p-4 border border-violet-500/30">
+                <span className="text-sm font-medium text-slate-400">Achievement</span>
                 <p
                   className={`text-3xl font-bold ${
-                    (haulingAchievement?.achievement ?? selectedProduction.achievement) >= 100 ? 'text-green-600' : (haulingAchievement?.achievement ?? selectedProduction.achievement) >= 80 ? 'text-orange-500' : 'text-red-500'
+                    (haulingAchievement?.achievement ?? selectedProduction.achievement) >= 100 ? 'text-emerald-400' : (haulingAchievement?.achievement ?? selectedProduction.achievement) >= 80 ? 'text-amber-400' : 'text-rose-400'
                   }`}
                 >
                   {(haulingAchievement?.achievement ?? selectedProduction.achievement)?.toFixed(1) || 0}%
@@ -1653,98 +1667,98 @@ const ProductionList = () => {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg p-4 border shadow-sm">
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Target Production</span>
-                <p className="text-2xl font-bold text-gray-800">{selectedProduction.targetProduction?.toFixed(1) || 0}</p>
-                <span className="text-sm text-gray-500">ton</span>
+              <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 shadow-sm">
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Target Production</span>
+                <p className="text-2xl font-bold text-slate-100">{selectedProduction.targetProduction?.toFixed(1) || 0}</p>
+                <span className="text-sm text-slate-500">ton</span>
               </div>
-              <div className="bg-white rounded-lg p-4 border shadow-sm">
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Actual Production</span>
-                <p className="text-2xl font-bold text-blue-600">{(haulingAchievement?.totalLoadWeight ?? selectedProduction.actualProduction)?.toFixed(1) || 0}</p>
-                <span className="text-sm text-gray-500">ton</span>
+              <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 shadow-sm">
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Actual Production</span>
+                <p className="text-2xl font-bold text-sky-400">{(haulingAchievement?.totalLoadWeight ?? selectedProduction.actualProduction)?.toFixed(1) || 0}</p>
+                <span className="text-sm text-slate-500">ton</span>
               </div>
-              <div className="bg-white rounded-lg p-4 border shadow-sm">
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Total Trips</span>
-                <p className="text-2xl font-bold text-orange-600">{selectedProduction.totalTrips || 0}</p>
-                <span className="text-sm text-gray-500">trips</span>
+              <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 shadow-sm">
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Total Trips</span>
+                <p className="text-2xl font-bold text-amber-400">{selectedProduction.totalTrips || 0}</p>
+                <span className="text-sm text-slate-500">trips</span>
               </div>
-              <div className="bg-white rounded-lg p-4 border shadow-sm">
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Avg Cycle Time</span>
-                <p className="text-2xl font-bold text-purple-600">{selectedProduction.avgCycleTime?.toFixed(1) || 0}</p>
-                <span className="text-sm text-gray-500">minutes</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-50 rounded-lg p-3 border">
-                <span className="text-xs text-gray-500">Total Distance</span>
-                <p className="text-lg font-semibold">{selectedProduction.totalDistance?.toFixed(2) || 0} km</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3 border">
-                <span className="text-xs text-gray-500">Total Fuel</span>
-                <p className="text-lg font-semibold">{selectedProduction.totalFuel?.toFixed(2) || 0} L</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3 border">
-                <span className="text-xs text-gray-500">Trucks Operating</span>
-                <p className="text-lg font-semibold">
-                  {selectedProduction.trucksOperating || 0} <span className="text-xs text-gray-400">({selectedProduction.trucksBreakdown || 0} breakdown)</span>
-                </p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3 border">
-                <span className="text-xs text-gray-500">Excavators Operating</span>
-                <p className="text-lg font-semibold">
-                  {selectedProduction.excavatorsOperating || 0} <span className="text-xs text-gray-400">({selectedProduction.excavatorsBreakdown || 0} breakdown)</span>
-                </p>
+              <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 shadow-sm">
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Avg Cycle Time</span>
+                <p className="text-2xl font-bold text-violet-400">{selectedProduction.avgCycleTime?.toFixed(1) || 0}</p>
+                <span className="text-sm text-slate-500">minutes</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-50 rounded-lg p-3 border">
-                <span className="text-xs text-gray-500">Utilization Rate</span>
-                <p className="text-lg font-semibold">{selectedProduction.utilizationRate?.toFixed(1) || 0}%</p>
+              <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
+                <span className="text-xs text-slate-500">Total Distance</span>
+                <p className="text-lg font-semibold text-slate-200">{selectedProduction.totalDistance?.toFixed(2) || 0} km</p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3 border">
-                <span className="text-xs text-gray-500">Downtime Hours</span>
-                <p className="text-lg font-semibold">{selectedProduction.downtimeHours?.toFixed(1) || 0} hrs</p>
+              <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
+                <span className="text-xs text-slate-500">Total Fuel</span>
+                <p className="text-lg font-semibold text-slate-200">{selectedProduction.totalFuel?.toFixed(2) || 0} L</p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3 border">
-                <span className="text-xs text-gray-500">Avg Calori</span>
-                <p className="text-lg font-semibold">{selectedProduction.avgCalori?.toFixed(0) || '-'}</p>
+              <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
+                <span className="text-xs text-slate-500">Trucks Operating</span>
+                <p className="text-lg font-semibold text-slate-200">
+                  {selectedProduction.trucksOperating || 0} <span className="text-xs text-slate-500">({selectedProduction.trucksBreakdown || 0} breakdown)</span>
+                </p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3 border">
-                <span className="text-xs text-gray-500">Avg Moisture</span>
-                <p className="text-lg font-semibold">{selectedProduction.avgMoisture?.toFixed(1) || '-'}%</p>
+              <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
+                <span className="text-xs text-slate-500">Excavators Operating</span>
+                <p className="text-lg font-semibold text-slate-200">
+                  {selectedProduction.excavatorsOperating || 0} <span className="text-xs text-slate-500">({selectedProduction.excavatorsBreakdown || 0} breakdown)</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
+                <span className="text-xs text-slate-500">Utilization Rate</span>
+                <p className="text-lg font-semibold text-slate-200">{selectedProduction.utilizationRate?.toFixed(1) || 0}%</p>
+              </div>
+              <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
+                <span className="text-xs text-slate-500">Downtime Hours</span>
+                <p className="text-lg font-semibold text-slate-200">{selectedProduction.downtimeHours?.toFixed(1) || 0} hrs</p>
+              </div>
+              <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
+                <span className="text-xs text-slate-500">Avg Calori</span>
+                <p className="text-lg font-semibold text-slate-200">{selectedProduction.avgCalori?.toFixed(0) || '-'}</p>
+              </div>
+              <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
+                <span className="text-xs text-slate-500">Avg Moisture</span>
+                <p className="text-lg font-semibold text-slate-200">{selectedProduction.avgMoisture?.toFixed(1) || '-'}%</p>
               </div>
             </div>
 
             {haulingAchievement && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-800 text-sm flex items-center mb-3">
+              <div className="bg-gradient-to-r from-sky-900/30 to-sky-950/30 border border-sky-500/30 rounded-lg p-4">
+                <h4 className="font-semibold text-sky-400 text-sm flex items-center mb-3">
                   <Package size={16} className="mr-2" />
                   Hauling Achievement Details
                 </h4>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  <div className="bg-white rounded p-3 text-center border border-blue-100">
-                    <span className={`text-2xl font-bold ${haulingAchievement.achievement >= 100 ? 'text-green-600' : 'text-orange-600'}`}>{haulingAchievement.achievement?.toFixed(1) || 0}%</span>
-                    <p className="text-xs text-gray-500 mt-1">Achievement</p>
+                  <div className="bg-slate-800/50 rounded p-3 text-center border border-slate-700/50">
+                    <span className={`text-2xl font-bold ${haulingAchievement.achievement >= 100 ? 'text-emerald-400' : 'text-amber-400'}`}>{haulingAchievement.achievement?.toFixed(1) || 0}%</span>
+                    <p className="text-xs text-slate-500 mt-1">Achievement</p>
                   </div>
-                  <div className="bg-white rounded p-3 text-center border border-blue-100">
-                    <span className="text-2xl font-bold text-blue-600">
+                  <div className="bg-slate-800/50 rounded p-3 text-center border border-slate-700/50">
+                    <span className="text-2xl font-bold text-sky-400">
                       {haulingAchievement.completedCount || 0}/{haulingAchievement.totalCount || 0}
                     </span>
-                    <p className="text-xs text-gray-500 mt-1">Completed</p>
+                    <p className="text-xs text-slate-500 mt-1">Completed</p>
                   </div>
-                  <div className="bg-white rounded p-3 text-center border border-blue-100">
-                    <span className="text-2xl font-bold text-green-600">{haulingAchievement.totalLoadWeight?.toFixed(1) || 0}</span>
-                    <p className="text-xs text-gray-500 mt-1">Ton Loaded</p>
+                  <div className="bg-slate-800/50 rounded p-3 text-center border border-slate-700/50">
+                    <span className="text-2xl font-bold text-emerald-400">{haulingAchievement.totalLoadWeight?.toFixed(1) || 0}</span>
+                    <p className="text-xs text-slate-500 mt-1">Ton Loaded</p>
                   </div>
-                  <div className="bg-white rounded p-3 text-center border border-blue-100">
-                    <span className="text-2xl font-bold text-gray-600">{haulingAchievement.totalTargetWeight?.toFixed(1) || 0}</span>
-                    <p className="text-xs text-gray-500 mt-1">Target Weight</p>
+                  <div className="bg-slate-800/50 rounded p-3 text-center border border-slate-700/50">
+                    <span className="text-2xl font-bold text-slate-300">{haulingAchievement.totalTargetWeight?.toFixed(1) || 0}</span>
+                    <p className="text-xs text-slate-500 mt-1">Target Weight</p>
                   </div>
-                  <div className="bg-white rounded p-3 text-center border border-blue-100">
-                    <span className="text-2xl font-bold text-purple-600">{haulingAchievement.loadWeightProgress?.toFixed(1) || 0}%</span>
-                    <p className="text-xs text-gray-500 mt-1">Weight Progress</p>
+                  <div className="bg-slate-800/50 rounded p-3 text-center border border-slate-700/50">
+                    <span className="text-2xl font-bold text-violet-400">{haulingAchievement.loadWeightProgress?.toFixed(1) || 0}%</span>
+                    <p className="text-xs text-slate-500 mt-1">Weight Progress</p>
                   </div>
                 </div>
               </div>
@@ -1752,42 +1766,48 @@ const ProductionList = () => {
 
             {loadingHaulingActivities && (
               <div className="flex items-center justify-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600">Loading hauling activities...</span>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500"></div>
+                <span className="ml-2 text-slate-400">Loading hauling activities...</span>
               </div>
             )}
 
             {relatedHaulingActivities.length > 0 && (
-              <div className="border rounded-lg overflow-hidden">
-                <div className="bg-gray-50 px-4 py-2 border-b">
-                  <h4 className="font-semibold text-gray-700 flex items-center">
+              <div className="border border-slate-700/50 rounded-lg overflow-hidden">
+                <div className="bg-slate-800/50 px-4 py-2 border-b border-slate-700/50">
+                  <h4 className="font-semibold text-slate-200 flex items-center">
                     <Truck size={16} className="mr-2" />
                     Related Hauling Activities ({relatedHaulingActivities.length})
                   </h4>
                 </div>
                 <div className="max-h-64 overflow-y-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-100 sticky top-0">
+                    <thead className="bg-slate-800/80 sticky top-0">
                       <tr>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Activity</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Truck</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Load/Target</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Status</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-400">Activity</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-400">Truck</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-400">Load/Target</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-400">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-slate-700/50">
                       {relatedHaulingActivities.map((ha) => (
-                        <tr key={ha.id} className="hover:bg-gray-50">
-                          <td className="px-3 py-2 font-mono text-xs">{ha.activityNumber}</td>
-                          <td className="px-3 py-2">{ha.truck?.code || '-'}</td>
+                        <tr key={ha.id} className="hover:bg-sky-900/20">
+                          <td className="px-3 py-2 font-mono text-xs text-slate-400">{ha.activityNumber}</td>
+                          <td className="px-3 py-2 text-slate-300">{ha.truck?.code || '-'}</td>
                           <td className="px-3 py-2">
-                            <span className={ha.loadWeight >= ha.targetWeight ? 'text-green-600 font-semibold' : ''}>{ha.loadWeight || 0}</span>
-                            <span className="text-gray-400">/{ha.targetWeight || 0}t</span>
+                            <span className={ha.loadWeight >= ha.targetWeight ? 'text-emerald-400 font-semibold' : 'text-slate-300'}>{ha.loadWeight || 0}</span>
+                            <span className="text-slate-500">/{ha.targetWeight || 0}t</span>
                           </td>
                           <td className="px-3 py-2">
                             <span
                               className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                ha.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : ha.status === 'LOADING' ? 'bg-blue-100 text-blue-700' : ha.status === 'HAULING' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'
+                                ha.status === 'COMPLETED'
+                                  ? 'bg-emerald-900/30 text-emerald-400'
+                                  : ha.status === 'LOADING'
+                                  ? 'bg-sky-900/30 text-sky-400'
+                                  : ha.status === 'HAULING'
+                                  ? 'bg-amber-900/30 text-amber-400'
+                                  : 'bg-slate-700 text-slate-300'
                               }`}
                             >
                               {ha.status}
@@ -1802,13 +1822,13 @@ const ProductionList = () => {
             )}
 
             {selectedProduction.remarks && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <span className="text-xs text-yellow-700 font-medium uppercase tracking-wide">Remarks</span>
-                <p className="text-gray-700 mt-1">{selectedProduction.remarks}</p>
+              <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
+                <span className="text-xs text-amber-400 font-medium uppercase tracking-wide">Remarks</span>
+                <p className="text-slate-300 mt-1">{selectedProduction.remarks}</p>
               </div>
             )}
 
-            <div className="flex justify-end pt-4 border-t">
+            <div className="flex justify-end pt-4 border-t border-slate-700/50">
               <button onClick={() => setShowModal(false)} className="btn-secondary">
                 Close
               </button>
@@ -1818,64 +1838,64 @@ const ProductionList = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Hauling Activity Info Banner - Shows details of created hauling activities */}
             {haulingActivityInfo && haulingActivityInfo.createdCount > 0 && (
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-gradient-to-r from-emerald-900/30 to-emerald-950/30 border border-emerald-500/30 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-green-800 text-lg flex items-center">
-                    <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">✓</span>
+                  <h4 className="font-semibold text-emerald-400 text-lg flex items-center">
+                    <span className="bg-emerald-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">OK</span>
                     Hauling Activities Created Successfully
                   </h4>
-                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">{haulingActivityInfo.createdCount} activities</span>
+                  <span className="bg-emerald-900/50 text-emerald-400 px-3 py-1 rounded-full text-sm font-medium">{haulingActivityInfo.createdCount} activities</span>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                  <div className="bg-white rounded p-2 border border-green-100">
-                    <span className="text-xs text-gray-500">Strategy</span>
-                    <p className="font-medium text-green-700">#{haulingActivityInfo.strategyRank}</p>
+                  <div className="bg-slate-800/50 rounded p-2 border border-slate-700/50">
+                    <span className="text-xs text-slate-500">Strategy</span>
+                    <p className="font-medium text-emerald-400">#{haulingActivityInfo.strategyRank}</p>
                   </div>
-                  <div className="bg-white rounded p-2 border border-green-100">
-                    <span className="text-xs text-gray-500">Trucks</span>
-                    <p className="font-medium text-blue-600">{haulingActivityInfo.equipmentAllocation?.truck_ids?.length || 0}</p>
+                  <div className="bg-slate-800/50 rounded p-2 border border-slate-700/50">
+                    <span className="text-xs text-slate-500">Trucks</span>
+                    <p className="font-medium text-sky-400">{haulingActivityInfo.equipmentAllocation?.truck_ids?.length || 0}</p>
                   </div>
-                  <div className="bg-white rounded p-2 border border-green-100">
-                    <span className="text-xs text-gray-500">Excavators</span>
-                    <p className="font-medium text-orange-600">{haulingActivityInfo.equipmentAllocation?.excavator_ids?.length || 0}</p>
+                  <div className="bg-slate-800/50 rounded p-2 border border-slate-700/50">
+                    <span className="text-xs text-slate-500">Excavators</span>
+                    <p className="font-medium text-amber-400">{haulingActivityInfo.equipmentAllocation?.excavator_ids?.length || 0}</p>
                   </div>
-                  <div className="bg-white rounded p-2 border border-green-100">
-                    <span className="text-xs text-gray-500">Operators</span>
-                    <p className="font-medium text-purple-600">{haulingActivityInfo.equipmentAllocation?.operator_ids?.length || 0}</p>
+                  <div className="bg-slate-800/50 rounded p-2 border border-slate-700/50">
+                    <span className="text-xs text-slate-500">Operators</span>
+                    <p className="font-medium text-violet-400">{haulingActivityInfo.equipmentAllocation?.operator_ids?.length || 0}</p>
                   </div>
                 </div>
 
                 {/* Activity Numbers List */}
                 {haulingActivityInfo.createdActivities && haulingActivityInfo.createdActivities.length > 0 && (
-                  <div className="mt-3 border-t border-green-200 pt-3">
-                    <span className="text-xs text-gray-600 font-medium">Activity IDs:</span>
+                  <div className="mt-3 border-t border-emerald-500/30 pt-3">
+                    <span className="text-xs text-slate-400 font-medium">Activity IDs:</span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {haulingActivityInfo.createdActivities.slice(0, 10).map((activity, idx) => (
-                        <span key={idx} className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-mono">
+                        <span key={idx} className="bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded text-xs font-mono">
                           {activity.activityNumber || activity.id}
                         </span>
                       ))}
-                      {haulingActivityInfo.createdActivities.length > 10 && <span className="text-xs text-gray-500">+{haulingActivityInfo.createdActivities.length - 10} more</span>}
+                      {haulingActivityInfo.createdActivities.length > 10 && <span className="text-xs text-slate-500">+{haulingActivityInfo.createdActivities.length - 10} more</span>}
                     </div>
                   </div>
                 )}
 
                 {/* Aggregated Data Summary */}
                 {haulingActivityInfo.aggregatedData && (
-                  <div className="mt-3 border-t border-green-200 pt-3">
-                    <span className="text-xs text-gray-600 font-medium mb-2 block">Aggregated Metrics:</span>
+                  <div className="mt-3 border-t border-emerald-500/30 pt-3">
+                    <span className="text-xs text-slate-400 font-medium mb-2 block">Aggregated Metrics:</span>
                     <div className="grid grid-cols-4 gap-2 text-center">
                       <div>
-                        <p className="text-lg font-bold text-blue-600">{parseFloat(haulingActivityInfo.aggregatedData.total_tonase || 0).toFixed(1)}</p>
-                        <span className="text-xs text-gray-500">Tons</span>
+                        <p className="text-lg font-bold text-sky-400">{parseFloat(haulingActivityInfo.aggregatedData.total_tonase || 0).toFixed(1)}</p>
+                        <span className="text-xs text-slate-500">Tons</span>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-green-600">{parseFloat(haulingActivityInfo.aggregatedData.total_distance_km || 0).toFixed(1)}</p>
-                        <span className="text-xs text-gray-500">km Distance</span>
+                        <p className="text-lg font-bold text-emerald-400">{parseFloat(haulingActivityInfo.aggregatedData.total_distance_km || 0).toFixed(1)}</p>
+                        <span className="text-xs text-slate-500">km Distance</span>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-orange-600">
+                        <p className="text-lg font-bold text-amber-400">
                           {(() => {
                             const fuel = parseFloat(haulingActivityInfo.aggregatedData.total_fuel_liter || 0);
                             if (fuel > 0) return fuel.toFixed(1);
@@ -1885,11 +1905,11 @@ const ProductionList = () => {
                             return (dist * fuelRate * 1.3).toFixed(1);
                           })()}
                         </p>
-                        <span className="text-xs text-gray-500">L Fuel</span>
+                        <span className="text-xs text-slate-500">L Fuel</span>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-purple-600">{parseFloat(haulingActivityInfo.aggregatedData.avg_cycle_time_minutes || 0).toFixed(1)}</p>
-                        <span className="text-xs text-gray-500">min/cycle</span>
+                        <p className="text-lg font-bold text-violet-400">{parseFloat(haulingActivityInfo.aggregatedData.avg_cycle_time_minutes || 0).toFixed(1)}</p>
+                        <span className="text-xs text-slate-500">min/cycle</span>
                       </div>
                     </div>
                   </div>
@@ -1899,26 +1919,26 @@ const ProductionList = () => {
 
             {/* Hauling Activities Section - For Edit Mode (Achievement Info) */}
             {modalMode === 'edit' && haulingAchievement && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <div className="bg-gradient-to-r from-sky-900/30 to-sky-950/30 border border-sky-500/30 rounded-lg p-3 mb-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-blue-800 text-sm flex items-center">
+                  <h4 className="font-semibold text-sky-400 text-sm flex items-center">
                     <Package size={16} className="mr-2" />
                     Hauling Achievement
                   </h4>
                   <div className="flex items-center space-x-4">
                     <div className="text-center">
-                      <span className={`text-xl font-bold ${haulingAchievement.achievement >= 100 ? 'text-green-600' : 'text-orange-600'}`}>{haulingAchievement.achievement.toFixed(1)}%</span>
-                      <p className="text-xs text-gray-500">Achievement</p>
+                      <span className={`text-xl font-bold ${haulingAchievement.achievement >= 100 ? 'text-emerald-400' : 'text-amber-400'}`}>{haulingAchievement.achievement.toFixed(1)}%</span>
+                      <p className="text-xs text-slate-500">Achievement</p>
                     </div>
                     <div className="text-center">
-                      <span className="text-lg font-semibold text-blue-600">
+                      <span className="text-lg font-semibold text-sky-400">
                         {haulingAchievement.completedCount}/{haulingAchievement.totalCount}
                       </span>
-                      <p className="text-xs text-gray-500">Completed</p>
+                      <p className="text-xs text-slate-500">Completed</p>
                     </div>
                     <div className="text-center">
-                      <span className="text-lg font-semibold text-green-600">{haulingAchievement.totalLoadWeight?.toFixed(1) || 0}</span>
-                      <p className="text-xs text-gray-500">ton Loaded</p>
+                      <span className="text-lg font-semibold text-emerald-400">{haulingAchievement.totalLoadWeight?.toFixed(1) || 0}</span>
+                      <p className="text-xs text-slate-500">ton Loaded</p>
                     </div>
                   </div>
                 </div>
@@ -1926,13 +1946,13 @@ const ProductionList = () => {
             )}
 
             {isManualMode && (
-              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4">
+              <div className="bg-gradient-to-r from-violet-900/30 to-violet-950/30 border border-violet-500/30 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-semibold text-purple-800 text-lg flex items-center">
+                  <h4 className="font-semibold text-violet-400 text-lg flex items-center">
                     <Package size={20} className="mr-2" />
                     {modalMode === 'edit' ? 'Edit Hauling Activities' : 'Manual Hauling Activities'} ({manualHaulingList.length})
                   </h4>
-                  <button type="button" onClick={handleAddManualHauling} className="text-sm bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 flex items-center">
+                  <button type="button" onClick={handleAddManualHauling} className="text-sm bg-violet-600 text-white px-3 py-1 rounded hover:bg-violet-700 flex items-center">
                     <Plus size={14} className="mr-1" /> Add Hauling
                   </button>
                 </div>
@@ -1940,18 +1960,18 @@ const ProductionList = () => {
                 {manualHaulingList.length > 0 ? (
                   <div className="space-y-4 max-h-96 overflow-y-auto">
                     {manualHaulingList.map((hauling, idx) => (
-                      <div key={hauling.tempId} className={`bg-white rounded-lg border p-4 shadow-sm ${hauling.isExisting ? 'border-blue-300' : 'border-purple-200'}`}>
+                      <div key={hauling.tempId} className={`bg-slate-800/50 rounded-lg border p-4 shadow-sm ${hauling.isExisting ? 'border-sky-500/30' : 'border-violet-500/30'}`}>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-2">
-                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${hauling.isExisting ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${hauling.isExisting ? 'bg-sky-900/50 text-sky-400' : 'bg-violet-900/50 text-violet-400'}`}>
                               {hauling.isExisting ? `Existing #${idx + 1}` : `New #${idx + 1}`}
                             </span>
-                            {hauling.activityNumber && <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-mono">{hauling.activityNumber}</span>}
+                            {hauling.activityNumber && <span className="bg-slate-700 text-slate-400 px-2 py-0.5 rounded text-xs font-mono">{hauling.activityNumber}</span>}
                           </div>
                           <button
                             type="button"
                             onClick={() => handleRemoveManualHauling(hauling.tempId)}
-                            className={`p-1 rounded ${hauling.isExisting ? 'text-red-600 hover:bg-red-50' : 'text-gray-500 hover:bg-gray-50'}`}
+                            className={`p-1 rounded ${hauling.isExisting ? 'text-rose-400 hover:bg-rose-900/30' : 'text-slate-400 hover:bg-slate-700/50'}`}
                             title={hauling.isExisting ? 'Delete from database' : 'Remove'}
                           >
                             <Trash2 size={18} />
@@ -1960,13 +1980,13 @@ const ProductionList = () => {
 
                         <div className="grid grid-cols-2 gap-3 mb-3">
                           <div>
-                            <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                            <label className="text-xs font-medium text-slate-400 mb-1 flex items-center">
                               <Truck size={12} className="mr-1" /> Truck
                             </label>
                             <select
                               value={hauling.truckId}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'truckId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 ${hauling.isExisting ? 'bg-gray-100' : ''}`}
+                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
                               disabled={hauling.isExisting}
                             >
                               <option value="">Select Truck</option>
@@ -1980,11 +2000,11 @@ const ProductionList = () => {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Excavator</label>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Excavator</label>
                             <select
                               value={hauling.excavatorId}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'excavatorId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 ${hauling.isExisting ? 'bg-gray-100' : ''}`}
+                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
                               disabled={hauling.isExisting}
                             >
                               <option value="">Select Excavator</option>
@@ -2001,13 +2021,13 @@ const ProductionList = () => {
 
                         <div className="grid grid-cols-2 gap-3 mb-3">
                           <div>
-                            <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                            <label className="text-xs font-medium text-slate-400 mb-1 flex items-center">
                               <User size={12} className="mr-1" /> Operator
                             </label>
                             <select
                               value={hauling.operatorId}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'operatorId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 ${hauling.isExisting ? 'bg-gray-100' : ''}`}
+                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
                               disabled={hauling.isExisting}
                             >
                               <option value="">Select Operator</option>
@@ -2021,13 +2041,13 @@ const ProductionList = () => {
                             </select>
                           </div>
                           <div>
-                            <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
-                              <Navigation size={12} className="mr-1" /> Road Segment {filteredRoadSegments.length > 0 && <span className="text-xs text-blue-500 ml-1">({filteredRoadSegments.length} for site)</span>}
+                            <label className="text-xs font-medium text-slate-400 mb-1 flex items-center">
+                              <Navigation size={12} className="mr-1" /> Road Segment {filteredRoadSegments.length > 0 && <span className="text-xs text-sky-400 ml-1">({filteredRoadSegments.length} for site)</span>}
                             </label>
                             <select
                               value={hauling.roadSegmentId}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'roadSegmentId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 ${filteredRoadSegments.length > 0 ? 'bg-blue-50 border-blue-200' : ''}`}
+                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 ${filteredRoadSegments.length > 0 ? 'border-sky-500/30' : 'border-slate-700/50'}`}
                             >
                               <option value="">Select Road</option>
                               {(filteredRoadSegments.length > 0 ? filteredRoadSegments : roadSegments.filter((rs) => rs.isActive !== false)).map((rs) => (
@@ -2041,13 +2061,13 @@ const ProductionList = () => {
 
                         <div className="grid grid-cols-2 gap-3 mb-3">
                           <div>
-                            <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
-                              <MapPin size={12} className="mr-1 text-green-600" /> Loading Point {filteredLoadingPoints.length > 0 && <span className="text-xs text-green-500 ml-1">({filteredLoadingPoints.length} for site)</span>}
+                            <label className="text-xs font-medium text-slate-400 mb-1 flex items-center">
+                              <MapPin size={12} className="mr-1 text-emerald-400" /> Loading Point {filteredLoadingPoints.length > 0 && <span className="text-xs text-emerald-400 ml-1">({filteredLoadingPoints.length} for site)</span>}
                             </label>
                             <select
                               value={hauling.loadingPointId}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'loadingPointId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 ${filteredLoadingPoints.length > 0 ? 'bg-green-50 border-green-200' : ''}`}
+                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 ${filteredLoadingPoints.length > 0 ? 'border-emerald-500/30' : 'border-slate-700/50'}`}
                             >
                               <option value="">Select Loading Point</option>
                               {(filteredLoadingPoints.length > 0 ? filteredLoadingPoints : loadingPoints.filter((lp) => lp.isActive !== false)).map((lp) => (
@@ -2058,13 +2078,13 @@ const ProductionList = () => {
                             </select>
                           </div>
                           <div>
-                            <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
-                              <MapPin size={12} className="mr-1 text-red-600" /> Dumping Point {filteredDumpingPoints.length > 0 && <span className="text-xs text-orange-500 ml-1">({filteredDumpingPoints.length} for site)</span>}
+                            <label className="text-xs font-medium text-slate-400 mb-1 flex items-center">
+                              <MapPin size={12} className="mr-1 text-rose-400" /> Dumping Point {filteredDumpingPoints.length > 0 && <span className="text-xs text-amber-400 ml-1">({filteredDumpingPoints.length} for site)</span>}
                             </label>
                             <select
                               value={hauling.dumpingPointId}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'dumpingPointId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 ${filteredDumpingPoints.length > 0 ? 'bg-orange-50 border-orange-200' : ''}`}
+                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 ${filteredDumpingPoints.length > 0 ? 'border-amber-500/30' : 'border-slate-700/50'}`}
                             >
                               <option value="">Select Dumping Point</option>
                               {(filteredDumpingPoints.length > 0 ? filteredDumpingPoints : dumpingPoints.filter((dp) => dp.isActive !== false)).map((dp) => (
@@ -2078,39 +2098,43 @@ const ProductionList = () => {
 
                         <div className="grid grid-cols-4 gap-3">
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Target (ton)</label>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Target (ton)</label>
                             <input
                               type="number"
                               step="0.1"
                               value={hauling.targetWeight?.toFixed?.(1) || hauling.targetWeight || ''}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'targetWeight', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 bg-gray-50"
+                              className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Load (ton)</label>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Load (ton)</label>
                             <input
                               type="number"
                               step="0.1"
                               placeholder="Actual load"
                               value={hauling.loadWeight}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'loadWeight', e.target.value)}
-                              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500"
+                              className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 placeholder-slate-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Distance (km)</label>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Distance (km)</label>
                             <input
                               type="number"
                               step="0.1"
                               value={hauling.distance?.toFixed?.(2) || hauling.distance || ''}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'distance', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500 bg-gray-50"
+                              className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
-                            <select value={hauling.status} onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'status', e.target.value)} className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-purple-500">
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Status</label>
+                            <select
+                              value={hauling.status}
+                              onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'status', e.target.value)}
+                              className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200"
+                            >
                               {HAULING_STATUS_OPTIONS.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
                                   {opt.label}
@@ -2123,15 +2147,15 @@ const ProductionList = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Package size={40} className="mx-auto mb-3 text-gray-300" />
+                  <div className="text-center py-8 text-slate-400">
+                    <Package size={40} className="mx-auto mb-3 text-slate-600" />
                     <p className="font-medium">Belum ada hauling ditambahkan</p>
-                    <p className="text-xs mt-1">Pilih truck & excavator di atas, lalu klik "Add Hauling"</p>
+                    <p className="text-xs mt-1 text-slate-500">Pilih truck & excavator di atas, lalu klik "Add Hauling"</p>
                   </div>
                 )}
 
-                <div className="mt-4 pt-3 border-t border-purple-200">
-                  <p className="text-xs text-purple-700">
+                <div className="mt-4 pt-3 border-t border-violet-500/30">
+                  <p className="text-xs text-violet-400">
                     <strong>Note:</strong>{' '}
                     {modalMode === 'edit'
                       ? 'Perubahan pada hauling yang sudah ada akan langsung disimpan. Hauling baru akan dibuat saat Production Record diupdate.'
@@ -2143,14 +2167,14 @@ const ProductionList = () => {
 
             {loadingHaulingActivities && (
               <div className="flex items-center justify-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
-                <span className="ml-2 text-gray-600">Loading hauling activities...</span>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-violet-500"></div>
+                <span className="ml-2 text-slate-400">Loading hauling activities...</span>
               </div>
             )}
 
             {modalMode === 'create' && !haulingActivityInfo && (
               <div className="flex items-center justify-end mb-2">
-                <label className="flex items-center text-sm text-gray-600 cursor-pointer">
+                <label className="flex items-center text-sm text-slate-400 cursor-pointer">
                   <input type="checkbox" checked={isManualMode} onChange={(e) => setIsManualMode(e.target.checked)} className="mr-2 rounded" />
                   Mode Manual (Tanpa AI Recommendation)
                 </label>
@@ -2159,11 +2183,11 @@ const ProductionList = () => {
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Record Date *</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Record Date *</label>
                 <input type="date" value={formData.recordDate} onChange={(e) => setFormData({ ...formData, recordDate: e.target.value })} className="input-field" required />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Shift *</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Shift *</label>
                 <select value={formData.shift} onChange={(e) => setFormData({ ...formData, shift: e.target.value })} className="input-field" required>
                   <option value="SHIFT_1">Pagi</option>
                   <option value="SHIFT_2">Siang</option>
@@ -2171,10 +2195,10 @@ const ProductionList = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mining Site * <span className="text-xs text-blue-600">(Auto-fill enabled)</span>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Mining Site * <span className="text-xs text-sky-400">(Auto-fill enabled)</span>
                 </label>
-                <select value={formData.miningSiteId} onChange={(e) => handleMiningSiteChange(e.target.value)} className="input-field border-blue-300 focus:ring-blue-500" required>
+                <select value={formData.miningSiteId} onChange={(e) => handleMiningSiteChange(e.target.value)} className="input-field border-sky-500/30 focus:ring-sky-500" required>
                   <option value="">Select Mining Site</option>
                   {miningSites.map((site) => (
                     <option key={site.id} value={site.id}>
@@ -2186,27 +2210,27 @@ const ProductionList = () => {
             </div>
 
             {siteAutoFillInfo && formData.miningSiteId && (
-              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-3 mt-2">
+              <div className="bg-gradient-to-r from-sky-900/30 to-cyan-900/30 border border-sky-500/30 rounded-lg p-3 mt-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center">
-                      <CheckCircle size={14} className="text-green-500 mr-1" />
-                      <span className="text-xs text-gray-600">Auto-filled from site data</span>
+                      <CheckCircle size={14} className="text-emerald-400 mr-1" />
+                      <span className="text-xs text-slate-400">Auto-filled from site data</span>
                     </div>
                     <div className="flex items-center space-x-3 text-xs">
-                      <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{siteAutoFillInfo.roadCount} Roads</span>
-                      <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded">{siteAutoFillInfo.lpCount} Loading Pts</span>
-                      <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded">{siteAutoFillInfo.dpCount} Dumping Pts</span>
+                      <span className="bg-sky-900/50 text-sky-400 px-2 py-0.5 rounded">{siteAutoFillInfo.roadCount} Roads</span>
+                      <span className="bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded">{siteAutoFillInfo.lpCount} Loading Pts</span>
+                      <span className="bg-amber-900/50 text-amber-400 px-2 py-0.5 rounded">{siteAutoFillInfo.dpCount} Dumping Pts</span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2 text-xs">
-                    <span className="text-gray-500">Distance:</span>
-                    <span className="font-semibold text-blue-700">{siteAutoFillInfo.avgDistance?.toFixed(2) || '-'} km</span>
-                    <span className="text-gray-400">|</span>
-                    <span className="text-gray-500">Road:</span>
+                    <span className="text-slate-500">Distance:</span>
+                    <span className="font-semibold text-sky-400">{siteAutoFillInfo.avgDistance?.toFixed(2) || '-'} km</span>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-500">Road:</span>
                     <span
                       className={`font-semibold ${
-                        siteAutoFillInfo.roadCondition === 'EXCELLENT' ? 'text-green-600' : siteAutoFillInfo.roadCondition === 'GOOD' ? 'text-blue-600' : siteAutoFillInfo.roadCondition === 'FAIR' ? 'text-yellow-600' : 'text-red-600'
+                        siteAutoFillInfo.roadCondition === 'EXCELLENT' ? 'text-emerald-400' : siteAutoFillInfo.roadCondition === 'GOOD' ? 'text-sky-400' : siteAutoFillInfo.roadCondition === 'FAIR' ? 'text-amber-400' : 'text-rose-400'
                       }`}
                     >
                       {siteAutoFillInfo.roadCondition}
@@ -2216,30 +2240,30 @@ const ProductionList = () => {
               </div>
             )}
 
-            <div className="border-t pt-4 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg shadow-sm">
+            <div className="border-t border-slate-700/50 pt-4 bg-gradient-to-br from-sky-900/20 to-sky-950/20 p-4 rounded-lg shadow-sm">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold text-blue-800 flex items-center">
+                <h3 className="font-semibold text-sky-400 flex items-center">
                   <Calculator size={18} className="mr-2" />
                   Operational Calculator
                 </h3>
-                <button type="button" onClick={calculateMetrics} className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 flex items-center shadow-sm transition-colors">
+                <button type="button" onClick={calculateMetrics} className="text-sm bg-sky-600 text-white px-3 py-1.5 rounded-lg hover:bg-sky-700 flex items-center shadow-sm transition-colors">
                   <RefreshCw size={14} className="mr-1" /> Calculate
                 </button>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Target Production (ton) *</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Target Production (ton) *</label>
                   <input type="number" step="0.01" value={formData.targetProduction} onChange={(e) => setFormData({ ...formData, targetProduction: e.target.value })} className="input-field" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Haul Distance (km) {siteAutoFillInfo && <span className="text-xs text-green-600 ml-1">✓ auto-filled</span>}</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Haul Distance (km) {siteAutoFillInfo && <span className="text-xs text-emerald-400 ml-1">auto-filled</span>}</label>
                   <input
                     type="number"
                     step="0.1"
                     value={formData.haulDistance}
                     onChange={(e) => setFormData({ ...formData, haulDistance: e.target.value })}
-                    className={`input-field ${siteAutoFillInfo ? 'bg-green-50 border-green-200' : ''}`}
+                    className={`input-field ${siteAutoFillInfo ? 'border-emerald-500/30' : ''}`}
                     placeholder="One-way distance"
                   />
                 </div>
@@ -2247,8 +2271,8 @@ const ProductionList = () => {
 
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Weather Condition {siteAutoFillInfo && <span className="text-xs text-green-600 ml-1">✓ auto-filled</span>}</label>
-                  <select value={formData.weatherCondition} onChange={(e) => setFormData({ ...formData, weatherCondition: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'bg-green-50 border-green-200' : ''}`}>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Weather Condition {siteAutoFillInfo && <span className="text-xs text-emerald-400 ml-1">auto-filled</span>}</label>
+                  <select value={formData.weatherCondition} onChange={(e) => setFormData({ ...formData, weatherCondition: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'border-emerald-500/30' : ''}`}>
                     <option value="CERAH">Cerah</option>
                     <option value="BERAWAN">Berawan</option>
                     <option value="HUJAN_RINGAN">Hujan Ringan</option>
@@ -2259,8 +2283,8 @@ const ProductionList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Road Condition {siteAutoFillInfo && <span className="text-xs text-green-600 ml-1">✓ auto-filled</span>}</label>
-                  <select value={formData.roadCondition} onChange={(e) => setFormData({ ...formData, roadCondition: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'bg-green-50 border-green-200' : ''}`}>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Road Condition {siteAutoFillInfo && <span className="text-xs text-emerald-400 ml-1">auto-filled</span>}</label>
+                  <select value={formData.roadCondition} onChange={(e) => setFormData({ ...formData, roadCondition: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'border-emerald-500/30' : ''}`}>
                     <option value="EXCELLENT">Excellent</option>
                     <option value="GOOD">Good</option>
                     <option value="FAIR">Fair</option>
@@ -2269,8 +2293,8 @@ const ProductionList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Risk Level {siteAutoFillInfo && <span className="text-xs text-green-600 ml-1">✓ auto-filled</span>}</label>
-                  <select value={formData.riskLevel} onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'bg-green-50 border-green-200' : ''}`}>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Risk Level {siteAutoFillInfo && <span className="text-xs text-emerald-400 ml-1">auto-filled</span>}</label>
+                  <select value={formData.riskLevel} onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'border-emerald-500/30' : ''}`}>
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
                     <option value="HIGH">High</option>
@@ -2281,8 +2305,8 @@ const ProductionList = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pilih Truck ({selectedTruckIds.length})<span className="text-xs text-blue-600 ml-1">({availableTrucks.length} tersedia)</span>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Pilih Truck ({selectedTruckIds.length})<span className="text-xs text-sky-400 ml-1">({availableTrucks.length} tersedia)</span>
                   </label>
                   <div className="relative">
                     <button type="button" onClick={() => setTruckDropdownOpen(!truckDropdownOpen)} className="w-full input-field flex items-center justify-between">
@@ -2290,21 +2314,30 @@ const ProductionList = () => {
                       <ChevronDown size={16} />
                     </button>
                     {truckDropdownOpen && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-64 overflow-hidden">
-                        <div className="p-2 border-b">
+                      <div className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-700/50 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                        <div className="p-2 border-b border-slate-700/50">
                           <div className="relative">
-                            <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
-                            <input type="text" placeholder="Cari truck..." value={truckSearch} onChange={(e) => setTruckSearch(e.target.value)} className="w-full pl-9 pr-3 py-2 border rounded text-sm" onClick={(e) => e.stopPropagation()} />
+                            <Search size={16} className="absolute left-3 top-2.5 text-slate-500" />
+                            <input
+                              type="text"
+                              placeholder="Cari truck..."
+                              value={truckSearch}
+                              onChange={(e) => setTruckSearch(e.target.value)}
+                              className="w-full pl-9 pr-3 py-2 border border-slate-700/50 rounded text-sm bg-slate-900 text-slate-200 placeholder-slate-500"
+                              onClick={(e) => e.stopPropagation()}
+                            />
                           </div>
                         </div>
                         <div className="overflow-y-auto max-h-48">
                           {filteredTrucks.map((truck) => (
-                            <div key={truck.id} className={`flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer ${selectedTruckIds.includes(truck.id) ? 'bg-blue-50' : ''}`} onClick={() => toggleTruckSelection(truck.id)}>
-                              <input type="checkbox" checked={selectedTruckIds.includes(truck.id)} onChange={() => toggleTruckSelection(truck.id)} className="rounded text-blue-600" onClick={(e) => e.stopPropagation()} />
-                              <span className="ml-2 text-sm flex-1">
+                            <div key={truck.id} className={`flex items-center px-3 py-2 hover:bg-slate-700/50 cursor-pointer ${selectedTruckIds.includes(truck.id) ? 'bg-sky-900/30' : ''}`} onClick={() => toggleTruckSelection(truck.id)}>
+                              <input type="checkbox" checked={selectedTruckIds.includes(truck.id)} onChange={() => toggleTruckSelection(truck.id)} className="rounded text-sky-500" onClick={(e) => e.stopPropagation()} />
+                              <span className="ml-2 text-sm flex-1 text-slate-200">
                                 {truck.code} - {truck.model} ({truck.capacity}t)
                               </span>
-                              <span className={`text-xs px-1.5 py-0.5 rounded ${truck.status === 'IDLE' ? 'bg-green-100 text-green-700' : truck.status === 'STANDBY' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                              <span
+                                className={`text-xs px-1.5 py-0.5 rounded ${truck.status === 'IDLE' ? 'bg-emerald-900/50 text-emerald-400' : truck.status === 'STANDBY' ? 'bg-sky-900/50 text-sky-400' : 'bg-amber-900/50 text-amber-400'}`}
+                              >
                                 {truck.status}
                               </span>
                             </div>
@@ -2315,8 +2348,8 @@ const ProductionList = () => {
                   </div>
                 </div>
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pilih Excavator ({selectedExcavatorIds.length})<span className="text-xs text-green-600 ml-1">({availableExcavators.length} tersedia)</span>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Pilih Excavator ({selectedExcavatorIds.length})<span className="text-xs text-emerald-400 ml-1">({availableExcavators.length} tersedia)</span>
                   </label>
                   <div className="relative">
                     <button type="button" onClick={() => setExcavatorDropdownOpen(!excavatorDropdownOpen)} className="w-full input-field flex items-center justify-between">
@@ -2324,28 +2357,32 @@ const ProductionList = () => {
                       <ChevronDown size={16} />
                     </button>
                     {excavatorDropdownOpen && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-64 overflow-hidden">
-                        <div className="p-2 border-b">
+                      <div className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-700/50 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                        <div className="p-2 border-b border-slate-700/50">
                           <div className="relative">
-                            <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
+                            <Search size={16} className="absolute left-3 top-2.5 text-slate-500" />
                             <input
                               type="text"
                               placeholder="Cari excavator..."
                               value={excavatorSearch}
                               onChange={(e) => setExcavatorSearch(e.target.value)}
-                              className="w-full pl-9 pr-3 py-2 border rounded text-sm"
+                              className="w-full pl-9 pr-3 py-2 border border-slate-700/50 rounded text-sm bg-slate-900 text-slate-200 placeholder-slate-500"
                               onClick={(e) => e.stopPropagation()}
                             />
                           </div>
                         </div>
                         <div className="overflow-y-auto max-h-48">
                           {filteredExcavators.map((exc) => (
-                            <div key={exc.id} className={`flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer ${selectedExcavatorIds.includes(exc.id) ? 'bg-green-50' : ''}`} onClick={() => toggleExcavatorSelection(exc.id)}>
-                              <input type="checkbox" checked={selectedExcavatorIds.includes(exc.id)} onChange={() => toggleExcavatorSelection(exc.id)} className="rounded text-blue-600" onClick={(e) => e.stopPropagation()} />
-                              <span className="ml-2 text-sm flex-1">
+                            <div
+                              key={exc.id}
+                              className={`flex items-center px-3 py-2 hover:bg-slate-700/50 cursor-pointer ${selectedExcavatorIds.includes(exc.id) ? 'bg-emerald-900/30' : ''}`}
+                              onClick={() => toggleExcavatorSelection(exc.id)}
+                            >
+                              <input type="checkbox" checked={selectedExcavatorIds.includes(exc.id)} onChange={() => toggleExcavatorSelection(exc.id)} className="rounded text-sky-500" onClick={(e) => e.stopPropagation()} />
+                              <span className="ml-2 text-sm flex-1 text-slate-200">
                                 {exc.code} - {exc.model} ({exc.productionRate}t/m)
                               </span>
-                              <span className={`text-xs px-1.5 py-0.5 rounded ${exc.status === 'IDLE' ? 'bg-green-100 text-green-700' : exc.status === 'ACTIVE' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                              <span className={`text-xs px-1.5 py-0.5 rounded ${exc.status === 'IDLE' ? 'bg-emerald-900/50 text-emerald-400' : exc.status === 'ACTIVE' ? 'bg-sky-900/50 text-sky-400' : 'bg-amber-900/50 text-amber-400'}`}>
                                 {exc.status}
                               </span>
                             </div>
@@ -2359,31 +2396,31 @@ const ProductionList = () => {
             </div>
 
             {/* Calculated Results */}
-            <div className="border-t pt-4">
-              <h3 className="font-semibold mb-3">Operational Metrics (Auto-Calculated)</h3>
+            <div className="border-t border-slate-700/50 pt-4">
+              <h3 className="font-semibold mb-3 text-slate-200">Operational Metrics (Auto-Calculated)</h3>
               <div className="grid grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Total Trips</label>
-                  <input type="number" value={formData.totalTrips} readOnly className="input-field bg-gray-100" />
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Total Trips</label>
+                  <input type="number" value={formData.totalTrips} readOnly className="input-field bg-slate-800/50" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Total Distance (km)</label>
-                  <input type="number" value={formData.totalDistance} readOnly className="input-field bg-gray-100" />
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Total Distance (km)</label>
+                  <input type="number" value={formData.totalDistance} readOnly className="input-field bg-slate-800/50" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Total Fuel (L)</label>
-                  <input type="number" value={formData.totalFuel} readOnly className="input-field bg-gray-100" />
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Total Fuel (L)</label>
+                  <input type="number" value={formData.totalFuel} readOnly className="input-field bg-slate-800/50" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Avg Cycle Time (min)</label>
-                  <input type="number" value={formData.avgCycleTime} readOnly className="input-field bg-gray-100" />
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Avg Cycle Time (min)</label>
+                  <input type="number" value={formData.avgCycleTime} readOnly className="input-field bg-slate-800/50" />
                 </div>
               </div>
 
               {/* Calculation Preview Section */}
               {formData.totalTrips && formData.totalTrips > 0 && (
-                <div className="mt-4 bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm text-gray-700">
-                  <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
+                <div className="mt-4 bg-sky-900/20 p-4 rounded-lg border border-sky-500/30 text-sm text-slate-300">
+                  <h4 className="font-semibold text-sky-400 mb-2 flex items-center">
                     <Calculator size={16} className="mr-2" />
                     Calculation Preview & Financial Projection
                   </h4>
@@ -2391,50 +2428,50 @@ const ProductionList = () => {
                     <div className="flex justify-between">
                       <span>Trips Required:</span>
                       <span>
-                        {formData.targetProduction} ton / Avg Capacity ≈ <strong>{formData.totalTrips} trips</strong>
+                        {formData.targetProduction} ton / Avg Capacity = <strong className="text-slate-100">{formData.totalTrips} trips</strong>
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Total Distance:</span>
                       <span>
-                        {formData.totalTrips} trips × {formData.haulDistance} km × 2 (Return) = <strong>{formData.totalDistance} km</strong>
+                        {formData.totalTrips} trips x {formData.haulDistance} km x 2 (Return) = <strong className="text-slate-100">{formData.totalDistance} km</strong>
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Est. Fuel Consumption:</span>
                       <span>
-                        {formData.totalDistance} km × Avg Fuel Rate × Factors ≈ <strong>{formData.totalFuel} Liters</strong>
+                        {formData.totalDistance} km x Avg Fuel Rate x Factors = <strong className="text-slate-100">{formData.totalFuel} Liters</strong>
                       </span>
                     </div>
-                    <div className="flex justify-between border-t border-blue-200 pt-1 mt-1 mb-2">
+                    <div className="flex justify-between border-t border-sky-500/30 pt-1 mt-1 mb-2">
                       <span>Cycle Time:</span>
                       <span>
-                        Haul + Queue + Load + Dump + Return ≈ <strong>{formData.avgCycleTime} min/trip</strong>
+                        Haul + Queue + Load + Dump + Return = <strong className="text-slate-100">{formData.avgCycleTime} min/trip</strong>
                       </span>
                     </div>
 
                     {/* Financial Breakdown from Strategy */}
                     {strategyFinancials && (
-                      <div className="mt-3 pt-2 border-t-2 border-blue-200">
-                        <h5 className="font-semibold text-blue-900 mb-1">Financial Projection (Estimasi)</h5>
+                      <div className="mt-3 pt-2 border-t-2 border-sky-500/30">
+                        <h5 className="font-semibold text-sky-300 mb-1">Financial Projection (Estimasi)</h5>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                          <div className="flex justify-between text-green-700">
+                          <div className="flex justify-between text-emerald-400">
                             <span>Revenue:</span>
                             <strong>{strategyFinancials.REVENUE}</strong>
                           </div>
-                          <div className="flex justify-between text-red-600">
+                          <div className="flex justify-between text-rose-400">
                             <span>Fuel Cost:</span>
                             <span>{strategyFinancials.FUEL_COST}</span>
                           </div>
-                          <div className="flex justify-between text-red-600">
+                          <div className="flex justify-between text-rose-400">
                             <span>Queue Cost:</span>
                             <span>{strategyFinancials.QUEUE_COST}</span>
                           </div>
-                          <div className="flex justify-between text-red-600">
+                          <div className="flex justify-between text-rose-400">
                             <span>Demurrage:</span>
                             <span>{strategyFinancials.DEMURRAGE}</span>
                           </div>
-                          <div className="col-span-2 flex justify-between border-t border-blue-300 pt-1 mt-1 text-blue-900 font-bold text-sm">
+                          <div className="col-span-2 flex justify-between border-t border-sky-500/30 pt-1 mt-1 text-sky-300 font-bold text-sm">
                             <span>Net Profit:</span>
                             <span>{strategyFinancials.NET_PROFIT}</span>
                           </div>
@@ -2446,51 +2483,51 @@ const ProductionList = () => {
               )}
             </div>
 
-            <div className="border-t pt-4">
-              <h3 className="font-semibold mb-3">Actuals & Quality</h3>
+            <div className="border-t border-slate-700/50 pt-4">
+              <h3 className="font-semibold mb-3 text-slate-200">Actuals & Quality</h3>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Actual Production (ton) *{isManualMode && manualHaulingList.length > 0 && <span className="text-xs text-blue-600 ml-2">(Auto-calculated from haulings)</span>}
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Actual Production (ton) *{isManualMode && manualHaulingList.length > 0 && <span className="text-xs text-sky-400 ml-2">(Auto-calculated from haulings)</span>}
                   </label>
                   <input
                     type="number"
                     step="0.01"
                     value={formData.actualProduction}
                     onChange={(e) => setFormData({ ...formData, actualProduction: e.target.value })}
-                    className={`input-field ${isManualMode && manualHaulingList.length > 0 ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className={`input-field ${isManualMode && manualHaulingList.length > 0 ? 'bg-slate-800/50 cursor-not-allowed' : ''}`}
                     required
                     readOnly={isManualMode && manualHaulingList.length > 0}
                     title={isManualMode && manualHaulingList.length > 0 ? 'Nilai ini otomatis dihitung dari total load weight hauling activities' : ''}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Utilization Rate (%)</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Utilization Rate (%)</label>
                   <input type="number" step="0.01" value={formData.utilizationRate} onChange={(e) => setFormData({ ...formData, utilizationRate: e.target.value })} className="input-field" />
                 </div>
               </div>
               <div className="grid grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Avg Calori</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Avg Calori</label>
                   <input type="number" step="0.01" value={formData.avgCalori} onChange={(e) => setFormData({ ...formData, avgCalori: e.target.value })} className="input-field" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Avg Ash (%)</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Avg Ash (%)</label>
                   <input type="number" step="0.01" value={formData.avgAshContent} onChange={(e) => setFormData({ ...formData, avgAshContent: e.target.value })} className="input-field" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Avg Sulfur (%)</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Avg Sulfur (%)</label>
                   <input type="number" step="0.01" value={formData.avgSulfur} onChange={(e) => setFormData({ ...formData, avgSulfur: e.target.value })} className="input-field" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Avg Moisture (%)</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Avg Moisture (%)</label>
                   <input type="number" step="0.01" value={formData.avgMoisture} onChange={(e) => setFormData({ ...formData, avgMoisture: e.target.value })} className="input-field" />
                 </div>
               </div>
             </div>
 
-            <div className="border-t pt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+            <div className="border-t border-slate-700/50 pt-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Remarks</label>
               <textarea value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} className="input-field" rows="2" />
             </div>
 

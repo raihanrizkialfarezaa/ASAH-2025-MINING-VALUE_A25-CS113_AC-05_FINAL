@@ -460,29 +460,29 @@ const LocationManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center space-x-3">
-            <MapIcon className="text-blue-600" size={36} />
+          <h1 className="text-3xl font-bold text-slate-100 flex items-center gap-3">
+            <MapIcon className="text-sky-400" size={36} />
             <span>Location Management</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Manage mining sites, loading points, dumping points, and road segments</p>
+          <p className="text-sm text-slate-400 mt-1">Manage mining sites, loading points, dumping points, and road segments</p>
         </div>
-        <div className="flex space-x-3">
-          <button onClick={fetchData} className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border shadow-sm text-gray-700 font-medium transition-colors flex items-center space-x-2">
+        <div className="flex gap-3">
+          <button onClick={fetchData} className="bg-slate-800/80 hover:bg-slate-700 px-4 py-2 rounded-lg border border-slate-700 text-slate-300 font-medium transition-colors flex items-center gap-2">
             <RefreshCw size={18} />
             <span>Refresh</span>
           </button>
-          <div className="bg-white rounded-lg shadow-sm p-1 flex border">
-            <button onClick={() => setViewMode('list')} className={`px-3 py-2 rounded flex items-center space-x-1.5 transition-colors ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}>
+          <div className="bg-slate-800/80 rounded-lg p-1 flex border border-slate-700">
+            <button onClick={() => setViewMode('list')} className={`px-3 py-2 rounded flex items-center gap-1.5 transition-colors ${viewMode === 'list' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-400 hover:bg-slate-700'}`}>
               <List size={18} />
               <span className="text-sm font-medium">List</span>
             </button>
-            <button onClick={() => setViewMode('map')} className={`px-3 py-2 rounded flex items-center space-x-1.5 transition-colors ${viewMode === 'map' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}>
+            <button onClick={() => setViewMode('map')} className={`px-3 py-2 rounded flex items-center gap-1.5 transition-colors ${viewMode === 'map' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-400 hover:bg-slate-700'}`}>
               <MapIcon size={18} />
               <span className="text-sm font-medium">Map</span>
             </button>
           </div>
           {canEdit && (
-            <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
+            <button onClick={handleCreate} className="bg-sky-600 hover:bg-sky-500 text-white flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors">
               <Plus size={20} />
               <span>Add New</span>
             </button>
@@ -491,54 +491,54 @@ const LocationManagement = () => {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <div className="card bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+        <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Mining Sites</p>
-              <p className="text-3xl font-bold text-blue-600">{allSites.length}</p>
+              <p className="text-sm text-slate-400 mb-1">Mining Sites</p>
+              <p className="text-3xl font-bold text-sky-400">{allSites.length}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <MapPin className="text-blue-600" size={28} />
+            <div className="p-3 bg-sky-500/10 rounded-xl">
+              <MapPin className="text-sky-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Loading Points</p>
-              <p className="text-3xl font-bold text-green-600">{allLoadingPoints.length}</p>
+              <p className="text-sm text-slate-400 mb-1">Loading Points</p>
+              <p className="text-3xl font-bold text-emerald-400">{allLoadingPoints.length}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-xl">
-              <Activity className="text-green-600" size={28} />
+            <div className="p-3 bg-emerald-500/10 rounded-xl">
+              <Activity className="text-emerald-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+        <div className="rounded-xl border border-violet-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Dumping Points</p>
-              <p className="text-3xl font-bold text-purple-600">{allDumpingPoints.length}</p>
+              <p className="text-sm text-slate-400 mb-1">Dumping Points</p>
+              <p className="text-3xl font-bold text-violet-400">{allDumpingPoints.length}</p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-xl">
-              <Layers className="text-purple-600" size={28} />
+            <div className="p-3 bg-violet-500/10 rounded-xl">
+              <Layers className="text-violet-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200">
+        <div className="rounded-xl border border-amber-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Road Segments</p>
-              <p className="text-3xl font-bold text-orange-600">{allRoadSegments.length}</p>
+              <p className="text-sm text-slate-400 mb-1">Road Segments</p>
+              <p className="text-3xl font-bold text-amber-400">{allRoadSegments.length}</p>
             </div>
-            <div className="p-3 bg-orange-100 rounded-xl">
-              <Route className="text-orange-600" size={28} />
+            <div className="p-3 bg-amber-500/10 rounded-xl">
+              <Route className="text-amber-400" size={28} />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white border-b">
-        <div className="flex space-x-1">
+      <div className="bg-slate-900/90 border-b border-slate-700 rounded-t-xl">
+        <div className="flex gap-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -548,13 +548,13 @@ const LocationManagement = () => {
                   setActiveTab(tab.id);
                   setPagination((prev) => ({ ...prev, page: 1 }));
                 }}
-                className={`flex items-center space-x-2 px-5 py-3 border-b-2 transition-all font-medium ${
-                  activeTab === tab.id ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                className={`flex items-center gap-2 px-5 py-3 border-b-2 transition-all font-medium ${
+                  activeTab === tab.id ? 'border-sky-500 text-sky-400 bg-sky-500/10' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                 }`}
               >
                 <Icon size={18} />
                 <span>{tab.label}</span>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>{tab.count}</span>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === tab.id ? 'bg-sky-500 text-white' : 'bg-slate-700 text-slate-300'}`}>{tab.count}</span>
               </button>
             );
           })}
@@ -562,13 +562,13 @@ const LocationManagement = () => {
       </div>
 
       {viewMode === 'map' ? (
-        <div className="card p-6">
+        <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold flex items-center space-x-2">
-              <Navigation className="text-blue-600" size={24} />
+            <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+              <Navigation className="text-sky-400" size={24} />
               <span>Geospatial View</span>
             </h2>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-slate-400">
               Showing {allSites.length} sites, {allLoadingPoints.length} loading points, {allDumpingPoints.length} dumping points
             </div>
           </div>
@@ -576,12 +576,12 @@ const LocationManagement = () => {
         </div>
       ) : (
         <>
-          <div className="card">
+          <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex-1 flex items-center space-x-3">
+                <div className="flex-1 flex items-center gap-3">
                   <div className="relative" style={{ minWidth: '360px', maxWidth: '480px', flex: '1' }}>
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" size={20} />
                     <input
                       type="text"
                       placeholder="Search by code, name, or mining site..."
@@ -593,37 +593,37 @@ const LocationManagement = () => {
                         paddingLeft: '44px',
                         paddingRight: '44px',
                         fontSize: '14px',
-                        color: '#1f2937',
-                        backgroundColor: '#ffffff',
-                        border: '1px solid #d1d5db',
+                        color: '#e2e8f0',
+                        backgroundColor: 'rgba(30, 41, 59, 0.8)',
+                        border: '1px solid rgba(71, 85, 105, 0.5)',
                         borderRadius: '8px',
                         outline: 'none',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
                       }}
                       onFocus={(e) => {
-                        e.target.style.borderColor = '#3b82f6';
-                        e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)';
+                        e.target.style.borderColor = '#0ea5e9';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.15)';
                       }}
                       onBlur={(e) => {
-                        e.target.style.borderColor = '#d1d5db';
-                        e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+                        e.target.style.borderColor = 'rgba(71, 85, 105, 0.5)';
+                        e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.2)';
                       }}
                     />
                     {searchQuery && (
-                      <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-300">
                         <X size={18} />
                       </button>
                     )}
                   </div>
 
-                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input-field min-w-[180px]">
+                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-slate-800/80 border border-slate-700 text-slate-300 rounded-lg px-3 py-2.5 min-w-[180px] focus:border-sky-500 outline-none">
                     <option value="">All Status</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
 
                   {activeFiltersCount > 0 && (
-                    <button onClick={handleClearFilters} className="flex items-center space-x-1 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg border border-red-200 transition-colors">
+                    <button onClick={handleClearFilters} className="flex items-center gap-1 px-3 py-2 text-sm text-rose-400 hover:bg-rose-500/10 rounded-lg border border-rose-500/30 transition-colors">
                       <X size={16} />
                       <span>Clear ({activeFiltersCount})</span>
                     </button>
@@ -635,26 +635,26 @@ const LocationManagement = () => {
           {activeTab === 'sites' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {sites.map((site) => (
-                <div key={site.id} className="card hover:shadow-lg transition-shadow border-l-4 border-blue-500">
+                <div key={site.id} className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 hover:border-sky-500/30 transition-all border-l-4 border-l-sky-500">
                   <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-start space-x-2">
-                      <MapPin className="text-blue-600 mt-1" size={20} />
+                    <div className="flex items-start gap-2">
+                      <MapPin className="text-sky-400 mt-1" size={20} />
                       <div>
-                        <h3 className="font-bold text-lg text-gray-900">{site.name}</h3>
-                        <p className="text-xs text-gray-500">{site.code}</p>
+                        <h3 className="font-bold text-lg text-slate-100">{site.name}</h3>
+                        <p className="text-xs text-slate-500">{site.code}</p>
                       </div>
                     </div>
-                    <div className="flex space-x-1">
-                      <button onClick={() => handleView(site)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="View">
+                    <div className="flex gap-1">
+                      <button onClick={() => handleView(site)} className="p-1.5 text-sky-400 hover:bg-sky-500/10 rounded transition-colors" title="View">
                         <Eye size={16} />
                       </button>
                       {canEdit && (
-                        <button onClick={() => handleEdit(site)} className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors" title="Edit">
+                        <button onClick={() => handleEdit(site)} className="p-1.5 text-emerald-400 hover:bg-emerald-500/10 rounded transition-colors" title="Edit">
                           <Edit size={16} />
                         </button>
                       )}
                       {canEdit && (
-                        <button onClick={() => handleDelete(site.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
+                        <button onClick={() => handleDelete(site.id)} className="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded transition-colors" title="Delete">
                           <Trash2 size={16} />
                         </button>
                       )}
@@ -662,29 +662,29 @@ const LocationManagement = () => {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Type:</span>
-                      <span className="text-sm font-semibold text-gray-900">{getSiteTypeLabel(site.siteType)}</span>
+                      <span className="text-sm text-slate-400">Type:</span>
+                      <span className="text-sm font-semibold text-slate-200">{getSiteTypeLabel(site.siteType)}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className="text-sm text-slate-400">Status:</span>
                       <StatusBadge status={site.isActive ? 'active' : 'inactive'} label={site.isActive ? 'Active' : 'Inactive'} />
                     </div>
                     {site.capacity && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Capacity:</span>
-                        <span className="text-sm font-medium text-blue-600">{site.capacity.toFixed(2)} ton/day</span>
+                        <span className="text-sm text-slate-400">Capacity:</span>
+                        <span className="text-sm font-medium text-sky-400">{site.capacity.toFixed(2)} ton/day</span>
                       </div>
                     )}
                     {site.elevation && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Elevation:</span>
-                        <span className="text-sm text-gray-700">{site.elevation.toFixed(2)} m</span>
+                        <span className="text-sm text-slate-400">Elevation:</span>
+                        <span className="text-sm text-slate-300">{site.elevation.toFixed(2)} m</span>
                       </div>
                     )}
                     {site.latitude && site.longitude && (
-                      <div className="flex items-center justify-between pt-2 border-t">
-                        <span className="text-xs text-gray-500">Coordinates:</span>
-                        <span className="text-xs text-gray-600">
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-700/50">
+                        <span className="text-xs text-slate-500">Coordinates:</span>
+                        <span className="text-xs text-slate-400">
                           {site.latitude.toFixed(4)}, {site.longitude.toFixed(4)}
                         </span>
                       </div>
@@ -698,26 +698,26 @@ const LocationManagement = () => {
           {activeTab === 'loading' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {loadingPoints.map((point) => (
-                <div key={point.id} className="card hover:shadow-lg transition-shadow border-l-4 border-green-500">
+                <div key={point.id} className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 hover:border-emerald-500/30 transition-all border-l-4 border-l-emerald-500">
                   <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-start space-x-2">
-                      <Activity className="text-green-600 mt-1" size={20} />
+                    <div className="flex items-start gap-2">
+                      <Activity className="text-emerald-400 mt-1" size={20} />
                       <div>
-                        <h3 className="font-bold text-lg text-gray-900">{point.name}</h3>
-                        <p className="text-xs text-gray-500">{point.code}</p>
+                        <h3 className="font-bold text-lg text-slate-100">{point.name}</h3>
+                        <p className="text-xs text-slate-500">{point.code}</p>
                       </div>
                     </div>
-                    <div className="flex space-x-1">
-                      <button onClick={() => handleView(point)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="View">
+                    <div className="flex gap-1">
+                      <button onClick={() => handleView(point)} className="p-1.5 text-sky-400 hover:bg-sky-500/10 rounded transition-colors" title="View">
                         <Eye size={16} />
                       </button>
                       {canEdit && (
-                        <button onClick={() => handleEdit(point)} className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors" title="Edit">
+                        <button onClick={() => handleEdit(point)} className="p-1.5 text-emerald-400 hover:bg-emerald-500/10 rounded transition-colors" title="Edit">
                           <Edit size={16} />
                         </button>
                       )}
                       {canEdit && (
-                        <button onClick={() => handleDelete(point.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
+                        <button onClick={() => handleDelete(point.id)} className="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded transition-colors" title="Delete">
                           <Trash2 size={16} />
                         </button>
                       )}
@@ -725,33 +725,33 @@ const LocationManagement = () => {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Mining Site:</span>
-                      <span className="text-sm font-semibold text-gray-900 truncate max-w-[180px]">{point.miningSite?.name || '-'}</span>
+                      <span className="text-sm text-slate-400">Mining Site:</span>
+                      <span className="text-sm font-semibold text-slate-200 truncate max-w-[180px]">{point.miningSite?.name || '-'}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className="text-sm text-slate-400">Status:</span>
                       <StatusBadge status={point.isActive ? 'active' : 'inactive'} label={point.isActive ? 'Active' : 'Inactive'} />
                     </div>
                     {point.excavator && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Excavator:</span>
-                        <span className="text-sm text-gray-700">{point.excavator.code}</span>
+                        <span className="text-sm text-slate-400">Excavator:</span>
+                        <span className="text-sm text-slate-300">{point.excavator.code}</span>
                       </div>
                     )}
                     {point.coalSeam && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Coal Seam:</span>
-                        <span className="text-sm font-medium text-green-600">{point.coalSeam}</span>
+                        <span className="text-sm text-slate-400">Coal Seam:</span>
+                        <span className="text-sm font-medium text-emerald-400">{point.coalSeam}</span>
                       </div>
                     )}
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Max Queue:</span>
-                      <span className="text-sm text-gray-700">{point.maxQueueSize} trucks</span>
+                      <span className="text-sm text-slate-400">Max Queue:</span>
+                      <span className="text-sm text-slate-300">{point.maxQueueSize} trucks</span>
                     </div>
                     {point.coalQuality && (
-                      <div className="pt-2 border-t">
-                        <p className="text-xs text-gray-500 mb-1">Coal Quality:</p>
-                        <div className="grid grid-cols-2 gap-1 text-xs">
+                      <div className="pt-2 border-t border-slate-700/50">
+                        <p className="text-xs text-slate-500 mb-1">Coal Quality:</p>
+                        <div className="grid grid-cols-2 gap-1 text-xs text-slate-400">
                           {point.coalQuality.calorie && <span>Cal: {point.coalQuality.calorie.toFixed(0)}</span>}
                           {point.coalQuality.moisture && <span>Mois: {point.coalQuality.moisture.toFixed(1)}%</span>}
                           {point.coalQuality.ash_content && <span>Ash: {point.coalQuality.ash_content.toFixed(1)}%</span>}
@@ -760,9 +760,9 @@ const LocationManagement = () => {
                       </div>
                     )}
                     {point.latitude && point.longitude && (
-                      <div className="flex items-center justify-between pt-2 border-t">
-                        <span className="text-xs text-gray-500">Coordinates:</span>
-                        <span className="text-xs text-gray-600">
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-700/50">
+                        <span className="text-xs text-slate-500">Coordinates:</span>
+                        <span className="text-xs text-slate-400">
                           {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
                         </span>
                       </div>
@@ -776,26 +776,26 @@ const LocationManagement = () => {
           {activeTab === 'dumping' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {dumpingPoints.map((point) => (
-                <div key={point.id} className="card hover:shadow-lg transition-shadow border-l-4 border-purple-500">
+                <div key={point.id} className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 hover:border-violet-500/30 transition-all border-l-4 border-l-violet-500">
                   <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-start space-x-2">
-                      <Layers className="text-purple-600 mt-1" size={20} />
+                    <div className="flex items-start gap-2">
+                      <Layers className="text-violet-400 mt-1" size={20} />
                       <div>
-                        <h3 className="font-bold text-lg text-gray-900">{point.name}</h3>
-                        <p className="text-xs text-gray-500">{point.code}</p>
+                        <h3 className="font-bold text-lg text-slate-100">{point.name}</h3>
+                        <p className="text-xs text-slate-500">{point.code}</p>
                       </div>
                     </div>
-                    <div className="flex space-x-1">
-                      <button onClick={() => handleView(point)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="View">
+                    <div className="flex gap-1">
+                      <button onClick={() => handleView(point)} className="p-1.5 text-sky-400 hover:bg-sky-500/10 rounded transition-colors" title="View">
                         <Eye size={16} />
                       </button>
                       {canEdit && (
-                        <button onClick={() => handleEdit(point)} className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors" title="Edit">
+                        <button onClick={() => handleEdit(point)} className="p-1.5 text-emerald-400 hover:bg-emerald-500/10 rounded transition-colors" title="Edit">
                           <Edit size={16} />
                         </button>
                       )}
                       {canEdit && (
-                        <button onClick={() => handleDelete(point.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
+                        <button onClick={() => handleDelete(point.id)} className="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded transition-colors" title="Delete">
                           <Trash2 size={16} />
                         </button>
                       )}
@@ -803,44 +803,44 @@ const LocationManagement = () => {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Mining Site:</span>
-                      <span className="text-sm font-semibold text-gray-900 truncate max-w-[180px]">{point.miningSite?.name || '-'}</span>
+                      <span className="text-sm text-slate-400">Mining Site:</span>
+                      <span className="text-sm font-semibold text-slate-200 truncate max-w-[180px]">{point.miningSite?.name || '-'}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Type:</span>
-                      <span className="text-sm font-medium text-purple-600">{point.dumpingType}</span>
+                      <span className="text-sm text-slate-400">Type:</span>
+                      <span className="text-sm font-medium text-violet-400">{point.dumpingType}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className="text-sm text-slate-400">Status:</span>
                       <StatusBadge status={point.isActive ? 'active' : 'inactive'} label={point.isActive ? 'Active' : 'Inactive'} />
                     </div>
                     {point.capacity && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Capacity:</span>
-                        <span className="text-sm text-gray-700">{point.capacity.toFixed(2)} ton</span>
+                        <span className="text-sm text-slate-400">Capacity:</span>
+                        <span className="text-sm text-slate-300">{point.capacity.toFixed(2)} ton</span>
                       </div>
                     )}
                     {point.currentStock !== null && point.currentStock !== undefined && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Current Stock:</span>
-                        <span className="text-sm font-semibold text-purple-600">{point.currentStock.toFixed(2)} ton</span>
+                        <span className="text-sm text-slate-400">Current Stock:</span>
+                        <span className="text-sm font-semibold text-violet-400">{point.currentStock.toFixed(2)} ton</span>
                       </div>
                     )}
                     {point.capacity && point.currentStock !== null && (
                       <div className="pt-2">
-                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                        <div className="flex justify-between text-xs text-slate-500 mb-1">
                           <span>Utilization</span>
                           <span>{((point.currentStock / point.capacity) * 100).toFixed(1)}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div className="bg-purple-600 h-2 rounded-full transition-all" style={{ width: `${Math.min((point.currentStock / point.capacity) * 100, 100)}%` }}></div>
+                        <div className="w-full bg-slate-700 rounded-full h-2">
+                          <div className="bg-violet-500 h-2 rounded-full transition-all" style={{ width: `${Math.min((point.currentStock / point.capacity) * 100, 100)}%` }}></div>
                         </div>
                       </div>
                     )}
                     {point.latitude && point.longitude && (
-                      <div className="flex items-center justify-between pt-2 border-t">
-                        <span className="text-xs text-gray-500">Coordinates:</span>
-                        <span className="text-xs text-gray-600">
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-700/50">
+                        <span className="text-xs text-slate-500">Coordinates:</span>
+                        <span className="text-xs text-slate-400">
                           {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
                         </span>
                       </div>
@@ -854,75 +854,75 @@ const LocationManagement = () => {
           {activeTab === 'roads' && (
             <div className="space-y-3">
               {roadSegments.map((road) => (
-                <div key={road.id} className="card hover:shadow-lg transition-shadow border-l-4 border-orange-500">
+                <div key={road.id} className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 hover:border-amber-500/30 transition-all border-l-4 border-l-amber-500">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <div className="flex items-start space-x-2 mb-3">
-                        <Route className="text-orange-600 mt-1" size={20} />
+                      <div className="flex items-start gap-2 mb-3">
+                        <Route className="text-amber-400 mt-1" size={20} />
                         <div>
-                          <h3 className="font-bold text-lg text-gray-900">{road.name}</h3>
-                          <p className="text-xs text-gray-500">{road.code}</p>
+                          <h3 className="font-bold text-lg text-slate-100">{road.name}</h3>
+                          <p className="text-xs text-slate-500">{road.code}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Mining Site</p>
-                          <p className="text-sm font-semibold text-gray-900">{road.miningSite?.name || '-'}</p>
+                          <p className="text-xs text-slate-500 mb-1">Mining Site</p>
+                          <p className="text-sm font-semibold text-slate-200">{road.miningSite?.name || '-'}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Distance</p>
-                          <p className="text-sm font-semibold text-orange-600">{road.distance} km</p>
+                          <p className="text-xs text-slate-500 mb-1">Distance</p>
+                          <p className="text-sm font-semibold text-amber-400">{road.distance} km</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Max Speed</p>
-                          <p className="text-sm text-gray-700">{road.maxSpeed} km/h</p>
+                          <p className="text-xs text-slate-500 mb-1">Max Speed</p>
+                          <p className="text-sm text-slate-300">{road.maxSpeed} km/h</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Condition</p>
+                          <p className="text-xs text-slate-500 mb-1">Condition</p>
                           <StatusBadge status={getRoadConditionColor(road.roadCondition)} label={road.roadCondition} />
                         </div>
                         {road.startPoint && (
                           <div>
-                            <p className="text-xs text-gray-500 mb-1">Start Point</p>
-                            <p className="text-sm text-gray-700">{road.startPoint}</p>
+                            <p className="text-xs text-slate-500 mb-1">Start Point</p>
+                            <p className="text-sm text-slate-300">{road.startPoint}</p>
                           </div>
                         )}
                         {road.endPoint && (
                           <div>
-                            <p className="text-xs text-gray-500 mb-1">End Point</p>
-                            <p className="text-sm text-gray-700">{road.endPoint}</p>
+                            <p className="text-xs text-slate-500 mb-1">End Point</p>
+                            <p className="text-sm text-slate-300">{road.endPoint}</p>
                           </div>
                         )}
                         {road.gradient !== null && road.gradient !== undefined && (
                           <div>
-                            <p className="text-xs text-gray-500 mb-1">Gradient</p>
-                            <p className="text-sm text-gray-700">{road.gradient.toFixed(2)}°</p>
+                            <p className="text-xs text-slate-500 mb-1">Gradient</p>
+                            <p className="text-sm text-slate-300">{road.gradient.toFixed(2)}deg</p>
                           </div>
                         )}
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Status</p>
+                          <p className="text-xs text-slate-500 mb-1">Status</p>
                           <StatusBadge status={road.isActive ? 'active' : 'inactive'} label={road.isActive ? 'Active' : 'Inactive'} />
                         </div>
                       </div>
                       {road.lastMaintenance && (
-                        <div className="mt-3 pt-3 border-t">
-                          <p className="text-xs text-gray-500">
-                            Last Maintenance: <span className="text-gray-700">{new Date(road.lastMaintenance).toLocaleDateString()}</span>
+                        <div className="mt-3 pt-3 border-t border-slate-700/50">
+                          <p className="text-xs text-slate-500">
+                            Last Maintenance: <span className="text-slate-300">{new Date(road.lastMaintenance).toLocaleDateString()}</span>
                           </p>
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-col space-y-1 ml-4">
-                      <button onClick={() => handleView(road)} className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="View">
+                    <div className="flex flex-col gap-1 ml-4">
+                      <button onClick={() => handleView(road)} className="p-2 text-sky-400 hover:bg-sky-500/10 rounded transition-colors" title="View">
                         <Eye size={18} />
                       </button>
                       {canEdit && (
-                        <button onClick={() => handleEdit(road)} className="p-2 text-green-600 hover:bg-green-50 rounded transition-colors" title="Edit">
+                        <button onClick={() => handleEdit(road)} className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded transition-colors" title="Edit">
                           <Edit size={18} />
                         </button>
                       )}
                       {canEdit && (
-                        <button onClick={() => handleDelete(road.id)} className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
+                        <button onClick={() => handleDelete(road.id)} className="p-2 text-rose-400 hover:bg-rose-500/10 rounded transition-colors" title="Delete">
                           <Trash2 size={18} />
                         </button>
                       )}
@@ -934,9 +934,9 @@ const LocationManagement = () => {
           )}
 
           {((activeTab === 'sites' && sites.length === 0) || (activeTab === 'loading' && loadingPoints.length === 0) || (activeTab === 'dumping' && dumpingPoints.length === 0) || (activeTab === 'roads' && roadSegments.length === 0)) && (
-            <div className="card text-center py-12">
-              <p className="text-gray-500 text-lg">No data found</p>
-              <p className="text-gray-400 text-sm mt-2">Try adjusting your filters or create a new item</p>
+            <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 text-center py-12">
+              <p className="text-slate-400 text-lg">No data found</p>
+              <p className="text-slate-500 text-sm mt-2">Try adjusting your filters or create a new item</p>
             </div>
           )}
 
@@ -949,16 +949,16 @@ const LocationManagement = () => {
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={getModalTitle()} size="lg">
         {modalMode === 'view' && selectedItem ? (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
+            <div className="bg-gradient-to-r from-sky-500/10 to-violet-500/10 p-6 rounded-xl border border-sky-500/20">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  {activeTab === 'sites' && <MapPin className="text-blue-600" size={32} />}
-                  {activeTab === 'loading' && <Activity className="text-green-600" size={32} />}
-                  {activeTab === 'dumping' && <Layers className="text-purple-600" size={32} />}
-                  {activeTab === 'roads' && <Route className="text-orange-600" size={32} />}
+                <div className="flex items-center gap-3">
+                  {activeTab === 'sites' && <MapPin className="text-sky-400" size={32} />}
+                  {activeTab === 'loading' && <Activity className="text-emerald-400" size={32} />}
+                  {activeTab === 'dumping' && <Layers className="text-violet-400" size={32} />}
+                  {activeTab === 'roads' && <Route className="text-amber-400" size={32} />}
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900">{selectedItem.name}</h3>
-                    <p className="text-sm text-gray-600 font-mono">{selectedItem.code}</p>
+                    <h3 className="text-2xl font-bold text-slate-100">{selectedItem.name}</h3>
+                    <p className="text-sm text-slate-400 font-mono">{selectedItem.code}</p>
                   </div>
                 </div>
                 <div>{selectedItem.isActive !== undefined && <StatusBadge status={selectedItem.isActive ? 'active' : 'inactive'} label={selectedItem.isActive ? 'Active' : 'Inactive'} />}</div>
@@ -968,56 +968,56 @@ const LocationManagement = () => {
             {activeTab === 'sites' && (
               <>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Layers className="text-blue-600" size={18} />
-                      <p className="text-xs font-semibold text-gray-500 uppercase">Site Type</p>
+                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Layers className="text-sky-400" size={18} />
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Site Type</p>
                     </div>
-                    <p className="text-lg font-bold text-gray-900">{getSiteTypeLabel(selectedItem.siteType)}</p>
+                    <p className="text-lg font-bold text-slate-200">{getSiteTypeLabel(selectedItem.siteType)}</p>
                   </div>
                   {selectedItem.capacity && (
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <TrendingUp className="text-green-600" size={18} />
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Capacity</p>
+                    <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="text-emerald-400" size={18} />
+                        <p className="text-xs font-semibold text-slate-500 uppercase">Capacity</p>
                       </div>
-                      <p className="text-lg font-bold text-gray-900">
-                        {selectedItem.capacity.toFixed(2)} <span className="text-sm font-normal text-gray-600">ton/day</span>
+                      <p className="text-lg font-bold text-slate-200">
+                        {selectedItem.capacity.toFixed(2)} <span className="text-sm font-normal text-slate-400">ton/day</span>
                       </p>
                     </div>
                   )}
                   {selectedItem.elevation && (
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Navigation className="text-indigo-600" size={18} />
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Elevation</p>
+                    <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Navigation className="text-violet-400" size={18} />
+                        <p className="text-xs font-semibold text-slate-500 uppercase">Elevation</p>
                       </div>
-                      <p className="text-lg font-bold text-gray-900">
-                        {selectedItem.elevation.toFixed(2)} <span className="text-sm font-normal text-gray-600">meters</span>
+                      <p className="text-lg font-bold text-slate-200">
+                        {selectedItem.elevation.toFixed(2)} <span className="text-sm font-normal text-slate-400">meters</span>
                       </p>
                     </div>
                   )}
                 </div>
                 {selectedItem.description && (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Description</p>
-                    <p className="text-gray-700 leading-relaxed">{selectedItem.description}</p>
+                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                    <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Description</p>
+                    <p className="text-slate-300 leading-relaxed">{selectedItem.description}</p>
                   </div>
                 )}
                 {selectedItem.latitude && selectedItem.longitude && (
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <MapPin className="text-green-600" size={20} />
-                      <p className="text-sm font-semibold text-gray-700">Geographic Coordinates</p>
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <MapPin className="text-emerald-400" size={20} />
+                      <p className="text-sm font-semibold text-slate-300">Geographic Coordinates</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <p className="text-xs text-gray-600 mb-1">Latitude</p>
-                        <p className="text-base font-mono font-semibold text-gray-900">{selectedItem.latitude.toFixed(6)}</p>
+                        <p className="text-xs text-slate-500 mb-1">Latitude</p>
+                        <p className="text-base font-mono font-semibold text-slate-200">{selectedItem.latitude.toFixed(6)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600 mb-1">Longitude</p>
-                        <p className="text-base font-mono font-semibold text-gray-900">{selectedItem.longitude.toFixed(6)}</p>
+                        <p className="text-xs text-slate-500 mb-1">Longitude</p>
+                        <p className="text-base font-mono font-semibold text-slate-200">{selectedItem.longitude.toFixed(6)}</p>
                       </div>
                     </div>
                   </div>
@@ -1028,92 +1028,92 @@ const LocationManagement = () => {
             {activeTab === 'loading' && (
               <>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <MapPin className="text-blue-600" size={18} />
-                      <p className="text-xs font-semibold text-gray-500 uppercase">Mining Site</p>
+                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin className="text-sky-400" size={18} />
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Mining Site</p>
                     </div>
-                    <p className="text-base font-bold text-gray-900">{selectedItem.miningSite?.name || '-'}</p>
-                    {selectedItem.miningSite?.code && <p className="text-xs text-gray-500 font-mono mt-1">{selectedItem.miningSite.code}</p>}
+                    <p className="text-base font-bold text-slate-200">{selectedItem.miningSite?.name || '-'}</p>
+                    {selectedItem.miningSite?.code && <p className="text-xs text-slate-500 font-mono mt-1">{selectedItem.miningSite.code}</p>}
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Activity className="text-orange-600" size={18} />
-                      <p className="text-xs font-semibold text-gray-500 uppercase">Max Queue Size</p>
+                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Activity className="text-amber-400" size={18} />
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Max Queue Size</p>
                     </div>
-                    <p className="text-lg font-bold text-gray-900">
-                      {selectedItem.maxQueueSize} <span className="text-sm font-normal text-gray-600">trucks</span>
+                    <p className="text-lg font-bold text-slate-200">
+                      {selectedItem.maxQueueSize} <span className="text-sm font-normal text-slate-400">trucks</span>
                     </p>
                   </div>
                   {selectedItem.excavator && (
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Activity className="text-green-600" size={18} />
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Excavator</p>
+                    <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Activity className="text-emerald-400" size={18} />
+                        <p className="text-xs font-semibold text-slate-500 uppercase">Excavator</p>
                       </div>
-                      <p className="text-base font-bold text-gray-900">{selectedItem.excavator.name || selectedItem.excavator.code}</p>
-                      <p className="text-xs text-gray-500 font-mono mt-1">{selectedItem.excavator.code}</p>
+                      <p className="text-base font-bold text-slate-200">{selectedItem.excavator.name || selectedItem.excavator.code}</p>
+                      <p className="text-xs text-slate-500 font-mono mt-1">{selectedItem.excavator.code}</p>
                     </div>
                   )}
                   {selectedItem.coalSeam && (
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Layers className="text-purple-600" size={18} />
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Coal Seam</p>
+                    <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Layers className="text-violet-400" size={18} />
+                        <p className="text-xs font-semibold text-slate-500 uppercase">Coal Seam</p>
                       </div>
-                      <p className="text-lg font-bold text-gray-900">{selectedItem.coalSeam}</p>
+                      <p className="text-lg font-bold text-slate-200">{selectedItem.coalSeam}</p>
                     </div>
                   )}
                 </div>
                 {selectedItem.coalQuality && (selectedItem.coalQuality.calorie || selectedItem.coalQuality.moisture || selectedItem.coalQuality.ash_content || selectedItem.coalQuality.sulfur) && (
-                  <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <TrendingUp className="text-amber-600" size={20} />
-                      <p className="text-sm font-semibold text-gray-700">Coal Quality Parameters</p>
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <TrendingUp className="text-amber-400" size={20} />
+                      <p className="text-sm font-semibold text-slate-300">Coal Quality Parameters</p>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {selectedItem.coalQuality.calorie && (
-                        <div className="bg-white rounded-lg p-3 border border-amber-200">
-                          <p className="text-xs text-gray-600 mb-1">Calorie Value</p>
-                          <p className="text-lg font-bold text-gray-900">{selectedItem.coalQuality.calorie.toFixed(0)}</p>
-                          <p className="text-xs text-gray-500">kcal/kg</p>
+                        <div className="bg-slate-800/80 rounded-lg p-3 border border-amber-500/20">
+                          <p className="text-xs text-slate-500 mb-1">Calorie Value</p>
+                          <p className="text-lg font-bold text-slate-200">{selectedItem.coalQuality.calorie.toFixed(0)}</p>
+                          <p className="text-xs text-slate-500">kcal/kg</p>
                         </div>
                       )}
                       {selectedItem.coalQuality.moisture && (
-                        <div className="bg-white rounded-lg p-3 border border-amber-200">
-                          <p className="text-xs text-gray-600 mb-1">Moisture</p>
-                          <p className="text-lg font-bold text-gray-900">{selectedItem.coalQuality.moisture.toFixed(2)}%</p>
+                        <div className="bg-slate-800/80 rounded-lg p-3 border border-amber-500/20">
+                          <p className="text-xs text-slate-500 mb-1">Moisture</p>
+                          <p className="text-lg font-bold text-slate-200">{selectedItem.coalQuality.moisture.toFixed(2)}%</p>
                         </div>
                       )}
                       {selectedItem.coalQuality.ash_content && (
-                        <div className="bg-white rounded-lg p-3 border border-amber-200">
-                          <p className="text-xs text-gray-600 mb-1">Ash Content</p>
-                          <p className="text-lg font-bold text-gray-900">{selectedItem.coalQuality.ash_content.toFixed(2)}%</p>
+                        <div className="bg-slate-800/80 rounded-lg p-3 border border-amber-500/20">
+                          <p className="text-xs text-slate-500 mb-1">Ash Content</p>
+                          <p className="text-lg font-bold text-slate-200">{selectedItem.coalQuality.ash_content.toFixed(2)}%</p>
                         </div>
                       )}
                       {selectedItem.coalQuality.sulfur && (
-                        <div className="bg-white rounded-lg p-3 border border-amber-200">
-                          <p className="text-xs text-gray-600 mb-1">Sulfur</p>
-                          <p className="text-lg font-bold text-gray-900">{selectedItem.coalQuality.sulfur.toFixed(2)}%</p>
+                        <div className="bg-slate-800/80 rounded-lg p-3 border border-amber-500/20">
+                          <p className="text-xs text-slate-500 mb-1">Sulfur</p>
+                          <p className="text-lg font-bold text-slate-200">{selectedItem.coalQuality.sulfur.toFixed(2)}%</p>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
                 {selectedItem.latitude && selectedItem.longitude && (
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <MapPin className="text-green-600" size={20} />
-                      <p className="text-sm font-semibold text-gray-700">Geographic Coordinates</p>
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <MapPin className="text-emerald-400" size={20} />
+                      <p className="text-sm font-semibold text-slate-300">Geographic Coordinates</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <p className="text-xs text-gray-600 mb-1">Latitude</p>
-                        <p className="text-base font-mono font-semibold text-gray-900">{selectedItem.latitude.toFixed(6)}</p>
+                        <p className="text-xs text-slate-500 mb-1">Latitude</p>
+                        <p className="text-base font-mono font-semibold text-slate-200">{selectedItem.latitude.toFixed(6)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600 mb-1">Longitude</p>
-                        <p className="text-base font-mono font-semibold text-gray-900">{selectedItem.longitude.toFixed(6)}</p>
+                        <p className="text-xs text-slate-500 mb-1">Longitude</p>
+                        <p className="text-base font-mono font-semibold text-slate-200">{selectedItem.longitude.toFixed(6)}</p>
                       </div>
                     </div>
                   </div>
@@ -1124,76 +1124,76 @@ const LocationManagement = () => {
             {activeTab === 'dumping' && (
               <>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <MapPin className="text-blue-600" size={18} />
-                      <p className="text-xs font-semibold text-gray-500 uppercase">Mining Site</p>
+                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin className="text-sky-400" size={18} />
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Mining Site</p>
                     </div>
-                    <p className="text-base font-bold text-gray-900">{selectedItem.miningSite?.name || '-'}</p>
-                    {selectedItem.miningSite?.code && <p className="text-xs text-gray-500 font-mono mt-1">{selectedItem.miningSite.code}</p>}
+                    <p className="text-base font-bold text-slate-200">{selectedItem.miningSite?.name || '-'}</p>
+                    {selectedItem.miningSite?.code && <p className="text-xs text-slate-500 font-mono mt-1">{selectedItem.miningSite.code}</p>}
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Layers className="text-purple-600" size={18} />
-                      <p className="text-xs font-semibold text-gray-500 uppercase">Dumping Type</p>
+                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Layers className="text-violet-400" size={18} />
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Dumping Type</p>
                     </div>
-                    <p className="text-lg font-bold text-gray-900">{selectedItem.dumpingType}</p>
+                    <p className="text-lg font-bold text-slate-200">{selectedItem.dumpingType}</p>
                   </div>
                   {selectedItem.capacity && (
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <TrendingUp className="text-green-600" size={18} />
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Total Capacity</p>
+                    <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="text-emerald-400" size={18} />
+                        <p className="text-xs font-semibold text-slate-500 uppercase">Total Capacity</p>
                       </div>
-                      <p className="text-lg font-bold text-gray-900">
-                        {selectedItem.capacity.toFixed(2)} <span className="text-sm font-normal text-gray-600">ton</span>
+                      <p className="text-lg font-bold text-slate-200">
+                        {selectedItem.capacity.toFixed(2)} <span className="text-sm font-normal text-slate-400">ton</span>
                       </p>
                     </div>
                   )}
                   {selectedItem.currentStock !== null && selectedItem.currentStock !== undefined && (
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Activity className="text-orange-600" size={18} />
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Current Stock</p>
+                    <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Activity className="text-amber-400" size={18} />
+                        <p className="text-xs font-semibold text-slate-500 uppercase">Current Stock</p>
                       </div>
-                      <p className="text-lg font-bold text-gray-900">
-                        {selectedItem.currentStock.toFixed(2)} <span className="text-sm font-normal text-gray-600">ton</span>
+                      <p className="text-lg font-bold text-slate-200">
+                        {selectedItem.currentStock.toFixed(2)} <span className="text-sm font-normal text-slate-400">ton</span>
                       </p>
                     </div>
                   )}
                 </div>
                 {selectedItem.capacity && selectedItem.currentStock !== null && selectedItem.currentStock !== undefined && (
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
+                  <div className="bg-violet-500/10 border border-violet-500/20 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                        <TrendingUp className="text-purple-600" size={20} />
-                        <p className="text-sm font-semibold text-gray-700">Storage Utilization</p>
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="text-violet-400" size={20} />
+                        <p className="text-sm font-semibold text-slate-300">Storage Utilization</p>
                       </div>
-                      <p className="text-2xl font-bold text-purple-600">{((selectedItem.currentStock / selectedItem.capacity) * 100).toFixed(1)}%</p>
+                      <p className="text-2xl font-bold text-violet-400">{((selectedItem.currentStock / selectedItem.capacity) * 100).toFixed(1)}%</p>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div className="bg-gradient-to-r from-purple-600 to-pink-600 h-3 rounded-full transition-all duration-500" style={{ width: `${Math.min((selectedItem.currentStock / selectedItem.capacity) * 100, 100)}%` }}></div>
+                    <div className="w-full bg-slate-700 rounded-full h-3">
+                      <div className="bg-gradient-to-r from-violet-500 to-fuchsia-500 h-3 rounded-full transition-all duration-500" style={{ width: `${Math.min((selectedItem.currentStock / selectedItem.capacity) * 100, 100)}%` }}></div>
                     </div>
-                    <div className="flex justify-between mt-2 text-xs text-gray-600">
+                    <div className="flex justify-between mt-2 text-xs text-slate-500">
                       <span>{selectedItem.currentStock.toFixed(2)} ton</span>
                       <span>{selectedItem.capacity.toFixed(2)} ton</span>
                     </div>
                   </div>
                 )}
                 {selectedItem.latitude && selectedItem.longitude && (
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <MapPin className="text-green-600" size={20} />
-                      <p className="text-sm font-semibold text-gray-700">Geographic Coordinates</p>
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <MapPin className="text-emerald-400" size={20} />
+                      <p className="text-sm font-semibold text-slate-300">Geographic Coordinates</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <p className="text-xs text-gray-600 mb-1">Latitude</p>
-                        <p className="text-base font-mono font-semibold text-gray-900">{selectedItem.latitude.toFixed(6)}</p>
+                        <p className="text-xs text-slate-500 mb-1">Latitude</p>
+                        <p className="text-base font-mono font-semibold text-slate-200">{selectedItem.latitude.toFixed(6)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600 mb-1">Longitude</p>
-                        <p className="text-base font-mono font-semibold text-gray-900">{selectedItem.longitude.toFixed(6)}</p>
+                        <p className="text-xs text-slate-500 mb-1">Longitude</p>
+                        <p className="text-base font-mono font-semibold text-slate-200">{selectedItem.longitude.toFixed(6)}</p>
                       </div>
                     </div>
                   </div>
@@ -1204,83 +1204,83 @@ const LocationManagement = () => {
             {activeTab === 'roads' && (
               <>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <MapPin className="text-blue-600" size={18} />
-                      <p className="text-xs font-semibold text-gray-500 uppercase">Mining Site</p>
+                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin className="text-sky-400" size={18} />
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Mining Site</p>
                     </div>
-                    <p className="text-base font-bold text-gray-900">{selectedItem.miningSite?.name || '-'}</p>
-                    {selectedItem.miningSite?.code && <p className="text-xs text-gray-500 font-mono mt-1">{selectedItem.miningSite.code}</p>}
+                    <p className="text-base font-bold text-slate-200">{selectedItem.miningSite?.name || '-'}</p>
+                    {selectedItem.miningSite?.code && <p className="text-xs text-slate-500 font-mono mt-1">{selectedItem.miningSite.code}</p>}
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Route className="text-orange-600" size={18} />
-                      <p className="text-xs font-semibold text-gray-500 uppercase">Distance</p>
+                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Route className="text-amber-400" size={18} />
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Distance</p>
                     </div>
-                    <p className="text-lg font-bold text-gray-900">
-                      {selectedItem.distance} <span className="text-sm font-normal text-gray-600">km</span>
+                    <p className="text-lg font-bold text-slate-200">
+                      {selectedItem.distance} <span className="text-sm font-normal text-slate-400">km</span>
                     </p>
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Activity className="text-green-600" size={18} />
-                      <p className="text-xs font-semibold text-gray-500 uppercase">Road Condition</p>
+                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Activity className="text-emerald-400" size={18} />
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Road Condition</p>
                     </div>
                     <StatusBadge status={getRoadConditionColor(selectedItem.roadCondition)} label={selectedItem.roadCondition} />
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <TrendingUp className="text-indigo-600" size={18} />
-                      <p className="text-xs font-semibold text-gray-500 uppercase">Max Speed</p>
+                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="text-violet-400" size={18} />
+                      <p className="text-xs font-semibold text-slate-500 uppercase">Max Speed</p>
                     </div>
-                    <p className="text-lg font-bold text-gray-900">
-                      {selectedItem.maxSpeed} <span className="text-sm font-normal text-gray-600">km/h</span>
+                    <p className="text-lg font-bold text-slate-200">
+                      {selectedItem.maxSpeed} <span className="text-sm font-normal text-slate-400">km/h</span>
                     </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   {selectedItem.startPoint && (
-                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Navigation className="text-blue-600" size={18} />
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Start Point</p>
+                    <div className="bg-sky-500/10 border border-sky-500/20 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Navigation className="text-sky-400" size={18} />
+                        <p className="text-xs font-semibold text-slate-500 uppercase">Start Point</p>
                       </div>
-                      <p className="text-base font-bold text-gray-900">{selectedItem.startPoint}</p>
+                      <p className="text-base font-bold text-slate-200">{selectedItem.startPoint}</p>
                     </div>
                   )}
                   {selectedItem.endPoint && (
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <MapPin className="text-green-600" size={18} />
-                        <p className="text-xs font-semibold text-gray-500 uppercase">End Point</p>
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MapPin className="text-emerald-400" size={18} />
+                        <p className="text-xs font-semibold text-slate-500 uppercase">End Point</p>
                       </div>
-                      <p className="text-base font-bold text-gray-900">{selectedItem.endPoint}</p>
+                      <p className="text-base font-bold text-slate-200">{selectedItem.endPoint}</p>
                     </div>
                   )}
                   {selectedItem.gradient !== null && selectedItem.gradient !== undefined && (
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Activity className="text-purple-600" size={18} />
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Gradient</p>
+                    <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Activity className="text-violet-400" size={18} />
+                        <p className="text-xs font-semibold text-slate-500 uppercase">Gradient</p>
                       </div>
-                      <p className="text-lg font-bold text-gray-900">{selectedItem.gradient.toFixed(2)}°</p>
+                      <p className="text-lg font-bold text-slate-200">{selectedItem.gradient.toFixed(2)}deg</p>
                     </div>
                   )}
                   {selectedItem.lastMaintenance && (
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Activity className="text-orange-600" size={18} />
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Last Maintenance</p>
+                    <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Activity className="text-amber-400" size={18} />
+                        <p className="text-xs font-semibold text-slate-500 uppercase">Last Maintenance</p>
                       </div>
-                      <p className="text-base font-bold text-gray-900">{new Date(selectedItem.lastMaintenance).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                      <p className="text-base font-bold text-slate-200">{new Date(selectedItem.lastMaintenance).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
                     </div>
                   )}
                 </div>
               </>
             )}
 
-            <div className="flex justify-end space-x-3 pt-4 border-t">
-              <button onClick={() => setShowModal(false)} className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors">
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
+              <button onClick={() => setShowModal(false)} className="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg font-medium transition-colors">
                 Close
               </button>
               <button
@@ -1288,7 +1288,7 @@ const LocationManagement = () => {
                   setShowModal(false);
                   handleEdit(selectedItem);
                 }}
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+                className="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
               >
                 <Edit size={18} />
                 <span>Edit Details</span>
@@ -1299,7 +1299,7 @@ const LocationManagement = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Code *{modalMode === 'create' && <span className="ml-2 text-xs text-blue-600">{autoGenerateCode ? '(Auto-generated)' : ''}</span>}</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Code *{modalMode === 'create' && <span className="ml-2 text-xs text-sky-400">{autoGenerateCode ? '(Auto-generated)' : ''}</span>}</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -1319,7 +1319,7 @@ const LocationManagement = () => {
                         setAutoGenerateCode(true);
                         setFormData({ ...formData, code: generateCode(activeTab) });
                       }}
-                      className="px-3 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 text-sm font-medium"
+                      className="px-3 py-2 bg-sky-900/30 text-sky-400 border border-sky-500/30 rounded-lg hover:bg-sky-800/40 text-sm font-medium transition-colors"
                       title="Generate new code"
                     >
                       Generate
@@ -1328,14 +1328,14 @@ const LocationManagement = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Name *</label>
                 <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field" required />
               </div>
 
               {activeTab === 'sites' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Site Type *</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Site Type *</label>
                     <select value={formData.siteType} onChange={(e) => setFormData({ ...formData, siteType: e.target.value })} className="input-field" required>
                       <option value="PIT">Pit</option>
                       <option value="STOCKPILE">Stockpile</option>
@@ -1346,36 +1346,40 @@ const LocationManagement = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Status</label>
                     <select value={formData.isActive ? 'true' : 'false'} onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'true' })} className="input-field">
                       <option value="true">Active</option>
                       <option value="false">Inactive</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Capacity (ton/day)</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Capacity (ton/day)</label>
                     <input type="number" step="0.01" value={formData.capacity} onChange={(e) => setFormData({ ...formData, capacity: e.target.value })} className="input-field" placeholder="Optional" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Elevation (m)</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Elevation (m)</label>
                     <input type="number" step="0.01" value={formData.elevation} onChange={(e) => setFormData({ ...formData, elevation: e.target.value })} className="input-field" placeholder="Optional" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Latitude</label>
                     <div className="flex gap-2">
                       <input type="number" step="0.000001" value={formData.latitude} onChange={(e) => setFormData({ ...formData, latitude: e.target.value })} className="input-field flex-1" placeholder="e.g., -4.7433" />
-                      <button type="button" onClick={() => setShowMapPicker(true)} className="px-3 py-2 bg-green-50 text-green-600 border border-green-200 rounded-lg hover:bg-green-100 text-sm font-medium flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowMapPicker(true)}
+                        className="px-3 py-2 bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-800/40 text-sm font-medium flex items-center gap-1 transition-colors"
+                      >
                         <MapPin size={16} />
                         Map
                       </button>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Longitude</label>
                     <input type="number" step="0.000001" value={formData.longitude} onChange={(e) => setFormData({ ...formData, longitude: e.target.value })} className="input-field" placeholder="e.g., 116.0384" />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
                     <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input-field" rows="3" placeholder="Optional description"></textarea>
                   </div>
                 </>
@@ -1384,7 +1388,7 @@ const LocationManagement = () => {
               {activeTab === 'loading' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Mining Site *</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Mining Site *</label>
                     <select value={formData.miningSiteId} onChange={(e) => setFormData({ ...formData, miningSiteId: e.target.value })} className="input-field" required>
                       <option value="">Select Mining Site</option>
                       {allSites.map((site) => (
@@ -1395,14 +1399,14 @@ const LocationManagement = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Status</label>
                     <select value={formData.isActive ? 'true' : 'false'} onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'true' })} className="input-field">
                       <option value="true">Active</option>
                       <option value="false">Inactive</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Excavator</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Excavator</label>
                     <select value={formData.excavatorId} onChange={(e) => setFormData({ ...formData, excavatorId: e.target.value })} className="input-field">
                       <option value="">Select Excavator (Optional)</option>
                       {excavators.map((excavator) => (
@@ -1413,32 +1417,36 @@ const LocationManagement = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Max Queue Size</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Max Queue Size</label>
                     <input type="number" value={formData.maxQueueSize} onChange={(e) => setFormData({ ...formData, maxQueueSize: e.target.value })} className="input-field" min="1" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Coal Seam</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Coal Seam</label>
                     <input type="text" value={formData.coalSeam} onChange={(e) => setFormData({ ...formData, coalSeam: e.target.value })} className="input-field" placeholder="e.g., Seam-C2" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Latitude</label>
                     <div className="flex gap-2">
                       <input type="number" step="0.000001" value={formData.latitude} onChange={(e) => setFormData({ ...formData, latitude: e.target.value })} className="input-field flex-1" placeholder="e.g., -2.9629" />
-                      <button type="button" onClick={() => setShowMapPicker(true)} className="px-3 py-2 bg-green-50 text-green-600 border border-green-200 rounded-lg hover:bg-green-100 text-sm font-medium flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowMapPicker(true)}
+                        className="px-3 py-2 bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-800/40 text-sm font-medium flex items-center gap-1 transition-colors"
+                      >
                         <MapPin size={16} />
                         Map
                       </button>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Longitude</label>
                     <input type="number" step="0.000001" value={formData.longitude} onChange={(e) => setFormData({ ...formData, longitude: e.target.value })} className="input-field" placeholder="e.g., 119.4386" />
                   </div>
-                  <div className="col-span-2 border-t pt-4">
-                    <p className="text-sm font-medium text-gray-700 mb-3">Coal Quality (Optional)</p>
+                  <div className="col-span-2 border-t border-slate-700/50 pt-4">
+                    <p className="text-sm font-medium text-slate-300 mb-3">Coal Quality (Optional)</p>
                     <div className="grid grid-cols-4 gap-3">
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">Calorie</label>
+                        <label className="block text-xs text-slate-400 mb-1">Calorie</label>
                         <input
                           type="number"
                           step="0.01"
@@ -1449,7 +1457,7 @@ const LocationManagement = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">Moisture (%)</label>
+                        <label className="block text-xs text-slate-400 mb-1">Moisture (%)</label>
                         <input
                           type="number"
                           step="0.01"
@@ -1460,7 +1468,7 @@ const LocationManagement = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">Ash Content (%)</label>
+                        <label className="block text-xs text-slate-400 mb-1">Ash Content (%)</label>
                         <input
                           type="number"
                           step="0.01"
@@ -1471,7 +1479,7 @@ const LocationManagement = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">Sulfur (%)</label>
+                        <label className="block text-xs text-slate-400 mb-1">Sulfur (%)</label>
                         <input
                           type="number"
                           step="0.01"
@@ -1489,7 +1497,7 @@ const LocationManagement = () => {
               {activeTab === 'dumping' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Mining Site *</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Mining Site *</label>
                     <select value={formData.miningSiteId} onChange={(e) => setFormData({ ...formData, miningSiteId: e.target.value })} className="input-field" required>
                       <option value="">Select Mining Site</option>
                       {allSites.map((site) => (
@@ -1500,7 +1508,7 @@ const LocationManagement = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Dumping Type *</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Dumping Type *</label>
                     <select value={formData.dumpingType} onChange={(e) => setFormData({ ...formData, dumpingType: e.target.value })} className="input-field" required>
                       <option value="STOCKPILE">Stockpile</option>
                       <option value="CRUSHER">Crusher</option>
@@ -1510,32 +1518,36 @@ const LocationManagement = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Status</label>
                     <select value={formData.isActive ? 'true' : 'false'} onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'true' })} className="input-field">
                       <option value="true">Active</option>
                       <option value="false">Inactive</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Capacity (ton)</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Capacity (ton)</label>
                     <input type="number" step="0.01" value={formData.capacity} onChange={(e) => setFormData({ ...formData, capacity: e.target.value })} className="input-field" placeholder="Optional" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Current Stock (ton)</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Current Stock (ton)</label>
                     <input type="number" step="0.01" value={formData.currentStock} onChange={(e) => setFormData({ ...formData, currentStock: e.target.value })} className="input-field" placeholder="0" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Latitude</label>
                     <div className="flex gap-2">
                       <input type="number" step="0.000001" value={formData.latitude} onChange={(e) => setFormData({ ...formData, latitude: e.target.value })} className="input-field flex-1" placeholder="e.g., -4.7400" />
-                      <button type="button" onClick={() => setShowMapPicker(true)} className="px-3 py-2 bg-green-50 text-green-600 border border-green-200 rounded-lg hover:bg-green-100 text-sm font-medium flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowMapPicker(true)}
+                        className="px-3 py-2 bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-800/40 text-sm font-medium flex items-center gap-1 transition-colors"
+                      >
                         <MapPin size={16} />
                         Map
                       </button>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Longitude</label>
                     <input type="number" step="0.000001" value={formData.longitude} onChange={(e) => setFormData({ ...formData, longitude: e.target.value })} className="input-field" placeholder="e.g., 116.0421" />
                   </div>
                 </>
@@ -1544,7 +1556,7 @@ const LocationManagement = () => {
               {activeTab === 'roads' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Mining Site *</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Mining Site *</label>
                     <select value={formData.miningSiteId} onChange={(e) => setFormData({ ...formData, miningSiteId: e.target.value })} className="input-field" required>
                       <option value="">Select Mining Site</option>
                       {allSites.map((site) => (
@@ -1555,19 +1567,19 @@ const LocationManagement = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Distance (km) *</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Distance (km) *</label>
                     <input type="number" step="0.01" value={formData.distance} onChange={(e) => setFormData({ ...formData, distance: e.target.value })} className="input-field" required placeholder="e.g., 3.5" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Start Point</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Start Point</label>
                     <input type="text" value={formData.startPoint} onChange={(e) => setFormData({ ...formData, startPoint: e.target.value })} className="input-field" placeholder="e.g., Point-A" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">End Point</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">End Point</label>
                     <input type="text" value={formData.endPoint} onChange={(e) => setFormData({ ...formData, endPoint: e.target.value })} className="input-field" placeholder="e.g., Point-B" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Road Condition *</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Road Condition *</label>
                     <select value={formData.roadCondition} onChange={(e) => setFormData({ ...formData, roadCondition: e.target.value })} className="input-field" required>
                       <option value="EXCELLENT">Excellent</option>
                       <option value="GOOD">Good</option>
@@ -1577,22 +1589,22 @@ const LocationManagement = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Status</label>
                     <select value={formData.isActive ? 'true' : 'false'} onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'true' })} className="input-field">
                       <option value="true">Active</option>
                       <option value="false">Inactive</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Max Speed (km/h)</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Max Speed (km/h)</label>
                     <input type="number" value={formData.maxSpeed} onChange={(e) => setFormData({ ...formData, maxSpeed: e.target.value })} className="input-field" placeholder="Default: 30" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Gradient (degrees)</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Gradient (degrees)</label>
                     <input type="number" step="0.01" value={formData.gradient} onChange={(e) => setFormData({ ...formData, gradient: e.target.value })} className="input-field" placeholder="e.g., -1.18 or 9.77" />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Maintenance Date</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Last Maintenance Date</label>
                     <input type="date" value={formData.lastMaintenance} onChange={(e) => setFormData({ ...formData, lastMaintenance: e.target.value })} className="input-field" />
                   </div>
                 </>

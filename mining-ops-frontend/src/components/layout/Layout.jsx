@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Truck, Construction, Users, MapPin, Package, Wrench, CloudRain, BarChart3, Settings, LogOut, Menu, X, Bot } from 'lucide-react';
+import { LayoutDashboard, Truck, Construction, Users, MapPin, Package, Wrench, CloudRain, BarChart3, Settings, LogOut, Menu, X, Bot, ChevronLeft, Zap } from 'lucide-react';
 import { authService } from '../../services/authService';
 import aiService from '../../services/aiService';
 import ChatbotWidget from '../AI/ChatbotWidget';
@@ -24,7 +24,6 @@ const Layout = ({ children }) => {
     };
 
     checkAIStatus();
-    // Re-check every 30 seconds
     const interval = setInterval(checkAIStatus, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -75,45 +74,91 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <aside className={`bg-mining-coal text-white transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-20'} flex flex-col`}>
-        <div className="p-4 flex items-center justify-between">
-          {sidebarOpen && <h1 className="text-xl font-bold">Mining Ops</h1>}
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-gray-700 rounded">
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+    <div className="h-screen w-screen overflow-hidden bg-[#0a0f1a] flex">
+      {/* Sidebar - Fixed Position */}
+      <aside
+        className={`fixed top-0 left-0 h-full z-40 flex flex-col transition-all duration-300 ease-out ${sidebarOpen ? 'w-64' : 'w-20'}`}
+        style={{
+          background: 'linear-gradient(180deg, #0f172a 0%, #0a0f1a 100%)',
+          borderRight: '1px solid rgba(30, 58, 95, 0.5)',
+          boxShadow: '4px 0 24px rgba(0, 0, 0, 0.3)',
+        }}
+      >
+        {/* Logo Header */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800/50">
+          {sidebarOpen && (
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-sky-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-sky-500/30">
+                <Zap className="text-white" size={20} />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-white tracking-tight">Mining Ops</h1>
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest">Pro Dashboard</p>
+              </div>
+            </div>
+          )}
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-slate-800/60 rounded-lg transition-colors text-slate-400 hover:text-white">
+            {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
           </button>
         </div>
 
-        <nav className="flex-1 px-2 py-4 space-y-1">
+        {/* AI Service Status */}
+        {sidebarOpen && (
+          <div className="px-4 py-3 border-b border-slate-800/50">
+            <div className="flex items-center gap-2.5">
+              <div className={`w-2 h-2 rounded-full ${aiServiceStatus === 'online' ? 'bg-emerald-500 shadow-lg shadow-emerald-500/50' : aiServiceStatus === 'offline' ? 'bg-rose-500' : 'bg-amber-500 animate-pulse'}`} />
+              <span className="text-xs font-medium text-slate-400">
+                AI Service: <span className={`${aiServiceStatus === 'online' ? 'text-emerald-400' : aiServiceStatus === 'offline' ? 'text-rose-400' : 'text-amber-400'}`}>{aiServiceStatus}</span>
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation Menu */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           {filteredMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname.startsWith(item.path);
 
             return (
-              <Link key={item.path} to={item.path} className={`flex items-center space-x-3 px-3 py-2 rounded transition-colors ${isActive ? 'bg-primary-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}>
-                <Icon size={20} />
-                {sidebarOpen && <span>{item.label}</span>}
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  isActive ? 'bg-sky-600/20 text-sky-400 border-l-2 border-sky-500 ml-0' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border-l-2 border-transparent'
+                }`}
+                title={!sidebarOpen ? item.label : undefined}
+              >
+                <Icon size={20} className={isActive ? 'text-sky-400' : ''} />
+                {sidebarOpen && <span className={`font-medium text-sm ${isActive ? 'text-sky-400' : ''}`}>{item.label}</span>}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-700">
+        {/* User Section */}
+        <div className="border-t border-slate-800/50 p-4">
           {sidebarOpen && user && (
-            <div className="mb-3">
-              <p className="text-sm font-medium">{user.fullName}</p>
-              <p className="text-xs text-gray-400">{user.role}</p>
+            <div className="mb-4 p-3 rounded-lg bg-slate-800/40">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm">{user.fullName?.charAt(0) || 'U'}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-200 truncate">{user.fullName}</p>
+                  <p className="text-xs text-slate-500">{user.role}</p>
+                </div>
+              </div>
             </div>
           )}
-          <button onClick={handleLogout} className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700 w-full">
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-200">
             <LogOut size={20} />
-            {sidebarOpen && <span>Logout</span>}
+            {sidebarOpen && <span className="font-medium text-sm">Logout</span>}
           </button>
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-6">{children}</div>
+      {/* Main Content Area */}
+      <main className={`flex-1 h-full overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`} style={{ background: '#0a0f1a' }}>
+        <div className="min-h-full p-6">{children}</div>
       </main>
 
       {/* Global AI Chatbot Widget */}

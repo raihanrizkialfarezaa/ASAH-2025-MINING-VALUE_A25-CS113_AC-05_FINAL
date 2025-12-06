@@ -466,20 +466,22 @@ const OperatorList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center space-x-3">
-            <Users className="text-blue-600" size={36} />
+          <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/20">
+              <Users className="text-sky-400" size={28} />
+            </div>
             <span>Operators Management</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Manage and monitor operator workforce in real-time</p>
+          <p className="text-sm text-slate-400 mt-1 ml-14">Manage and monitor operator workforce in real-time</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex gap-3">
           {canEdit && (
-            <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
+            <button onClick={handleCreate} className="bg-sky-600 hover:bg-sky-500 text-white flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors">
               <Plus size={20} />
               <span>Add Operator</span>
             </button>
           )}
-          <button onClick={fetchOperators} className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border shadow-sm text-gray-700 font-medium transition-colors flex items-center space-x-2">
+          <button onClick={fetchOperators} className="bg-slate-800/80 hover:bg-slate-700 px-4 py-2 rounded-lg border border-slate-700 text-slate-300 font-medium transition-colors flex items-center gap-2">
             <RefreshCw size={18} />
             <span>Refresh</span>
           </button>
@@ -487,93 +489,77 @@ const OperatorList = () => {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <div className="card bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+        <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Total Operators</p>
-              <p className="text-3xl font-bold text-blue-600">{allOperators.length}</p>
+              <p className="text-sm text-slate-400 mb-1">Total Operators</p>
+              <p className="text-3xl font-bold text-sky-400">{allOperators.length}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Users className="text-blue-600" size={28} />
+            <div className="p-3 bg-sky-500/10 rounded-xl border border-sky-500/20">
+              <Users className="text-sky-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Active</p>
-              <p className="text-3xl font-bold text-green-600">{allOperators.filter((o) => o.status === 'ACTIVE').length}</p>
+              <p className="text-sm text-slate-400 mb-1">Active</p>
+              <p className="text-3xl font-bold text-emerald-400">{allOperators.filter((o) => o.status === 'ACTIVE').length}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-xl">
-              <UserCheck className="text-green-600" size={28} />
+            <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+              <UserCheck className="text-emerald-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200">
+        <div className="rounded-xl border border-amber-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">On Leave</p>
-              <p className="text-3xl font-bold text-yellow-600">{allOperators.filter((o) => o.status === 'ON_LEAVE').length}</p>
+              <p className="text-sm text-slate-400 mb-1">On Leave</p>
+              <p className="text-3xl font-bold text-amber-400">{allOperators.filter((o) => o.status === 'ON_LEAVE').length}</p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-xl">
-              <Clock className="text-yellow-600" size={28} />
+            <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
+              <Clock className="text-amber-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
+        <div className="rounded-xl border border-rose-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Sick</p>
-              <p className="text-3xl font-bold text-orange-600">{allOperators.filter((o) => o.status === 'SICK').length}</p>
+              <p className="text-sm text-slate-400 mb-1">Sick</p>
+              <p className="text-3xl font-bold text-rose-400">{allOperators.filter((o) => o.status === 'SICK').length}</p>
             </div>
-            <div className="p-3 bg-orange-100 rounded-xl">
-              <UserX className="text-orange-600" size={28} />
+            <div className="p-3 bg-rose-500/10 rounded-xl border border-rose-500/20">
+              <UserX className="text-rose-400" size={28} />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="card">
+      <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex-1 flex items-center space-x-3">
+            <div className="flex-1 flex items-center gap-3">
               <div className="relative" style={{ minWidth: '320px', maxWidth: '450px', flex: '1' }}>
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" size={20} />
                 <input
                   type="text"
                   placeholder="Search by name, employee number, license, email..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    height: '44px',
-                    paddingLeft: '44px',
-                    paddingRight: '44px',
-                    fontSize: '14px',
-                    color: '#1f2937',
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    outline: 'none',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#3b82f6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#d1d5db';
-                    e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-                  }}
+                  className="w-full h-11 pl-11 pr-11 text-sm text-slate-200 bg-slate-800/80 border border-slate-700 rounded-lg outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 transition-colors placeholder:text-slate-500"
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-300">
                     <X size={18} />
                   </button>
                 )}
               </div>
 
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input-field min-w-[160px]">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 min-w-[160px] focus:border-sky-500 outline-none transition-colors"
+              >
                 <option value="">All Status</option>
                 {statusOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -582,7 +568,11 @@ const OperatorList = () => {
                 ))}
               </select>
 
-              <select value={shiftFilter} onChange={(e) => setShiftFilter(e.target.value)} className="input-field min-w-[140px]">
+              <select
+                value={shiftFilter}
+                onChange={(e) => setShiftFilter(e.target.value)}
+                className="bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 min-w-[140px] focus:border-sky-500 outline-none transition-colors"
+              >
                 <option value="">All Shifts</option>
                 {shiftOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -593,25 +583,25 @@ const OperatorList = () => {
 
               <button
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className={`px-4 py-2 rounded-lg border font-medium transition-colors flex items-center space-x-2 ${
-                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                className={`px-4 py-2 rounded-lg border font-medium transition-colors flex items-center gap-2 ${
+                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-sky-500/15 border-sky-500/30 text-sky-400' : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-700'
                 }`}
               >
                 <Filter size={18} />
                 <span>Filters</span>
-                {activeFiltersCount > 0 && <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">{activeFiltersCount}</span>}
+                {activeFiltersCount > 0 && <span className="bg-sky-500 text-slate-900 text-xs px-2 py-0.5 rounded-full font-semibold">{activeFiltersCount}</span>}
                 <ChevronDown className={`transform transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} size={16} />
               </button>
 
               {activeFiltersCount > 0 && (
-                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 font-medium transition-colors flex items-center space-x-2">
+                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-slate-700 font-medium transition-colors flex items-center gap-2">
                   <X size={18} />
                   <span>Clear</span>
                 </button>
               )}
             </div>
 
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-slate-400">
               <span>
                 Showing {operators.length} of {allOperators.length} operators
               </span>
@@ -619,15 +609,19 @@ const OperatorList = () => {
           </div>
 
           {showAdvancedFilters && (
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
-                <Filter size={18} />
+            <div className="bg-slate-800/40 p-4 rounded-lg border border-slate-700/50">
+              <h3 className="font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                <Filter size={18} className="text-slate-400" />
                 <span>Advanced Filters</span>
               </h3>
               <div className="grid grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">License Type</label>
-                  <select value={licenseTypeFilter} onChange={(e) => setLicenseTypeFilter(e.target.value)} className="input-field">
+                  <label className="block text-sm font-medium text-slate-400 mb-2">License Type</label>
+                  <select
+                    value={licenseTypeFilter}
+                    onChange={(e) => setLicenseTypeFilter(e.target.value)}
+                    className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors"
+                  >
                     <option value="">All Types</option>
                     {licenseTypeOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -637,19 +631,49 @@ const OperatorList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Min Rating</label>
-                  <input type="number" step="0.1" min="0" max="5" value={filters.minRating} onChange={(e) => setFilters({ ...filters, minRating: e.target.value })} placeholder="0.0" className="input-field" />
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Min Rating</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="5"
+                    value={filters.minRating}
+                    onChange={(e) => setFilters({ ...filters, minRating: e.target.value })}
+                    placeholder="0.0"
+                    className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Max Rating</label>
-                  <input type="number" step="0.1" min="0" max="5" value={filters.maxRating} onChange={(e) => setFilters({ ...filters, maxRating: e.target.value })} placeholder="5.0" className="input-field" />
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Max Rating</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="5"
+                    value={filters.maxRating}
+                    onChange={(e) => setFilters({ ...filters, maxRating: e.target.value })}
+                    placeholder="5.0"
+                    className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Total Hours Range</label>
-                  <div className="flex items-center space-x-2">
-                    <input type="number" value={filters.minHours} onChange={(e) => setFilters({ ...filters, minHours: e.target.value })} placeholder="Min" className="input-field" />
-                    <span className="text-gray-500">-</span>
-                    <input type="number" value={filters.maxHours} onChange={(e) => setFilters({ ...filters, maxHours: e.target.value })} placeholder="Max" className="input-field" />
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Total Hours Range</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={filters.minHours}
+                      onChange={(e) => setFilters({ ...filters, minHours: e.target.value })}
+                      placeholder="Min"
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                    />
+                    <span className="text-slate-500">-</span>
+                    <input
+                      type="number"
+                      value={filters.maxHours}
+                      onChange={(e) => setFilters({ ...filters, maxHours: e.target.value })}
+                      placeholder="Max"
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                    />
                   </div>
                 </div>
               </div>
@@ -658,117 +682,117 @@ const OperatorList = () => {
         </div>
       </div>
 
-      <div className="card overflow-hidden">
+      <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+          <table className="min-w-full divide-y divide-slate-800">
+            <thead className="bg-slate-900/80 border-b border-slate-700/50">
               <tr>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('employeeNumber')}>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('employeeNumber')}>
                   <div className="flex items-center justify-between">
                     <span>Employee No</span>
-                    {sortField === 'employeeNumber' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'employeeNumber' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('fullName')}>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('fullName')}>
                   <div className="flex items-center justify-between">
                     <span>Name</span>
-                    {sortField === 'fullName' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'fullName' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header">License</th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('shift')}>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">License</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('shift')}>
                   <div className="flex items-center justify-between">
                     <span>Shift</span>
-                    {sortField === 'shift' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'shift' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('status')}>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('status')}>
                   <div className="flex items-center justify-between">
                     <span>Status</span>
-                    {sortField === 'status' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'status' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('rating')}>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('rating')}>
                   <div className="flex items-center justify-between">
                     <span>Rating</span>
-                    {sortField === 'rating' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'rating' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('salary')}>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('salary')}>
                   <div className="flex items-center justify-between">
                     <span>Salary</span>
-                    {sortField === 'salary' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'salary' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header cursor-pointer hover:bg-gray-200 transition-colors group" onClick={() => handleSort('totalHours')}>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('totalHours')}>
                   <div className="flex items-center justify-between">
                     <span>Total Hours</span>
-                    {sortField === 'totalHours' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-600" /> : <SortDesc size={16} className="text-blue-600" />)}
+                    {sortField === 'totalHours' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="table-header">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-slate-800/50 bg-slate-900/40">
               {operators.length === 0 ? (
                 <tr>
                   <td colSpan="9" className="text-center py-12">
-                    <div className="flex flex-col items-center space-y-3">
-                      <Users className="text-gray-400" size={48} />
-                      <p className="text-gray-500 font-medium">No operators found</p>
-                      <p className="text-sm text-gray-400">Try adjusting your filters or search query</p>
+                    <div className="flex flex-col items-center gap-3">
+                      <Users className="text-slate-600" size={48} />
+                      <p className="text-slate-400 font-medium">No operators found</p>
+                      <p className="text-sm text-slate-500">Try adjusting your filters or search query</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 operators.map((operator) => (
-                  <tr key={operator.id} className="hover:bg-blue-50 transition-colors">
-                    <td className="table-cell">
-                      <span className="font-bold text-blue-600">{operator.employeeNumber}</span>
+                  <tr key={operator.id} className="hover:bg-sky-500/5 transition-colors">
+                    <td className="px-4 py-3 text-sm">
+                      <span className="font-bold text-sky-400">{operator.employeeNumber}</span>
                     </td>
-                    <td className="table-cell">
-                      <div className="flex items-center space-x-2">
-                        <User className="text-gray-400" size={16} />
-                        <span className="font-medium text-gray-900">{operator.user?.fullName || '-'}</span>
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <User className="text-slate-500" size={16} />
+                        <span className="font-medium text-slate-200">{operator.user?.fullName || '-'}</span>
                       </div>
                     </td>
-                    <td className="table-cell">
+                    <td className="px-4 py-3 text-sm">
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium text-gray-900">{getLicenseTypeLabel(operator.licenseType)}</span>
-                        <span className="text-xs text-gray-500">{operator.licenseNumber || '-'}</span>
+                        <span className="text-sm font-medium text-slate-200">{getLicenseTypeLabel(operator.licenseType)}</span>
+                        <span className="text-xs text-slate-500">{operator.licenseNumber || '-'}</span>
                       </div>
                     </td>
-                    <td className="table-cell">
-                      <span className="text-gray-700">{operator.shift?.replace('SHIFT_', 'Shift ') || '-'}</span>
+                    <td className="px-4 py-3 text-sm">
+                      <span className="text-slate-400">{operator.shift?.replace('SHIFT_', 'Shift ') || '-'}</span>
                     </td>
-                    <td className="table-cell">
+                    <td className="px-4 py-3 text-sm">
                       <StatusBadge status={operator.status} />
                     </td>
-                    <td className="table-cell">
-                      <div className="flex items-center space-x-1">
-                        <Star className="text-yellow-500" size={16} fill="currentColor" />
-                        <span className="font-semibold text-gray-900">{operator.rating?.toFixed(2) || '-'}</span>
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex items-center gap-1">
+                        <Star className="text-amber-400" size={16} fill="currentColor" />
+                        <span className="font-semibold text-slate-200">{operator.rating?.toFixed(2) || '-'}</span>
                       </div>
                     </td>
-                    <td className="table-cell">
-                      <span className="font-semibold text-gray-900">{formatCurrency(operator.salary)}</span>
+                    <td className="px-4 py-3 text-sm">
+                      <span className="font-semibold text-slate-200">{formatCurrency(operator.salary)}</span>
                     </td>
-                    <td className="table-cell">
-                      <span className="font-semibold text-gray-900">{operator.totalHours || 0}</span>
-                      <span className="text-gray-500 ml-1">hrs</span>
+                    <td className="px-4 py-3 text-sm">
+                      <span className="font-semibold text-slate-200">{operator.totalHours || 0}</span>
+                      <span className="text-slate-500 ml-1">hrs</span>
                     </td>
-                    <td className="table-cell">
-                      <div className="flex space-x-1">
-                        <button onClick={() => handleView(operator)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="View Details">
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex gap-1">
+                        <button onClick={() => handleView(operator)} className="p-2 text-sky-400 hover:bg-sky-500/10 rounded-lg transition-colors" title="View Details">
                           <Eye size={18} />
                         </button>
                         {canEdit && (
-                          <button onClick={() => handleEdit(operator)} className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors" title="Edit">
+                          <button onClick={() => handleEdit(operator)} className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Edit">
                             <Edit size={18} />
                           </button>
                         )}
                         {canEdit && (
-                          <button onClick={() => handleDelete(operator.id)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(operator.id)} className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors" title="Delete">
                             <Trash2 size={18} />
                           </button>
                         )}
@@ -783,10 +807,14 @@ const OperatorList = () => {
       </div>
 
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <label className="text-sm text-gray-600 flex items-center space-x-2">
+        <div className="flex items-center gap-4">
+          <label className="text-sm text-slate-400 flex items-center gap-2">
             <span>Items per page:</span>
-            <select value={pagination.limit} onChange={(e) => setPagination((prev) => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))} className="input-field py-1 px-2">
+            <select
+              value={pagination.limit}
+              onChange={(e) => setPagination((prev) => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+              className="bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-2 py-1 focus:border-sky-500 outline-none transition-colors"
+            >
               <option value="10">10</option>
               <option value="15">15</option>
               <option value="25">25</option>
@@ -803,25 +831,25 @@ const OperatorList = () => {
         onClose={() => setShowModal(false)}
         title={
           modalMode === 'edit' ? (
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Edit className="text-green-600" size={24} />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                <Edit className="text-emerald-400" size={24} />
               </div>
-              <span>Edit Operator</span>
+              <span className="text-slate-100">Edit Operator</span>
             </div>
           ) : modalMode === 'create' ? (
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Plus className="text-blue-600" size={24} />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-sky-500/10 rounded-lg border border-sky-500/20">
+                <Plus className="text-sky-400" size={24} />
               </div>
-              <span>Create New Operator</span>
+              <span className="text-slate-100">Create New Operator</span>
             </div>
           ) : (
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Eye className="text-purple-600" size={24} />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-violet-500/10 rounded-lg border border-violet-500/20">
+                <Eye className="text-violet-400" size={24} />
               </div>
-              <span>Operator Details</span>
+              <span className="text-slate-100">Operator Details</span>
             </div>
           )
         }
@@ -829,97 +857,97 @@ const OperatorList = () => {
       >
         {modalMode === 'view' && selectedOperator ? (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
+            <div className="bg-gradient-to-r from-sky-500/10 to-violet-500/10 p-6 rounded-xl border border-sky-500/20">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900">{selectedOperator.employeeNumber}</h3>
-                  <p className="text-gray-600 mt-1">{selectedOperator.user?.fullName || '-'}</p>
+                  <h3 className="text-2xl font-bold text-slate-100">{selectedOperator.employeeNumber}</h3>
+                  <p className="text-slate-400 mt-1">{selectedOperator.user?.fullName || '-'}</p>
                 </div>
                 <StatusBadge status={selectedOperator.status} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Mail className="text-blue-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Email</label>
+              <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Mail className="text-sky-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Email</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{selectedOperator.user?.email || '-'}</p>
+                <p className="text-lg font-medium text-slate-200">{selectedOperator.user?.email || '-'}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Shield className="text-purple-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">License Type</label>
+              <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="text-violet-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">License Type</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{getLicenseTypeLabel(selectedOperator.licenseType)}</p>
-                <p className="text-sm text-gray-600">{selectedOperator.licenseNumber || '-'}</p>
+                <p className="text-lg font-medium text-slate-200">{getLicenseTypeLabel(selectedOperator.licenseType)}</p>
+                <p className="text-sm text-slate-500">{selectedOperator.licenseNumber || '-'}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Calendar className="text-green-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">License Expiry</label>
+              <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="text-emerald-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">License Expiry</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{formatDate(selectedOperator.licenseExpiry)}</p>
+                <p className="text-lg font-medium text-slate-200">{formatDate(selectedOperator.licenseExpiry)}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Clock className="text-indigo-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Shift</label>
+              <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="text-cyan-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Shift</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{getShiftLabel(selectedOperator.shift)}</p>
+                <p className="text-lg font-medium text-slate-200">{getShiftLabel(selectedOperator.shift)}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Star className="text-yellow-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Rating</label>
+              <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Star className="text-amber-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Rating</label>
                 </div>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {selectedOperator.rating?.toFixed(2) || '-'} <span className="text-lg">/5.0</span>
+                <p className="text-2xl font-bold text-amber-400">
+                  {selectedOperator.rating?.toFixed(2) || '-'} <span className="text-lg text-slate-400">/5.0</span>
                 </p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Activity className="text-orange-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Total Hours</label>
+              <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Activity className="text-orange-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Total Hours</label>
                 </div>
-                <p className="text-2xl font-bold text-orange-600">
-                  {selectedOperator.totalHours || 0} <span className="text-lg">hrs</span>
+                <p className="text-2xl font-bold text-orange-400">
+                  {selectedOperator.totalHours || 0} <span className="text-lg text-slate-400">hrs</span>
                 </p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <CreditCard className="text-green-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Salary</label>
+              <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <CreditCard className="text-emerald-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Salary</label>
                 </div>
-                <p className="text-xl font-bold text-green-600">{formatCurrency(selectedOperator.salary)}</p>
+                <p className="text-xl font-bold text-emerald-400">{formatCurrency(selectedOperator.salary)}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Calendar className="text-purple-600" size={18} />
-                  <label className="text-sm font-semibold text-gray-600">Join Date</label>
+              <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="text-violet-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-400">Join Date</label>
                 </div>
-                <p className="text-lg font-medium text-gray-900">{formatDate(selectedOperator.joinDate)}</p>
+                <p className="text-lg font-medium text-slate-200">{formatDate(selectedOperator.joinDate)}</p>
               </div>
 
               {selectedOperator.trucks && selectedOperator.trucks.length > 0 && (
-                <div className="col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <Truck className="text-blue-600" size={18} />
-                    <label className="text-sm font-semibold text-gray-600">Assigned Trucks</label>
+                <div className="col-span-2 bg-sky-500/10 p-4 rounded-lg border border-sky-500/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Truck className="text-sky-400" size={18} />
+                    <label className="text-sm font-semibold text-slate-400">Assigned Trucks</label>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {selectedOperator.trucks.map((truck) => (
-                      <div key={truck.id} className="bg-white px-3 py-2 rounded-lg border border-blue-300">
-                        <p className="font-semibold text-blue-700">{truck.code}</p>
-                        <p className="text-xs text-gray-600">{truck.name}</p>
+                      <div key={truck.id} className="bg-slate-800/80 px-3 py-2 rounded-lg border border-sky-500/30">
+                        <p className="font-semibold text-sky-400">{truck.code}</p>
+                        <p className="text-xs text-slate-400">{truck.name}</p>
                       </div>
                     ))}
                   </div>
@@ -927,23 +955,23 @@ const OperatorList = () => {
               )}
 
               {selectedOperator.competency && (
-                <div className="col-span-2 bg-purple-50 p-4 rounded-lg border border-purple-200">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <Award className="text-purple-600" size={18} />
-                    <label className="text-sm font-semibold text-gray-600">Competency</label>
+                <div className="col-span-2 bg-violet-500/10 p-4 rounded-lg border border-violet-500/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Award className="text-violet-400" size={18} />
+                    <label className="text-sm font-semibold text-slate-400">Competency</label>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-white p-3 rounded-lg">
-                      <p className="text-sm text-gray-600">Dump Truck</p>
-                      <p className="font-semibold text-gray-900">{selectedOperator.competency.dump_truck ? 'Yes' : 'No'}</p>
+                    <div className="bg-slate-800/80 p-3 rounded-lg border border-slate-700/50">
+                      <p className="text-sm text-slate-400">Dump Truck</p>
+                      <p className="font-semibold text-slate-200">{selectedOperator.competency.dump_truck ? 'Yes' : 'No'}</p>
                     </div>
-                    <div className="bg-white p-3 rounded-lg">
-                      <p className="text-sm text-gray-600">Heavy Equipment</p>
-                      <p className="font-semibold text-gray-900">{selectedOperator.competency.heavy_equipment ? 'Yes' : 'No'}</p>
+                    <div className="bg-slate-800/80 p-3 rounded-lg border border-slate-700/50">
+                      <p className="text-sm text-slate-400">Heavy Equipment</p>
+                      <p className="font-semibold text-slate-200">{selectedOperator.competency.heavy_equipment ? 'Yes' : 'No'}</p>
                     </div>
-                    <div className="bg-white p-3 rounded-lg">
-                      <p className="text-sm text-gray-600">Experience</p>
-                      <p className="font-semibold text-gray-900">{selectedOperator.competency.years_experience || 0} years</p>
+                    <div className="bg-slate-800/80 p-3 rounded-lg border border-slate-700/50">
+                      <p className="text-sm text-slate-400">Experience</p>
+                      <p className="font-semibold text-slate-200">{selectedOperator.competency.years_experience || 0} years</p>
                     </div>
                   </div>
                 </div>
@@ -952,9 +980,10 @@ const OperatorList = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-800">
-                <strong>Note:</strong> {modalMode === 'create' ? 'All required fields must be filled. Employee number format: OPR-XXXX' : 'Update operator information carefully. Leave fields empty to keep current values.'}
+            <div className="bg-sky-500/10 p-4 rounded-lg border border-sky-500/20">
+              <p className="text-sm text-sky-300">
+                <strong className="text-sky-200">Note:</strong>{' '}
+                {modalMode === 'create' ? 'All required fields must be filled. Employee number format: OPR-XXXX' : 'Update operator information carefully. Leave fields empty to keep current values.'}
               </p>
             </div>
 
@@ -962,47 +991,79 @@ const OperatorList = () => {
               {modalMode === 'create' && (
                 <>
                   <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      User ID <span className="text-red-500">*</span>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                      User ID <span className="text-rose-400">*</span>
                     </label>
-                    <div className="flex items-center space-x-2">
-                      <input type="text" value={formData.userId} onChange={(e) => setFormData({ ...formData, userId: e.target.value })} className="input-field flex-1" placeholder="User ID with OPERATOR role" required />
-                      <button type="button" onClick={() => setFormData((prev) => ({ ...prev, userId: generateUserId() }))} className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={formData.userId}
+                        onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+                        className="flex-1 bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                        placeholder="User ID with OPERATOR role"
+                        required
+                      />
+                      <button type="button" onClick={() => setFormData((prev) => ({ ...prev, userId: generateUserId() }))} className="p-2 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors text-slate-300">
                         <RefreshCw size={16} />
                       </button>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">The user must have OPERATOR role and not already have an operator profile</p>
+                    <p className="text-xs text-slate-500 mt-1">The user must have OPERATOR role and not already have an operator profile</p>
                   </div>
 
                   <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Operator Email</label>
-                    <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input-field" placeholder="name@example.com" />
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">Operator Email</label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                      placeholder="name@example.com"
+                    />
                   </div>
 
                   <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Operator Name <span className="text-red-500">*</span>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                      Operator Name <span className="text-rose-400">*</span>
                     </label>
-                    <input type="text" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} className="input-field" placeholder="Full name e.g. Joko Nugroho" required />
+                    <input
+                      type="text"
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                      placeholder="Full name e.g. Joko Nugroho"
+                      required
+                    />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Employee Number <span className="text-red-500">*</span>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                      Employee Number <span className="text-rose-400">*</span>
                     </label>
-                    <div className="flex items-center space-x-2">
-                      <input type="text" value={formData.employeeNumber} onChange={(e) => setFormData({ ...formData, employeeNumber: e.target.value })} className="input-field" placeholder="OPR-0001" required />
-                      <button type="button" onClick={() => setFormData((prev) => ({ ...prev, employeeNumber: generateEmployeeNumber() }))} className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={formData.employeeNumber}
+                        onChange={(e) => setFormData({ ...formData, employeeNumber: e.target.value })}
+                        className="flex-1 bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                        placeholder="OPR-0001"
+                        required
+                      />
+                      <button type="button" onClick={() => setFormData((prev) => ({ ...prev, employeeNumber: generateEmployeeNumber() }))} className="p-2 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors text-slate-300">
                         <RefreshCw size={16} />
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      License Type <span className="text-red-500">*</span>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                      License Type <span className="text-rose-400">*</span>
                     </label>
-                    <select value={formData.licenseType} onChange={(e) => setFormData({ ...formData, licenseType: e.target.value })} className="input-field" required>
+                    <select
+                      value={formData.licenseType}
+                      onChange={(e) => setFormData({ ...formData, licenseType: e.target.value })}
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors"
+                      required
+                    >
                       <option value="">Select License Type</option>
                       {licenseTypeOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -1015,28 +1076,58 @@ const OperatorList = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Join Date <span className="text-red-500">*</span>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                      Join Date <span className="text-rose-400">*</span>
                     </label>
-                    <input type="date" value={formData.joinDate} onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })} className="input-field" required />
+                    <input
+                      type="date"
+                      value={formData.joinDate}
+                      onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors"
+                      required
+                    />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">License Expiry</label>
-                    <input type="date" value={formData.licenseExpiry} onChange={(e) => setFormData({ ...formData, licenseExpiry: e.target.value })} className="input-field" />
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">License Expiry</label>
+                    <input
+                      type="date"
+                      value={formData.licenseExpiry}
+                      onChange={(e) => setFormData({ ...formData, licenseExpiry: e.target.value })}
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors"
+                    />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Competency</label>
-                    <div className="flex items-center space-x-4">
-                      <label className="flex items-center space-x-2">
-                        <input type="checkbox" checked={!!formData.competencyDumpTruck} onChange={(e) => setFormData({ ...formData, competencyDumpTruck: e.target.checked })} /> <span className="text-sm">Dump Truck</span>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">Competency</label>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={!!formData.competencyDumpTruck}
+                          onChange={(e) => setFormData({ ...formData, competencyDumpTruck: e.target.checked })}
+                          className="rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
+                        />{' '}
+                        <span className="text-sm">Dump Truck</span>
                       </label>
-                      <label className="flex items-center space-x-2">
-                        <input type="checkbox" checked={!!formData.competencyHeavyEquipment} onChange={(e) => setFormData({ ...formData, competencyHeavyEquipment: e.target.checked })} /> <span className="text-sm">Heavy Equipment</span>
+                      <label className="flex items-center gap-2 text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={!!formData.competencyHeavyEquipment}
+                          onChange={(e) => setFormData({ ...formData, competencyHeavyEquipment: e.target.checked })}
+                          className="rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
+                        />{' '}
+                        <span className="text-sm">Heavy Equipment</span>
                       </label>
-                      <div className="flex items-center space-x-2">
-                        <input type="number" min="0" value={formData.competencyYearsExperience} onChange={(e) => setFormData({ ...formData, competencyYearsExperience: e.target.value })} className="input-field w-28" placeholder="Years" />{' '}
-                        <span className="text-sm text-gray-600">years</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          value={formData.competencyYearsExperience}
+                          onChange={(e) => setFormData({ ...formData, competencyYearsExperience: e.target.value })}
+                          className="w-28 bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                          placeholder="Years"
+                        />{' '}
+                        <span className="text-sm text-slate-400">years</span>
                       </div>
                     </div>
                   </div>
@@ -1046,36 +1137,63 @@ const OperatorList = () => {
               {modalMode === 'edit' && (
                 <>
                   <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">User ID</label>
-                    <input type="text" value={formData.userId} readOnly className="input-field bg-gray-50" />
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">User ID</label>
+                    <input type="text" value={formData.userId} readOnly className="w-full bg-slate-900/60 border border-slate-700 text-slate-400 rounded-lg px-3 py-2 cursor-not-allowed" />
                   </div>
 
                   <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Employee Number</label>
-                    <div className="flex items-center space-x-2">
-                      <input type="text" value={formData.employeeNumber} onChange={(e) => setFormData({ ...formData, employeeNumber: e.target.value })} className="input-field flex-1" placeholder="OPR-0001" />
-                      <button type="button" onClick={() => setFormData((prev) => ({ ...prev, employeeNumber: generateEmployeeNumber() }))} className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">Employee Number</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={formData.employeeNumber}
+                        onChange={(e) => setFormData({ ...formData, employeeNumber: e.target.value })}
+                        className="flex-1 bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                        placeholder="OPR-0001"
+                      />
+                      <button type="button" onClick={() => setFormData((prev) => ({ ...prev, employeeNumber: generateEmployeeNumber() }))} className="p-2 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors text-slate-300">
                         <RefreshCw size={16} />
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Join Date</label>
-                    <input type="date" value={formData.joinDate} onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })} className="input-field" />
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">Join Date</label>
+                    <input
+                      type="date"
+                      value={formData.joinDate}
+                      onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors"
+                    />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Operator Email</label>
-                    <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input-field" placeholder="name@example.com" />
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">Operator Email</label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                      placeholder="name@example.com"
+                    />
                   </div>
 
                   <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Operator Name</label>
-                    <input type="text" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} className="input-field" placeholder="Full name" />
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">Operator Name</label>
+                    <input
+                      type="text"
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                      placeholder="Full name"
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">License Type</label>
-                    <select value={formData.licenseType} onChange={(e) => setFormData({ ...formData, licenseType: e.target.value })} className="input-field">
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">License Type</label>
+                    <select
+                      value={formData.licenseType}
+                      onChange={(e) => setFormData({ ...formData, licenseType: e.target.value })}
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors"
+                    >
                       <option value="">Select License Type</option>
                       {licenseTypeOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -1088,35 +1206,79 @@ const OperatorList = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">License Number</label>
-                    <input type="text" value={formData.licenseNumber} onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })} className="input-field" placeholder="SIM-XXXXXXXX" />
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">License Number</label>
+                    <input
+                      type="text"
+                      value={formData.licenseNumber}
+                      onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                      placeholder="SIM-XXXXXXXX"
+                    />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">License Expiry</label>
-                    <input type="date" value={formData.licenseExpiry} onChange={(e) => setFormData({ ...formData, licenseExpiry: e.target.value })} className="input-field" />
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">License Expiry</label>
+                    <input
+                      type="date"
+                      value={formData.licenseExpiry}
+                      onChange={(e) => setFormData({ ...formData, licenseExpiry: e.target.value })}
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors"
+                    />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Rating</label>
-                    <input type="number" step="0.1" min="0" max="5" value={formData.rating} onChange={(e) => setFormData({ ...formData, rating: e.target.value })} className="input-field" placeholder="5.0" />
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">Rating</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="5"
+                      value={formData.rating}
+                      onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                      placeholder="5.0"
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Resign Date</label>
-                    <input type="date" value={formData.resignDate} onChange={(e) => setFormData({ ...formData, resignDate: e.target.value })} className="input-field" />
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">Resign Date</label>
+                    <input
+                      type="date"
+                      value={formData.resignDate}
+                      onChange={(e) => setFormData({ ...formData, resignDate: e.target.value })}
+                      className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors"
+                    />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Competency</label>
-                    <div className="flex items-center space-x-4">
-                      <label className="flex items-center space-x-2">
-                        <input type="checkbox" checked={!!formData.competencyDumpTruck} onChange={(e) => setFormData({ ...formData, competencyDumpTruck: e.target.checked })} /> <span className="text-sm">Dump Truck</span>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">Competency</label>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={!!formData.competencyDumpTruck}
+                          onChange={(e) => setFormData({ ...formData, competencyDumpTruck: e.target.checked })}
+                          className="rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
+                        />{' '}
+                        <span className="text-sm">Dump Truck</span>
                       </label>
-                      <label className="flex items-center space-x-2">
-                        <input type="checkbox" checked={!!formData.competencyHeavyEquipment} onChange={(e) => setFormData({ ...formData, competencyHeavyEquipment: e.target.checked })} /> <span className="text-sm">Heavy Equipment</span>
+                      <label className="flex items-center gap-2 text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={!!formData.competencyHeavyEquipment}
+                          onChange={(e) => setFormData({ ...formData, competencyHeavyEquipment: e.target.checked })}
+                          className="rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
+                        />{' '}
+                        <span className="text-sm">Heavy Equipment</span>
                       </label>
-                      <div className="flex items-center space-x-2">
-                        <input type="number" min="0" value={formData.competencyYearsExperience} onChange={(e) => setFormData({ ...formData, competencyYearsExperience: e.target.value })} className="input-field w-28" placeholder="Years" />{' '}
-                        <span className="text-sm text-gray-600">years</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          value={formData.competencyYearsExperience}
+                          onChange={(e) => setFormData({ ...formData, competencyYearsExperience: e.target.value })}
+                          className="w-28 bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                          placeholder="Years"
+                        />{' '}
+                        <span className="text-sm text-slate-400">years</span>
                       </div>
                     </div>
                   </div>
@@ -1124,13 +1286,24 @@ const OperatorList = () => {
               )}
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Salary (IDR) {modalMode === 'create' && <span className="text-red-500">*</span>}</label>
-                <input type="number" step="0.01" value={formData.salary} onChange={(e) => setFormData({ ...formData, salary: e.target.value })} className="input-field" placeholder="8000000" />
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Salary (IDR) {modalMode === 'create' && <span className="text-rose-400">*</span>}</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.salary}
+                  onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                  placeholder="8000000"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Shift</label>
-                <select value={formData.shift} onChange={(e) => setFormData({ ...formData, shift: e.target.value })} className="input-field">
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Shift</label>
+                <select
+                  value={formData.shift}
+                  onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
+                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors"
+                >
                   <option value="">Select Shift</option>
                   {shiftOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -1141,8 +1314,12 @@ const OperatorList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
-                <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="input-field">
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors"
+                >
                   <option value="">Select Status</option>
                   {statusOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -1154,17 +1331,23 @@ const OperatorList = () => {
 
               {modalMode === 'create' && (
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">License Number</label>
-                  <input type="text" value={formData.licenseNumber} onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })} className="input-field" placeholder="SIM-XXXXXXXX" />
+                  <label className="block text-sm font-semibold text-slate-300 mb-2">License Number</label>
+                  <input
+                    type="text"
+                    value={formData.licenseNumber}
+                    onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
+                    className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
+                    placeholder="SIM-XXXXXXXX"
+                  />
                 </div>
               )}
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4 border-t">
-              <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-700/50">
+              <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 border border-slate-600 rounded-lg text-slate-300 font-medium hover:bg-slate-700 transition-colors">
                 Cancel
               </button>
-              <button type="submit" className="btn-primary px-6 py-2.5 flex items-center space-x-2">
+              <button type="submit" className="bg-sky-600 hover:bg-sky-500 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
                 <CheckCircle size={18} />
                 <span>{modalMode === 'create' ? 'Create Operator' : 'Update Operator'}</span>
               </button>
