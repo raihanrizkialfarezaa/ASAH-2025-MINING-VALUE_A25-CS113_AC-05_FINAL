@@ -62,7 +62,9 @@ MODEL_DELAY = None
 MODEL_RISIKO = None
 MODEL_COLUMNS = []
 LLM_PROVIDER = None
-OLLAMA_MODEL = "qwen3:1.7b"
+
+from llm_config import get_model
+OLLAMA_MODEL = get_model("simulation")
 
 def load_models():
     global MODEL_FUEL, MODEL_FUEL_REAL, MODEL_LOAD, MODEL_TONASE, MODEL_DELAY, MODEL_RISIKO, MODEL_COLUMNS, LLM_PROVIDER, OLLAMA_MODEL
