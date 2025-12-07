@@ -2,7 +2,60 @@ import React, { useState, useEffect, useRef } from 'react';
 import aiService from '../../services/aiService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { MessageCircle, Bot, X, Trash2, Send, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Cpu, Loader2, Maximize2, Minimize2, Sparkles } from 'lucide-react';
+import { MessageCircle, Bot, X, Trash2, Send, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Cpu, Loader2, Maximize2, Minimize2, Sparkles, Copy, Check } from 'lucide-react';
+
+const CopyButton = ({ text, label, variant = 'default' }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs transition-all ${
+        variant === 'markdown' ? 'bg-sky-500/20 hover:bg-sky-500/30 text-sky-400' : 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-400 hover:text-slate-300'
+      }`}
+      title={label}
+    >
+      {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+      <span>{copied ? 'Copied!' : label}</span>
+    </button>
+  );
+};
+
+const MessageActions = ({ message, isUser }) => {
+  if (isUser) {
+    return (
+      <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <CopyButton text={message.content} label="Copy" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 mt-3 pt-2 border-t border-slate-700/30">
+      <span className="text-[10px] text-slate-500 mr-1">Copy:</span>
+      <CopyButton
+        text={message.content
+          .replace(/\*\*/g, '')
+          .replace(/\*/g, '')
+          .replace(/`/g, '')
+          .replace(/#{1,6}\s/g, '')}
+        label="Plain Text"
+        variant="default"
+      />
+      <CopyButton text={message.content} label="Markdown" variant="markdown" />
+    </div>
+  );
+};
 
 const ThinkingIndicator = () => {
   const [text, setText] = useState('Menganalisis pertanyaan...');
@@ -33,7 +86,7 @@ const ThinkingProcess = ({ steps }) => {
   if (!steps || steps.length === 0) return null;
 
   return (
-    <div className="mb-3 border border-sky-500/30 rounded-xl overflow-hidden bg-sky-500/10">
+    <div className="mb-3 border border-sky-500/30 rounded-xl overflow-hidden bg-gradient-to-r from-sky-500/10 to-cyan-500/10">
       <button onClick={() => setExpanded(!expanded)} className="w-full px-3 py-2 text-xs text-sky-400 flex items-center justify-between hover:bg-sky-500/20 transition-colors">
         <span className="flex items-center gap-2 font-medium">
           <Cpu className="w-3 h-3" />
@@ -55,7 +108,7 @@ const ThinkingProcess = ({ steps }) => {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-slate-300">{step.message}</div>
-                {step.detail && <div className="mt-1.5 p-2 bg-slate-950 text-emerald-400 font-mono rounded-lg text-[10px] overflow-x-auto whitespace-pre-wrap border border-slate-700 shadow-sm">{step.detail}</div>}
+                {step.detail && <div className="mt-1.5 p-2 bg-slate-950 text-cyan-400 font-mono rounded-lg text-[10px] overflow-x-auto whitespace-pre-wrap border border-slate-700 shadow-sm">{step.detail}</div>}
               </div>
             </div>
           ))}
@@ -71,39 +124,44 @@ const MarkdownContent = ({ content, isFullscreen }) => {
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          h1: ({ children }) => <h1 className="text-xl font-bold text-slate-100 mt-4 mb-2 border-b border-slate-700/50 pb-2">{children}</h1>,
-          h2: ({ children }) => <h2 className="text-lg font-bold text-slate-200 mt-3 mb-2">{children}</h2>,
-          h3: ({ children }) => <h3 className="text-base font-semibold text-slate-300 mt-2 mb-1">{children}</h3>,
-          p: ({ children }) => <p className="text-slate-300 mb-2 leading-relaxed">{children}</p>,
-          ul: ({ children }) => <ul className="list-disc list-inside space-y-1 text-slate-300 my-2">{children}</ul>,
-          ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 text-slate-300 my-2">{children}</ol>,
-          li: ({ children }) => <li className="text-slate-300">{children}</li>,
-          strong: ({ children }) => <strong className="font-semibold text-sky-400">{children}</strong>,
-          em: ({ children }) => <em className="text-slate-400 italic">{children}</em>,
+          h1: ({ children }) => <h1 className="text-xl font-bold text-white mt-4 mb-3 border-b border-sky-500/30 pb-2">{children}</h1>,
+          h2: ({ children }) => <h2 className="text-lg font-bold text-sky-100 mt-4 mb-2">{children}</h2>,
+          h3: ({ children }) => <h3 className="text-base font-semibold text-sky-200 mt-3 mb-2">{children}</h3>,
+          p: ({ children }) => <p className="text-slate-200 mb-3 leading-relaxed">{children}</p>,
+          ul: ({ children }) => <ul className="list-none space-y-2 text-slate-200 my-3 ml-1">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal list-inside space-y-2 text-slate-200 my-3 pl-1">{children}</ol>,
+          li: ({ children }) => (
+            <li className="text-slate-200 flex items-start gap-2">
+              <span className="text-sky-400 mt-1.5">•</span>
+              <span className="flex-1">{children}</span>
+            </li>
+          ),
+          strong: ({ children }) => <strong className="font-bold text-sky-300">{children}</strong>,
+          em: ({ children }) => <em className="text-cyan-300 italic">{children}</em>,
           code: ({ inline, children }) =>
             inline ? (
-              <code className="bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>
+              <code className="bg-sky-900/40 text-cyan-300 px-1.5 py-0.5 rounded text-xs font-mono border border-sky-700/30">{children}</code>
             ) : (
-              <code className="block bg-slate-950 text-emerald-400 p-3 rounded-xl text-xs font-mono overflow-x-auto border border-slate-700/50 my-2">{children}</code>
+              <code className="block bg-slate-950 text-cyan-300 p-3 rounded-xl text-xs font-mono overflow-x-auto border border-sky-700/30 my-3">{children}</code>
             ),
-          pre: ({ children }) => <pre className="bg-slate-950 p-3 rounded-xl overflow-x-auto border border-slate-700/50 my-2">{children}</pre>,
-          blockquote: ({ children }) => <blockquote className="border-l-4 border-sky-500/50 pl-4 my-2 text-slate-400 italic">{children}</blockquote>,
+          pre: ({ children }) => <pre className="bg-slate-950 p-4 rounded-xl overflow-x-auto border border-sky-700/30 my-3">{children}</pre>,
+          blockquote: ({ children }) => <blockquote className="border-l-4 border-sky-500 pl-4 my-3 text-sky-200/80 italic bg-sky-500/5 py-2 rounded-r-lg">{children}</blockquote>,
           table: ({ children }) => (
-            <div className="overflow-x-auto my-3">
-              <table className="min-w-full divide-y divide-slate-700/50 border border-slate-700/50 rounded-xl overflow-hidden">{children}</table>
+            <div className="overflow-x-auto my-4 rounded-xl border border-sky-700/30">
+              <table className="min-w-full divide-y divide-sky-700/30">{children}</table>
             </div>
           ),
-          thead: ({ children }) => <thead className="bg-slate-800/50">{children}</thead>,
-          tbody: ({ children }) => <tbody className="divide-y divide-slate-700/50 bg-slate-900/30">{children}</tbody>,
-          tr: ({ children }) => <tr className="hover:bg-slate-800/30 transition-colors">{children}</tr>,
-          th: ({ children }) => <th className="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">{children}</th>,
-          td: ({ children }) => <td className="px-3 py-2 text-sm text-slate-300">{children}</td>,
+          thead: ({ children }) => <thead className="bg-sky-900/30">{children}</thead>,
+          tbody: ({ children }) => <tbody className="divide-y divide-sky-700/20 bg-slate-900/30">{children}</tbody>,
+          tr: ({ children }) => <tr className="hover:bg-sky-900/20 transition-colors">{children}</tr>,
+          th: ({ children }) => <th className="px-4 py-3 text-left text-xs font-semibold text-sky-300 uppercase tracking-wider">{children}</th>,
+          td: ({ children }) => <td className="px-4 py-3 text-sm text-slate-200">{children}</td>,
           a: ({ href, children }) => (
-            <a href={href} className="text-sky-400 hover:text-sky-300 underline transition-colors" target="_blank" rel="noopener noreferrer">
+            <a href={href} className="text-sky-400 hover:text-sky-300 underline decoration-sky-500/50 hover:decoration-sky-400 transition-colors" target="_blank" rel="noopener noreferrer">
               {children}
             </a>
           ),
-          hr: () => <hr className="border-slate-700/50 my-4" />,
+          hr: () => <hr className="border-sky-700/30 my-4" />,
         }}
       >
         {content}
@@ -234,15 +292,15 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
   };
 
   const chatWindowClass = isFullscreen
-    ? 'fixed inset-4 z-[100] bg-slate-900 rounded-2xl shadow-2xl flex flex-col border border-slate-700/50 overflow-hidden'
-    : 'bg-slate-900 rounded-2xl shadow-2xl w-96 h-[600px] flex flex-col border border-slate-700/50 overflow-hidden';
+    ? 'fixed inset-4 z-[100] bg-slate-900 rounded-2xl shadow-2xl flex flex-col border border-sky-700/30 overflow-hidden'
+    : 'bg-slate-900 rounded-2xl shadow-2xl w-96 h-[600px] flex flex-col border border-sky-700/30 overflow-hidden';
 
   return (
     <div className={isFullscreen ? '' : 'fixed bottom-6 right-6 z-50'}>
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white rounded-2xl p-4 shadow-lg transition-all transform hover:scale-105 flex items-center space-x-2 group border border-sky-500/30"
+          className="bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 hover:to-cyan-500 text-white rounded-2xl p-4 shadow-lg shadow-sky-500/20 transition-all transform hover:scale-105 flex items-center space-x-2 group border border-sky-400/30"
         >
           <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
           <span className="font-semibold">AI Assistant</span>
@@ -252,15 +310,15 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
 
       {isOpen && (
         <div className={chatWindowClass}>
-          <div className="bg-gradient-to-r from-sky-600 to-indigo-600 text-white p-4 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-sky-600 via-sky-500 to-cyan-600 text-white p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                 <Bot className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="font-bold text-lg">Mining AI</h3>
-                <p className="text-xs text-sky-200 flex items-center gap-1">
-                  <span className={`w-2 h-2 rounded-full ${aiServiceStatus === 'online' ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                <p className="text-xs text-sky-100 flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${aiServiceStatus === 'online' ? 'bg-emerald-400 shadow-emerald-400/50 shadow-sm' : 'bg-rose-400'}`}></span>
                   {aiServiceStatus === 'online' ? 'Online' : 'Offline'}
                 </p>
               </div>
@@ -285,23 +343,27 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
             </div>
           </div>
 
-          <div className={`flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950/50 ${isFullscreen ? 'p-6' : ''}`}>
+          <div className={`flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-slate-900 to-slate-950 ${isFullscreen ? 'p-6' : ''}`}>
             {messages.map((msg, index) => (
-              <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} group`}>
                 <div
                   className={`${isFullscreen ? 'max-w-[70%]' : 'max-w-[85%]'} p-4 rounded-2xl ${
-                    msg.role === 'user' ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white rounded-br-sm' : 'bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-bl-sm'
+                    msg.role === 'user' ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-br-sm shadow-lg shadow-sky-500/20' : 'bg-slate-800/80 border border-sky-700/20 text-slate-200 rounded-bl-sm backdrop-blur-sm'
                   }`}
                 >
                   {msg.role === 'assistant' ? (
                     <div>
                       {msg.steps && msg.steps.length > 0 && <ThinkingProcess steps={msg.steps} />}
                       <MarkdownContent content={msg.content} isFullscreen={isFullscreen} />
+                      <MessageActions message={msg} isUser={false} />
                     </div>
                   ) : (
-                    <p className={`${isFullscreen ? 'text-base' : 'text-sm'} whitespace-pre-wrap break-words`}>{msg.content}</p>
+                    <div>
+                      <p className={`${isFullscreen ? 'text-base' : 'text-sm'} whitespace-pre-wrap break-words`}>{msg.content}</p>
+                      <MessageActions message={msg} isUser={true} />
+                    </div>
                   )}
-                  <p className={`text-xs mt-2 ${msg.role === 'user' ? 'text-sky-200' : 'text-slate-500'}`}>{msg.timestamp.toLocaleTimeString()}</p>
+                  <p className={`text-xs mt-2 ${msg.role === 'user' ? 'text-sky-100' : 'text-slate-500'}`}>{msg.timestamp.toLocaleTimeString()}</p>
                 </div>
               </div>
             ))}
@@ -319,9 +381,9 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
           </div>
 
           {messages.length <= 1 && (
-            <div className={`p-4 border-t border-slate-700/50 bg-slate-900/50 ${isFullscreen ? 'p-6' : ''}`}>
+            <div className={`p-4 border-t border-sky-700/20 bg-slate-900/80 ${isFullscreen ? 'p-6' : ''}`}>
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-amber-400" />
+                <Sparkles className="w-4 h-4 text-sky-400" />
                 <p className="text-xs text-slate-400 font-medium">Suggested questions:</p>
               </div>
               <div className={`grid gap-2 ${isFullscreen ? 'grid-cols-2' : 'grid-cols-1'}`}>
@@ -329,17 +391,17 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
                   <button
                     key={index}
                     onClick={() => handleSuggestedQuestion(item.question)}
-                    className="text-left bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 hover:border-sky-500/30 px-4 py-3 rounded-xl transition-all group"
+                    className="text-left bg-slate-800/50 hover:bg-sky-900/30 border border-sky-700/20 hover:border-sky-500/40 px-4 py-3 rounded-xl transition-all group"
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <div
                         className={`w-5 h-5 rounded-lg flex items-center justify-center text-xs font-bold ${
-                          index === 0 ? 'bg-emerald-500/20 text-emerald-400' : index === 1 ? 'bg-amber-500/20 text-amber-400' : index === 2 ? 'bg-sky-500/20 text-sky-400' : 'bg-violet-500/20 text-violet-400'
+                          index === 0 ? 'bg-sky-500/20 text-sky-400' : index === 1 ? 'bg-cyan-500/20 text-cyan-400' : index === 2 ? 'bg-blue-500/20 text-blue-400' : 'bg-teal-500/20 text-teal-400'
                         }`}
                       >
                         {index + 1}
                       </div>
-                      <span className="text-xs font-semibold text-slate-300 group-hover:text-sky-400 transition-colors">{item.title}</span>
+                      <span className="text-xs font-semibold text-slate-300 group-hover:text-sky-300 transition-colors">{item.title}</span>
                     </div>
                     <p className={`text-slate-500 group-hover:text-slate-400 transition-colors line-clamp-2 ${isFullscreen ? 'text-sm' : 'text-xs'}`}>{item.question}</p>
                   </button>
@@ -348,7 +410,7 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
             </div>
           )}
 
-          <div className={`p-4 border-t border-slate-700/50 bg-slate-900 ${isFullscreen ? 'p-6' : ''}`}>
+          <div className={`p-4 border-t border-sky-700/20 bg-slate-900 ${isFullscreen ? 'p-6' : ''}`}>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -357,14 +419,14 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
                 onKeyPress={handleKeyPress}
                 placeholder="Ask a question..."
                 disabled={loading || aiServiceStatus === 'offline'}
-                className={`flex-1 bg-slate-800/50 border border-slate-700/50 text-slate-200 placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent disabled:bg-slate-800/30 disabled:text-slate-600 transition-all ${
+                className={`flex-1 bg-slate-800/50 border border-sky-700/30 text-slate-200 placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent disabled:bg-slate-800/30 disabled:text-slate-600 transition-all ${
                   isFullscreen ? 'text-base' : 'text-sm'
                 }`}
               />
               <button
                 onClick={handleSend}
                 disabled={loading || !input.trim() || aiServiceStatus === 'offline'}
-                className="bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white px-5 py-3 rounded-xl transition-all disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed flex items-center justify-center min-w-[56px]"
+                className="bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 hover:to-cyan-500 text-white px-5 py-3 rounded-xl transition-all disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed flex items-center justify-center min-w-[56px] shadow-lg shadow-sky-500/20 disabled:shadow-none"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
               </button>
