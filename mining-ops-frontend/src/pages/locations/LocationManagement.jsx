@@ -502,36 +502,36 @@ const LocationManagement = () => {
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Loading Points</p>
-              <p className="text-3xl font-bold text-emerald-400">{allLoadingPoints.length}</p>
+              <p className="text-3xl font-bold text-cyan-400">{allLoadingPoints.length}</p>
             </div>
-            <div className="p-3 bg-emerald-500/10 rounded-xl">
-              <Activity className="text-emerald-400" size={28} />
+            <div className="p-3 bg-cyan-500/10 rounded-xl">
+              <Activity className="text-cyan-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-violet-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Dumping Points</p>
-              <p className="text-3xl font-bold text-violet-400">{allDumpingPoints.length}</p>
+              <p className="text-3xl font-bold text-sky-400">{allDumpingPoints.length}</p>
             </div>
-            <div className="p-3 bg-violet-500/10 rounded-xl">
-              <Layers className="text-violet-400" size={28} />
+            <div className="p-3 bg-sky-500/10 rounded-xl">
+              <Layers className="text-sky-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-amber-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-blue-400/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Road Segments</p>
-              <p className="text-3xl font-bold text-amber-400">{allRoadSegments.length}</p>
+              <p className="text-3xl font-bold text-blue-400">{allRoadSegments.length}</p>
             </div>
-            <div className="p-3 bg-amber-500/10 rounded-xl">
-              <Route className="text-amber-400" size={28} />
+            <div className="p-3 bg-blue-400/10 rounded-xl">
+              <Route className="text-blue-400" size={28} />
             </div>
           </div>
         </div>
@@ -623,7 +623,7 @@ const LocationManagement = () => {
                   </select>
 
                   {activeFiltersCount > 0 && (
-                    <button onClick={handleClearFilters} className="flex items-center gap-1 px-3 py-2 text-sm text-rose-400 hover:bg-rose-500/10 rounded-lg border border-rose-500/30 transition-colors">
+                    <button onClick={handleClearFilters} className="flex items-center gap-1 px-3 py-2 text-sm text-blue-300 hover:bg-blue-300/10 rounded-lg border border-blue-300/30 transition-colors">
                       <X size={16} />
                       <span>Clear ({activeFiltersCount})</span>
                     </button>
@@ -649,12 +649,12 @@ const LocationManagement = () => {
                         <Eye size={16} />
                       </button>
                       {canEdit && (
-                        <button onClick={() => handleEdit(site)} className="p-1.5 text-emerald-400 hover:bg-emerald-500/10 rounded transition-colors" title="Edit">
+                        <button onClick={() => handleEdit(site)} className="p-1.5 text-cyan-400 hover:bg-cyan-500/10 rounded transition-colors" title="Edit">
                           <Edit size={16} />
                         </button>
                       )}
                       {canEdit && (
-                        <button onClick={() => handleDelete(site.id)} className="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded transition-colors" title="Delete">
+                        <button onClick={() => handleDelete(site.id)} className="p-1.5 text-blue-300 hover:bg-blue-300/10 rounded transition-colors" title="Delete">
                           <Trash2 size={16} />
                         </button>
                       )}
@@ -698,10 +698,10 @@ const LocationManagement = () => {
           {activeTab === 'loading' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {loadingPoints.map((point) => (
-                <div key={point.id} className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 hover:border-emerald-500/30 transition-all border-l-4 border-l-emerald-500">
+                <div key={point.id} className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 hover:border-cyan-500/30 transition-all border-l-4 border-l-cyan-500">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-start gap-2">
-                      <Activity className="text-emerald-400 mt-1" size={20} />
+                      <Activity className="text-cyan-400 mt-1" size={20} />
                       <div>
                         <h3 className="font-bold text-lg text-slate-100">{point.name}</h3>
                         <p className="text-xs text-slate-500">{point.code}</p>
@@ -712,12 +712,12 @@ const LocationManagement = () => {
                         <Eye size={16} />
                       </button>
                       {canEdit && (
-                        <button onClick={() => handleEdit(point)} className="p-1.5 text-emerald-400 hover:bg-emerald-500/10 rounded transition-colors" title="Edit">
+                        <button onClick={() => handleEdit(point)} className="p-1.5 text-cyan-400 hover:bg-cyan-500/10 rounded transition-colors" title="Edit">
                           <Edit size={16} />
                         </button>
                       )}
                       {canEdit && (
-                        <button onClick={() => handleDelete(point.id)} className="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded transition-colors" title="Delete">
+                        <button onClick={() => handleDelete(point.id)} className="p-1.5 text-blue-300 hover:bg-blue-300/10 rounded transition-colors" title="Delete">
                           <Trash2 size={16} />
                         </button>
                       )}
@@ -741,7 +741,7 @@ const LocationManagement = () => {
                     {point.coalSeam && (
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-400">Coal Seam:</span>
-                        <span className="text-sm font-medium text-emerald-400">{point.coalSeam}</span>
+                        <span className="text-sm font-medium text-cyan-400">{point.coalSeam}</span>
                       </div>
                     )}
                     <div className="flex items-center justify-between">
@@ -776,10 +776,10 @@ const LocationManagement = () => {
           {activeTab === 'dumping' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {dumpingPoints.map((point) => (
-                <div key={point.id} className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 hover:border-violet-500/30 transition-all border-l-4 border-l-violet-500">
+                <div key={point.id} className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 hover:border-sky-500/30 transition-all border-l-4 border-l-sky-500">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-start gap-2">
-                      <Layers className="text-violet-400 mt-1" size={20} />
+                      <Layers className="text-sky-400 mt-1" size={20} />
                       <div>
                         <h3 className="font-bold text-lg text-slate-100">{point.name}</h3>
                         <p className="text-xs text-slate-500">{point.code}</p>
@@ -790,12 +790,12 @@ const LocationManagement = () => {
                         <Eye size={16} />
                       </button>
                       {canEdit && (
-                        <button onClick={() => handleEdit(point)} className="p-1.5 text-emerald-400 hover:bg-emerald-500/10 rounded transition-colors" title="Edit">
+                        <button onClick={() => handleEdit(point)} className="p-1.5 text-cyan-400 hover:bg-cyan-500/10 rounded transition-colors" title="Edit">
                           <Edit size={16} />
                         </button>
                       )}
                       {canEdit && (
-                        <button onClick={() => handleDelete(point.id)} className="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded transition-colors" title="Delete">
+                        <button onClick={() => handleDelete(point.id)} className="p-1.5 text-blue-300 hover:bg-blue-300/10 rounded transition-colors" title="Delete">
                           <Trash2 size={16} />
                         </button>
                       )}
@@ -808,7 +808,7 @@ const LocationManagement = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-slate-400">Type:</span>
-                      <span className="text-sm font-medium text-violet-400">{point.dumpingType}</span>
+                      <span className="text-sm font-medium text-sky-400">{point.dumpingType}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-slate-400">Status:</span>
@@ -823,7 +823,7 @@ const LocationManagement = () => {
                     {point.currentStock !== null && point.currentStock !== undefined && (
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-400">Current Stock:</span>
-                        <span className="text-sm font-semibold text-violet-400">{point.currentStock.toFixed(2)} ton</span>
+                        <span className="text-sm font-semibold text-sky-400">{point.currentStock.toFixed(2)} ton</span>
                       </div>
                     )}
                     {point.capacity && point.currentStock !== null && (
@@ -833,7 +833,7 @@ const LocationManagement = () => {
                           <span>{((point.currentStock / point.capacity) * 100).toFixed(1)}%</span>
                         </div>
                         <div className="w-full bg-slate-700 rounded-full h-2">
-                          <div className="bg-violet-500 h-2 rounded-full transition-all" style={{ width: `${Math.min((point.currentStock / point.capacity) * 100, 100)}%` }}></div>
+                          <div className="bg-sky-500 h-2 rounded-full transition-all" style={{ width: `${Math.min((point.currentStock / point.capacity) * 100, 100)}%` }}></div>
                         </div>
                       </div>
                     )}
@@ -854,11 +854,11 @@ const LocationManagement = () => {
           {activeTab === 'roads' && (
             <div className="space-y-3">
               {roadSegments.map((road) => (
-                <div key={road.id} className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 hover:border-amber-500/30 transition-all border-l-4 border-l-amber-500">
+                <div key={road.id} className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 hover:border-blue-400/30 transition-all border-l-4 border-l-blue-400">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-start gap-2 mb-3">
-                        <Route className="text-amber-400 mt-1" size={20} />
+                        <Route className="text-blue-400 mt-1" size={20} />
                         <div>
                           <h3 className="font-bold text-lg text-slate-100">{road.name}</h3>
                           <p className="text-xs text-slate-500">{road.code}</p>
@@ -871,7 +871,7 @@ const LocationManagement = () => {
                         </div>
                         <div>
                           <p className="text-xs text-slate-500 mb-1">Distance</p>
-                          <p className="text-sm font-semibold text-amber-400">{road.distance} km</p>
+                          <p className="text-sm font-semibold text-blue-400">{road.distance} km</p>
                         </div>
                         <div>
                           <p className="text-xs text-slate-500 mb-1">Max Speed</p>
@@ -917,12 +917,12 @@ const LocationManagement = () => {
                         <Eye size={18} />
                       </button>
                       {canEdit && (
-                        <button onClick={() => handleEdit(road)} className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded transition-colors" title="Edit">
+                        <button onClick={() => handleEdit(road)} className="p-2 text-cyan-400 hover:bg-cyan-500/10 rounded transition-colors" title="Edit">
                           <Edit size={18} />
                         </button>
                       )}
                       {canEdit && (
-                        <button onClick={() => handleDelete(road.id)} className="p-2 text-rose-400 hover:bg-rose-500/10 rounded transition-colors" title="Delete">
+                        <button onClick={() => handleDelete(road.id)} className="p-2 text-blue-300 hover:bg-blue-300/10 rounded transition-colors" title="Delete">
                           <Trash2 size={18} />
                         </button>
                       )}
@@ -949,13 +949,13 @@ const LocationManagement = () => {
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={getModalTitle()} size="lg">
         {modalMode === 'view' && selectedItem ? (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-sky-500/10 to-violet-500/10 p-6 rounded-xl border border-sky-500/20">
+            <div className="bg-gradient-to-r from-sky-500/10 to-blue-500/10 p-6 rounded-xl border border-sky-500/20">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   {activeTab === 'sites' && <MapPin className="text-sky-400" size={32} />}
-                  {activeTab === 'loading' && <Activity className="text-emerald-400" size={32} />}
-                  {activeTab === 'dumping' && <Layers className="text-violet-400" size={32} />}
-                  {activeTab === 'roads' && <Route className="text-amber-400" size={32} />}
+                  {activeTab === 'loading' && <Activity className="text-cyan-400" size={32} />}
+                  {activeTab === 'dumping' && <Layers className="text-sky-400" size={32} />}
+                  {activeTab === 'roads' && <Route className="text-sky-400" size={32} />}
                   <div>
                     <h3 className="text-2xl font-bold text-slate-100">{selectedItem.name}</h3>
                     <p className="text-sm text-slate-400 font-mono">{selectedItem.code}</p>
@@ -978,7 +978,7 @@ const LocationManagement = () => {
                   {selectedItem.capacity && (
                     <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="text-emerald-400" size={18} />
+                        <TrendingUp className="text-cyan-400" size={18} />
                         <p className="text-xs font-semibold text-slate-500 uppercase">Capacity</p>
                       </div>
                       <p className="text-lg font-bold text-slate-200">
@@ -989,7 +989,7 @@ const LocationManagement = () => {
                   {selectedItem.elevation && (
                     <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <Navigation className="text-violet-400" size={18} />
+                        <Navigation className="text-sky-400" size={18} />
                         <p className="text-xs font-semibold text-slate-500 uppercase">Elevation</p>
                       </div>
                       <p className="text-lg font-bold text-slate-200">
@@ -1005,9 +1005,9 @@ const LocationManagement = () => {
                   </div>
                 )}
                 {selectedItem.latitude && selectedItem.longitude && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+                  <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <MapPin className="text-emerald-400" size={20} />
+                      <MapPin className="text-cyan-400" size={20} />
                       <p className="text-sm font-semibold text-slate-300">Geographic Coordinates</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -1038,7 +1038,7 @@ const LocationManagement = () => {
                   </div>
                   <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Activity className="text-amber-400" size={18} />
+                      <Activity className="text-sky-400" size={18} />
                       <p className="text-xs font-semibold text-slate-500 uppercase">Max Queue Size</p>
                     </div>
                     <p className="text-lg font-bold text-slate-200">
@@ -1048,7 +1048,7 @@ const LocationManagement = () => {
                   {selectedItem.excavator && (
                     <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <Activity className="text-emerald-400" size={18} />
+                        <Activity className="text-cyan-400" size={18} />
                         <p className="text-xs font-semibold text-slate-500 uppercase">Excavator</p>
                       </div>
                       <p className="text-base font-bold text-slate-200">{selectedItem.excavator.name || selectedItem.excavator.code}</p>
@@ -1058,7 +1058,7 @@ const LocationManagement = () => {
                   {selectedItem.coalSeam && (
                     <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <Layers className="text-violet-400" size={18} />
+                        <Layers className="text-sky-400" size={18} />
                         <p className="text-xs font-semibold text-slate-500 uppercase">Coal Seam</p>
                       </div>
                       <p className="text-lg font-bold text-slate-200">{selectedItem.coalSeam}</p>
@@ -1066,33 +1066,33 @@ const LocationManagement = () => {
                   )}
                 </div>
                 {selectedItem.coalQuality && (selectedItem.coalQuality.calorie || selectedItem.coalQuality.moisture || selectedItem.coalQuality.ash_content || selectedItem.coalQuality.sulfur) && (
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+                  <div className="bg-sky-500/10 border border-sky-500/20 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <TrendingUp className="text-amber-400" size={20} />
+                      <TrendingUp className="text-sky-400" size={20} />
                       <p className="text-sm font-semibold text-slate-300">Coal Quality Parameters</p>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {selectedItem.coalQuality.calorie && (
-                        <div className="bg-slate-800/80 rounded-lg p-3 border border-amber-500/20">
+                        <div className="bg-slate-800/80 rounded-lg p-3 border border-sky-500/20">
                           <p className="text-xs text-slate-500 mb-1">Calorie Value</p>
                           <p className="text-lg font-bold text-slate-200">{selectedItem.coalQuality.calorie.toFixed(0)}</p>
                           <p className="text-xs text-slate-500">kcal/kg</p>
                         </div>
                       )}
                       {selectedItem.coalQuality.moisture && (
-                        <div className="bg-slate-800/80 rounded-lg p-3 border border-amber-500/20">
+                        <div className="bg-slate-800/80 rounded-lg p-3 border border-sky-500/20">
                           <p className="text-xs text-slate-500 mb-1">Moisture</p>
                           <p className="text-lg font-bold text-slate-200">{selectedItem.coalQuality.moisture.toFixed(2)}%</p>
                         </div>
                       )}
                       {selectedItem.coalQuality.ash_content && (
-                        <div className="bg-slate-800/80 rounded-lg p-3 border border-amber-500/20">
+                        <div className="bg-slate-800/80 rounded-lg p-3 border border-sky-500/20">
                           <p className="text-xs text-slate-500 mb-1">Ash Content</p>
                           <p className="text-lg font-bold text-slate-200">{selectedItem.coalQuality.ash_content.toFixed(2)}%</p>
                         </div>
                       )}
                       {selectedItem.coalQuality.sulfur && (
-                        <div className="bg-slate-800/80 rounded-lg p-3 border border-amber-500/20">
+                        <div className="bg-slate-800/80 rounded-lg p-3 border border-sky-500/20">
                           <p className="text-xs text-slate-500 mb-1">Sulfur</p>
                           <p className="text-lg font-bold text-slate-200">{selectedItem.coalQuality.sulfur.toFixed(2)}%</p>
                         </div>
@@ -1101,9 +1101,9 @@ const LocationManagement = () => {
                   </div>
                 )}
                 {selectedItem.latitude && selectedItem.longitude && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+                  <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <MapPin className="text-emerald-400" size={20} />
+                      <MapPin className="text-cyan-400" size={20} />
                       <p className="text-sm font-semibold text-slate-300">Geographic Coordinates</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -1134,7 +1134,7 @@ const LocationManagement = () => {
                   </div>
                   <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Layers className="text-violet-400" size={18} />
+                      <Layers className="text-sky-400" size={18} />
                       <p className="text-xs font-semibold text-slate-500 uppercase">Dumping Type</p>
                     </div>
                     <p className="text-lg font-bold text-slate-200">{selectedItem.dumpingType}</p>
@@ -1142,7 +1142,7 @@ const LocationManagement = () => {
                   {selectedItem.capacity && (
                     <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="text-emerald-400" size={18} />
+                        <TrendingUp className="text-cyan-400" size={18} />
                         <p className="text-xs font-semibold text-slate-500 uppercase">Total Capacity</p>
                       </div>
                       <p className="text-lg font-bold text-slate-200">
@@ -1153,7 +1153,7 @@ const LocationManagement = () => {
                   {selectedItem.currentStock !== null && selectedItem.currentStock !== undefined && (
                     <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <Activity className="text-amber-400" size={18} />
+                        <Activity className="text-sky-400" size={18} />
                         <p className="text-xs font-semibold text-slate-500 uppercase">Current Stock</p>
                       </div>
                       <p className="text-lg font-bold text-slate-200">
@@ -1163,16 +1163,16 @@ const LocationManagement = () => {
                   )}
                 </div>
                 {selectedItem.capacity && selectedItem.currentStock !== null && selectedItem.currentStock !== undefined && (
-                  <div className="bg-violet-500/10 border border-violet-500/20 rounded-lg p-4">
+                  <div className="bg-sky-500/10 border border-sky-500/20 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <TrendingUp className="text-violet-400" size={20} />
+                        <TrendingUp className="text-sky-400" size={20} />
                         <p className="text-sm font-semibold text-slate-300">Storage Utilization</p>
                       </div>
-                      <p className="text-2xl font-bold text-violet-400">{((selectedItem.currentStock / selectedItem.capacity) * 100).toFixed(1)}%</p>
+                      <p className="text-2xl font-bold text-sky-400">{((selectedItem.currentStock / selectedItem.capacity) * 100).toFixed(1)}%</p>
                     </div>
                     <div className="w-full bg-slate-700 rounded-full h-3">
-                      <div className="bg-gradient-to-r from-violet-500 to-fuchsia-500 h-3 rounded-full transition-all duration-500" style={{ width: `${Math.min((selectedItem.currentStock / selectedItem.capacity) * 100, 100)}%` }}></div>
+                      <div className="bg-gradient-to-r from-sky-500 to-blue-500 h-3 rounded-full transition-all duration-500" style={{ width: `${Math.min((selectedItem.currentStock / selectedItem.capacity) * 100, 100)}%` }}></div>
                     </div>
                     <div className="flex justify-between mt-2 text-xs text-slate-500">
                       <span>{selectedItem.currentStock.toFixed(2)} ton</span>
@@ -1181,9 +1181,9 @@ const LocationManagement = () => {
                   </div>
                 )}
                 {selectedItem.latitude && selectedItem.longitude && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+                  <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <MapPin className="text-emerald-400" size={20} />
+                      <MapPin className="text-cyan-400" size={20} />
                       <p className="text-sm font-semibold text-slate-300">Geographic Coordinates</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -1214,7 +1214,7 @@ const LocationManagement = () => {
                   </div>
                   <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Route className="text-amber-400" size={18} />
+                      <Route className="text-sky-400" size={18} />
                       <p className="text-xs font-semibold text-slate-500 uppercase">Distance</p>
                     </div>
                     <p className="text-lg font-bold text-slate-200">
@@ -1223,14 +1223,14 @@ const LocationManagement = () => {
                   </div>
                   <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Activity className="text-emerald-400" size={18} />
+                      <Activity className="text-cyan-400" size={18} />
                       <p className="text-xs font-semibold text-slate-500 uppercase">Road Condition</p>
                     </div>
                     <StatusBadge status={getRoadConditionColor(selectedItem.roadCondition)} label={selectedItem.roadCondition} />
                   </div>
                   <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <TrendingUp className="text-violet-400" size={18} />
+                      <TrendingUp className="text-sky-400" size={18} />
                       <p className="text-xs font-semibold text-slate-500 uppercase">Max Speed</p>
                     </div>
                     <p className="text-lg font-bold text-slate-200">
@@ -1249,9 +1249,9 @@ const LocationManagement = () => {
                     </div>
                   )}
                   {selectedItem.endPoint && (
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+                    <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <MapPin className="text-emerald-400" size={18} />
+                        <MapPin className="text-cyan-400" size={18} />
                         <p className="text-xs font-semibold text-slate-500 uppercase">End Point</p>
                       </div>
                       <p className="text-base font-bold text-slate-200">{selectedItem.endPoint}</p>
@@ -1260,7 +1260,7 @@ const LocationManagement = () => {
                   {selectedItem.gradient !== null && selectedItem.gradient !== undefined && (
                     <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <Activity className="text-violet-400" size={18} />
+                        <Activity className="text-sky-400" size={18} />
                         <p className="text-xs font-semibold text-slate-500 uppercase">Gradient</p>
                       </div>
                       <p className="text-lg font-bold text-slate-200">{selectedItem.gradient.toFixed(2)}deg</p>
@@ -1269,7 +1269,7 @@ const LocationManagement = () => {
                   {selectedItem.lastMaintenance && (
                     <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <Activity className="text-amber-400" size={18} />
+                        <Activity className="text-sky-400" size={18} />
                         <p className="text-xs font-semibold text-slate-500 uppercase">Last Maintenance</p>
                       </div>
                       <p className="text-base font-bold text-slate-200">{new Date(selectedItem.lastMaintenance).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
@@ -1367,7 +1367,7 @@ const LocationManagement = () => {
                       <button
                         type="button"
                         onClick={() => setShowMapPicker(true)}
-                        className="px-3 py-2 bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-800/40 text-sm font-medium flex items-center gap-1 transition-colors"
+                        className="px-3 py-2 bg-cyan-900/30 text-cyan-400 border border-cyan-500/30 rounded-lg hover:bg-cyan-800/40 text-sm font-medium flex items-center gap-1 transition-colors"
                       >
                         <MapPin size={16} />
                         Map
@@ -1431,7 +1431,7 @@ const LocationManagement = () => {
                       <button
                         type="button"
                         onClick={() => setShowMapPicker(true)}
-                        className="px-3 py-2 bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-800/40 text-sm font-medium flex items-center gap-1 transition-colors"
+                        className="px-3 py-2 bg-cyan-900/30 text-cyan-400 border border-cyan-500/30 rounded-lg hover:bg-cyan-800/40 text-sm font-medium flex items-center gap-1 transition-colors"
                       >
                         <MapPin size={16} />
                         Map
@@ -1539,7 +1539,7 @@ const LocationManagement = () => {
                       <button
                         type="button"
                         onClick={() => setShowMapPicker(true)}
-                        className="px-3 py-2 bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-800/40 text-sm font-medium flex items-center gap-1 transition-colors"
+                        className="px-3 py-2 bg-cyan-900/30 text-cyan-400 border border-cyan-500/30 rounded-lg hover:bg-cyan-800/40 text-sm font-medium flex items-center gap-1 transition-colors"
                       >
                         <MapPin size={16} />
                         Map

@@ -37,7 +37,7 @@ const UserList = () => {
     { value: 'SUPERVISOR', label: 'Supervisor', color: 'blue', icon: UserCheck },
     { value: 'OPERATOR', label: 'Operator', color: 'green', icon: User },
     { value: 'DISPATCHER', label: 'Dispatcher', color: 'purple', icon: Activity },
-    { value: 'MAINTENANCE_STAFF', label: 'Maintenance Staff', color: 'orange', icon: Key },
+    { value: 'MAINTENANCE_STAFF', label: 'Maintenance Staff', color: 'sky', icon: Key },
   ];
 
   const applyFiltersAndPagination = useCallback(() => {
@@ -300,11 +300,11 @@ const UserList = () => {
 
   const getRoleColor = (role) => {
     const colors = {
-      ADMIN: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+      ADMIN: 'bg-blue-300/20 text-blue-300 border-blue-300/30',
       SUPERVISOR: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
-      OPERATOR: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-      DISPATCHER: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
-      MAINTENANCE_STAFF: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+      OPERATOR: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+      DISPATCHER: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+      MAINTENANCE_STAFF: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
     };
     return colors[role] || 'bg-slate-500/20 text-slate-300 border-slate-500/30';
   };
@@ -376,47 +376,47 @@ const UserList = () => {
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-900/20 to-emerald-950/20 p-5">
+        <div className="rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-900/20 to-cyan-950/20 p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Active</p>
-              <p className="text-3xl font-bold text-emerald-400">{stats.active}</p>
+              <p className="text-3xl font-bold text-cyan-400">{stats.active}</p>
             </div>
-            <div className="p-3 bg-emerald-500/20 rounded-xl">
-              <UserCheck className="text-emerald-400" size={28} />
+            <div className="p-3 bg-cyan-500/20 rounded-xl">
+              <UserCheck className="text-cyan-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-rose-500/20 bg-gradient-to-br from-rose-900/20 to-rose-950/20 p-5">
+        <div className="rounded-xl border border-blue-300/20 bg-gradient-to-br from-blue-900/20 to-blue-950/20 p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Inactive</p>
-              <p className="text-3xl font-bold text-rose-400">{stats.inactive}</p>
+              <p className="text-3xl font-bold text-blue-300">{stats.inactive}</p>
             </div>
-            <div className="p-3 bg-rose-500/20 rounded-xl">
-              <UserX className="text-rose-400" size={28} />
+            <div className="p-3 bg-blue-300/20 rounded-xl">
+              <UserX className="text-blue-300" size={28} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-violet-500/20 bg-gradient-to-br from-violet-900/20 to-violet-950/20 p-5">
+        <div className="rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-900/20 to-blue-950/20 p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Admins</p>
-              <p className="text-3xl font-bold text-violet-400">{stats.admins}</p>
+              <p className="text-3xl font-bold text-blue-400">{stats.admins}</p>
             </div>
-            <div className="p-3 bg-violet-500/20 rounded-xl">
-              <Shield className="text-violet-400" size={28} />
+            <div className="p-3 bg-blue-500/20 rounded-xl">
+              <Shield className="text-blue-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-amber-500/20 bg-gradient-to-br from-amber-900/20 to-amber-950/20 p-5">
+        <div className="rounded-xl border border-sky-500/20 bg-gradient-to-br from-sky-900/20 to-sky-950/20 p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Operators</p>
-              <p className="text-3xl font-bold text-amber-400">{stats.operators}</p>
+              <p className="text-3xl font-bold text-sky-400">{stats.operators}</p>
             </div>
-            <div className="p-3 bg-amber-500/20 rounded-xl">
-              <User className="text-amber-400" size={28} />
+            <div className="p-3 bg-sky-500/20 rounded-xl">
+              <User className="text-sky-400" size={28} />
             </div>
           </div>
         </div>
@@ -512,7 +512,7 @@ const UserList = () => {
               </h3>
               <div className="grid grid-cols-5 gap-4">
                 <div className="text-center p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                  <p className="text-2xl font-bold text-rose-400">{stats.admins}</p>
+                  <p className="text-2xl font-bold text-blue-300">{stats.admins}</p>
                   <p className="text-xs text-slate-400">Admins</p>
                 </div>
                 <div className="text-center p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
@@ -520,15 +520,15 @@ const UserList = () => {
                   <p className="text-xs text-slate-400">Supervisors</p>
                 </div>
                 <div className="text-center p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                  <p className="text-2xl font-bold text-emerald-400">{stats.operators}</p>
+                  <p className="text-2xl font-bold text-cyan-400">{stats.operators}</p>
                   <p className="text-xs text-slate-400">Operators</p>
                 </div>
                 <div className="text-center p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                  <p className="text-2xl font-bold text-violet-400">{stats.dispatchers}</p>
+                  <p className="text-2xl font-bold text-blue-400">{stats.dispatchers}</p>
                   <p className="text-xs text-slate-400">Dispatchers</p>
                 </div>
                 <div className="text-center p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                  <p className="text-2xl font-bold text-amber-400">{stats.maintenance}</p>
+                  <p className="text-2xl font-bold text-sky-400">{stats.maintenance}</p>
                   <p className="text-xs text-slate-400">Maintenance</p>
                 </div>
               </div>
@@ -627,7 +627,7 @@ const UserList = () => {
                       <button
                         onClick={() => handleToggleActive(user)}
                         className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
-                          user.isActive ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'
+                          user.isActive ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30' : 'bg-blue-300/20 text-blue-300 hover:bg-blue-300/30'
                         }`}
                       >
                         {user.isActive ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
@@ -652,12 +652,12 @@ const UserList = () => {
                           <Eye size={18} />
                         </button>
                         {canEdit && (
-                          <button onClick={() => handleEdit(user)} className="p-2 text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-colors" title="Edit">
+                          <button onClick={() => handleEdit(user)} className="p-2 text-cyan-400 hover:bg-cyan-500/20 rounded-lg transition-colors" title="Edit">
                             <Edit size={18} />
                           </button>
                         )}
                         {canEdit && (
-                          <button onClick={() => handleDelete(user.id)} className="p-2 text-rose-400 hover:bg-rose-500/20 rounded-lg transition-colors" title="Deactivate">
+                          <button onClick={() => handleDelete(user.id)} className="p-2 text-blue-300 hover:bg-blue-300/20 rounded-lg transition-colors" title="Deactivate">
                             <Trash2 size={18} />
                           </button>
                         )}
@@ -700,15 +700,15 @@ const UserList = () => {
             </div>
           ) : modalMode === 'edit' ? (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-emerald-500/20 rounded-lg">
-                <Edit className="text-emerald-400" size={24} />
+              <div className="p-2 bg-cyan-500/20 rounded-lg">
+                <Edit className="text-cyan-400" size={24} />
               </div>
               <span className="text-slate-100">Edit User</span>
             </div>
           ) : (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-violet-500/20 rounded-lg">
-                <Eye className="text-violet-400" size={24} />
+              <div className="p-2 bg-blue-500/20 rounded-lg">
+                <Eye className="text-blue-400" size={24} />
               </div>
               <span className="text-slate-100">User Details</span>
             </div>
@@ -734,7 +734,7 @@ const UserList = () => {
                     {getRoleIcon(selectedUser.role)}
                     <span>{selectedUser.role.replace('_', ' ')}</span>
                   </span>
-                  <span className={`inline-flex items-center space-x-1 px-3 py-1.5 rounded-full text-sm font-medium ${selectedUser.isActive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                  <span className={`inline-flex items-center space-x-1 px-3 py-1.5 rounded-full text-sm font-medium ${selectedUser.isActive ? 'bg-cyan-500/20 text-cyan-300' : 'bg-blue-300/20 text-blue-300'}`}>
                     {selectedUser.isActive ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
                     <span>{selectedUser.isActive ? 'Active' : 'Inactive'}</span>
                   </span>
@@ -753,7 +753,7 @@ const UserList = () => {
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Mail className="text-emerald-400" size={18} />
+                  <Mail className="text-cyan-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Email</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{selectedUser.email || '-'}</p>
@@ -761,7 +761,7 @@ const UserList = () => {
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Shield className="text-violet-400" size={18} />
+                  <Shield className="text-blue-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Role</label>
                 </div>
                 <span className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-sm font-medium border ${getRoleColor(selectedUser.role)}`}>
@@ -772,10 +772,10 @@ const UserList = () => {
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Activity className="text-amber-400" size={18} />
+                  <Activity className="text-sky-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Status</label>
                 </div>
-                <span className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-sm font-medium ${selectedUser.isActive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                <span className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-sm font-medium ${selectedUser.isActive ? 'bg-cyan-500/20 text-cyan-300' : 'bg-blue-300/20 text-blue-300'}`}>
                   {selectedUser.isActive ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
                   <span>{selectedUser.isActive ? 'Active' : 'Inactive'}</span>
                 </span>
@@ -791,7 +791,7 @@ const UserList = () => {
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Calendar className="text-rose-400" size={18} />
+                  <Calendar className="text-blue-300" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Created At</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{formatDateTime(selectedUser.createdAt)}</p>
@@ -807,9 +807,9 @@ const UserList = () => {
             </div>
 
             {selectedUser.operatorProfile && (
-              <div className="bg-gradient-to-br from-emerald-900/20 to-emerald-950/20 p-4 rounded-lg border border-emerald-500/20">
+              <div className="bg-gradient-to-br from-cyan-900/20 to-cyan-950/20 p-4 rounded-lg border border-cyan-500/20">
                 <h4 className="text-lg font-semibold text-slate-100 mb-4 flex items-center space-x-2">
-                  <UserCheck className="text-emerald-400" size={20} />
+                  <UserCheck className="text-cyan-400" size={20} />
                   <span>Operator Profile</span>
                 </h4>
                 <div className="grid grid-cols-3 gap-4">
@@ -874,12 +874,12 @@ const UserList = () => {
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className={`input-field bg-slate-900/50 border-slate-700 text-slate-200 ${formErrors.username ? 'border-rose-500' : ''}`}
+                  className={`input-field bg-slate-900/50 border-slate-700 text-slate-200 ${formErrors.username ? 'border-blue-300' : ''}`}
                   required
                   placeholder="johndoe"
                   disabled={modalMode === 'edit'}
                 />
-                {formErrors.username && <p className="text-rose-400 text-xs mt-1">{formErrors.username}</p>}
+                {formErrors.username && <p className="text-blue-300 text-xs mt-1">{formErrors.username}</p>}
               </div>
 
               <div>
@@ -888,11 +888,11 @@ const UserList = () => {
                   type="text"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className={`input-field bg-slate-900/50 border-slate-700 text-slate-200 ${formErrors.fullName ? 'border-rose-500' : ''}`}
+                  className={`input-field bg-slate-900/50 border-slate-700 text-slate-200 ${formErrors.fullName ? 'border-blue-300' : ''}`}
                   required
                   placeholder="John Doe"
                 />
-                {formErrors.fullName && <p className="text-rose-400 text-xs mt-1">{formErrors.fullName}</p>}
+                {formErrors.fullName && <p className="text-blue-300 text-xs mt-1">{formErrors.fullName}</p>}
               </div>
 
               <div>
@@ -901,10 +901,10 @@ const UserList = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className={`input-field bg-slate-900/50 border-slate-700 text-slate-200 ${formErrors.email ? 'border-rose-500' : ''}`}
+                  className={`input-field bg-slate-900/50 border-slate-700 text-slate-200 ${formErrors.email ? 'border-blue-300' : ''}`}
                   placeholder="john@example.com"
                 />
-                {formErrors.email && <p className="text-rose-400 text-xs mt-1">{formErrors.email}</p>}
+                {formErrors.email && <p className="text-blue-300 text-xs mt-1">{formErrors.email}</p>}
               </div>
 
               {modalMode === 'create' && (
@@ -914,11 +914,11 @@ const UserList = () => {
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className={`input-field bg-slate-900/50 border-slate-700 text-slate-200 ${formErrors.password ? 'border-rose-500' : ''}`}
+                    className={`input-field bg-slate-900/50 border-slate-700 text-slate-200 ${formErrors.password ? 'border-blue-300' : ''}`}
                     required
                     placeholder="********"
                   />
-                  {formErrors.password && <p className="text-rose-400 text-xs mt-1">{formErrors.password}</p>}
+                  {formErrors.password && <p className="text-blue-300 text-xs mt-1">{formErrors.password}</p>}
                 </div>
               )}
 

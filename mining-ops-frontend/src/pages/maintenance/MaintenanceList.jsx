@@ -389,10 +389,10 @@ const MaintenanceList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">In Progress</p>
-              <p className="text-3xl font-bold text-amber-400">{allMaintenances.filter((m) => m.status === 'IN_PROGRESS').length}</p>
+              <p className="text-3xl font-bold text-sky-400">{allMaintenances.filter((m) => m.status === 'IN_PROGRESS').length}</p>
             </div>
-            <div className="p-3 bg-amber-900/30 rounded-xl">
-              <Clock className="text-amber-400" size={28} />
+            <div className="p-3 bg-sky-900/30 rounded-xl">
+              <Clock className="text-sky-400" size={28} />
             </div>
           </div>
         </div>
@@ -400,10 +400,10 @@ const MaintenanceList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Completed</p>
-              <p className="text-3xl font-bold text-emerald-400">{allMaintenances.filter((m) => m.status === 'COMPLETED').length}</p>
+              <p className="text-3xl font-bold text-cyan-400">{allMaintenances.filter((m) => m.status === 'COMPLETED').length}</p>
             </div>
-            <div className="p-3 bg-emerald-900/30 rounded-xl">
-              <CheckCircle className="text-emerald-400" size={28} />
+            <div className="p-3 bg-cyan-900/30 rounded-xl">
+              <CheckCircle className="text-cyan-400" size={28} />
             </div>
           </div>
         </div>
@@ -411,10 +411,10 @@ const MaintenanceList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Scheduled</p>
-              <p className="text-3xl font-bold text-violet-400">{allMaintenances.filter((m) => m.status === 'SCHEDULED').length}</p>
+              <p className="text-3xl font-bold text-blue-400">{allMaintenances.filter((m) => m.status === 'SCHEDULED').length}</p>
             </div>
-            <div className="p-3 bg-violet-900/30 rounded-xl">
-              <Calendar className="text-violet-400" size={28} />
+            <div className="p-3 bg-blue-900/30 rounded-xl">
+              <Calendar className="text-blue-400" size={28} />
             </div>
           </div>
         </div>
@@ -486,7 +486,7 @@ const MaintenanceList = () => {
               </select>
 
               {activeFiltersCount > 0 && (
-                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-rose-500/30 bg-rose-900/20 text-rose-400 hover:bg-rose-800/30 font-medium transition-colors flex items-center space-x-2">
+                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-blue-300/30 bg-blue-900/20 text-blue-300 hover:bg-blue-800/30 font-medium transition-colors flex items-center space-x-2">
                   <X size={18} />
                   <span>Clear</span>
                 </button>
@@ -575,7 +575,7 @@ const MaintenanceList = () => {
                       {maintenance.duration && <span className="text-slate-500 ml-1 text-xs">hrs</span>}
                     </td>
                     <td className="table-cell">
-                      <span className="font-semibold text-emerald-400">{maintenance.cost ? `Rp ${maintenance.cost.toLocaleString('id-ID')}` : '-'}</span>
+                      <span className="font-semibold text-cyan-400">{maintenance.cost ? `Rp ${maintenance.cost.toLocaleString('id-ID')}` : '-'}</span>
                     </td>
                     <td className="table-cell text-slate-300">{maintenance.mechanicName || '-'}</td>
                     <td className="table-cell">
@@ -587,12 +587,12 @@ const MaintenanceList = () => {
                           <Eye size={18} />
                         </button>
                         {canEdit && (
-                          <button onClick={() => handleEdit(maintenance)} className="p-2 text-emerald-400 hover:bg-emerald-900/30 rounded-lg transition-colors" title="Edit">
+                          <button onClick={() => handleEdit(maintenance)} className="p-2 text-cyan-400 hover:bg-cyan-900/30 rounded-lg transition-colors" title="Edit">
                             <Edit size={18} />
                           </button>
                         )}
                         {canEdit && (
-                          <button onClick={() => handleDelete(maintenance.id)} className="p-2 text-rose-400 hover:bg-rose-900/30 rounded-lg transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(maintenance.id)} className="p-2 text-blue-300 hover:bg-blue-900/30 rounded-lg transition-colors" title="Delete">
                             <Trash2 size={18} />
                           </button>
                         )}
@@ -635,8 +635,8 @@ const MaintenanceList = () => {
             </div>
           ) : modalMode === 'edit' ? (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-emerald-900/30 rounded-lg">
-                <Edit className="text-emerald-400" size={24} />
+              <div className="p-2 bg-cyan-900/30 rounded-lg">
+                <Edit className="text-cyan-400" size={24} />
               </div>
               <span className="text-slate-100">Edit Maintenance</span>
             </div>
@@ -677,7 +677,7 @@ const MaintenanceList = () => {
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <User className="text-violet-400" size={18} />
+                  <User className="text-sky-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Mechanic</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{selectedMaintenance.mechanicName || '-'}</p>
@@ -685,7 +685,7 @@ const MaintenanceList = () => {
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Calendar className="text-emerald-400" size={18} />
+                  <Calendar className="text-cyan-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Scheduled Date</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{selectedMaintenance.scheduledDate ? new Date(selectedMaintenance.scheduledDate).toLocaleDateString() : '-'}</p>
@@ -701,7 +701,7 @@ const MaintenanceList = () => {
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <CheckCircle className="text-emerald-400" size={18} />
+                  <CheckCircle className="text-cyan-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Completion Date</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{selectedMaintenance.completionDate ? new Date(selectedMaintenance.completionDate).toLocaleDateString() : '-'}</p>
@@ -709,7 +709,7 @@ const MaintenanceList = () => {
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Clock className="text-violet-400" size={18} />
+                  <Clock className="text-sky-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Duration</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">
@@ -719,15 +719,15 @@ const MaintenanceList = () => {
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <DollarSign className="text-emerald-400" size={18} />
+                  <DollarSign className="text-cyan-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Cost</label>
                 </div>
-                <p className="text-2xl font-bold text-emerald-400">{selectedMaintenance.cost ? `Rp ${selectedMaintenance.cost.toLocaleString('id-ID')}` : '-'}</p>
+                <p className="text-2xl font-bold text-cyan-400">{selectedMaintenance.cost ? `Rp ${selectedMaintenance.cost.toLocaleString('id-ID')}` : '-'}</p>
               </div>
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <AlertCircle className="text-rose-400" size={18} />
+                  <AlertCircle className="text-blue-300" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Downtime Hours</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">

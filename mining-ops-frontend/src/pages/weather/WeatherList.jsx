@@ -243,7 +243,7 @@ const WeatherList = () => {
   const riskLevelOptions = [
     { value: 'LOW', label: 'Low', color: 'green' },
     { value: 'MEDIUM', label: 'Medium', color: 'yellow' },
-    { value: 'HIGH', label: 'High', color: 'orange' },
+    { value: 'HIGH', label: 'High', color: 'sky' },
     { value: 'CRITICAL', label: 'Critical', color: 'red' },
   ];
 
@@ -416,10 +416,10 @@ const WeatherList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Operational</p>
-              <p className="text-3xl font-bold text-emerald-400">{allWeathers.filter((w) => w.isOperational).length}</p>
+              <p className="text-3xl font-bold text-cyan-400">{allWeathers.filter((w) => w.isOperational).length}</p>
             </div>
-            <div className="p-3 bg-emerald-900/30 rounded-xl">
-              <CheckCircle className="text-emerald-400" size={28} />
+            <div className="p-3 bg-cyan-900/30 rounded-xl">
+              <CheckCircle className="text-cyan-400" size={28} />
             </div>
           </div>
         </div>
@@ -427,10 +427,10 @@ const WeatherList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Non-Operational</p>
-              <p className="text-3xl font-bold text-rose-400">{allWeathers.filter((w) => !w.isOperational).length}</p>
+              <p className="text-3xl font-bold text-blue-300">{allWeathers.filter((w) => !w.isOperational).length}</p>
             </div>
-            <div className="p-3 bg-rose-900/30 rounded-xl">
-              <AlertTriangle className="text-rose-400" size={28} />
+            <div className="p-3 bg-blue-900/30 rounded-xl">
+              <AlertTriangle className="text-blue-300" size={28} />
             </div>
           </div>
         </div>
@@ -438,10 +438,10 @@ const WeatherList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">High Risk</p>
-              <p className="text-3xl font-bold text-amber-400">{allWeathers.filter((w) => w.riskLevel === 'HIGH' || w.riskLevel === 'CRITICAL').length}</p>
+              <p className="text-3xl font-bold text-sky-400">{allWeathers.filter((w) => w.riskLevel === 'HIGH' || w.riskLevel === 'CRITICAL').length}</p>
             </div>
-            <div className="p-3 bg-amber-900/30 rounded-xl">
-              <AlertTriangle className="text-amber-400" size={28} />
+            <div className="p-3 bg-sky-900/30 rounded-xl">
+              <AlertTriangle className="text-sky-400" size={28} />
             </div>
           </div>
         </div>
@@ -529,7 +529,7 @@ const WeatherList = () => {
               </button>
 
               {activeFiltersCount > 0 && (
-                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-rose-500/30 bg-rose-900/20 text-rose-400 hover:bg-rose-800/30 font-medium transition-colors flex items-center space-x-2">
+                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-blue-300/30 bg-blue-900/20 text-blue-300 hover:bg-blue-800/30 font-medium transition-colors flex items-center space-x-2">
                   <X size={18} />
                   <span>Clear</span>
                 </button>
@@ -676,7 +676,7 @@ const WeatherList = () => {
                         <StatusBadge status={weather.riskLevel} />
                       </td>
                       <td className="table-cell">
-                        <span className={`badge ${weather.isOperational ? 'bg-emerald-900/30 text-emerald-400' : 'bg-rose-900/30 text-rose-400'}`}>{weather.isOperational ? 'Yes' : 'No'}</span>
+                        <span className={`badge ${weather.isOperational ? 'bg-cyan-900/30 text-cyan-400' : 'bg-blue-900/30 text-blue-300'}`}>{weather.isOperational ? 'Yes' : 'No'}</span>
                       </td>
                       <td className="table-cell">
                         <div className="flex space-x-1">
@@ -684,12 +684,12 @@ const WeatherList = () => {
                             <Eye size={18} />
                           </button>
                           {canEdit && (
-                            <button onClick={() => handleEdit(weather)} className="p-2 text-emerald-400 hover:bg-emerald-900/30 rounded-lg transition-colors" title="Edit">
+                            <button onClick={() => handleEdit(weather)} className="p-2 text-cyan-400 hover:bg-cyan-900/30 rounded-lg transition-colors" title="Edit">
                               <Edit size={18} />
                             </button>
                           )}
                           {canEdit && (
-                            <button onClick={() => handleDelete(weather.id)} className="p-2 text-rose-400 hover:bg-rose-900/30 rounded-lg transition-colors" title="Delete">
+                            <button onClick={() => handleDelete(weather.id)} className="p-2 text-blue-300 hover:bg-blue-900/30 rounded-lg transition-colors" title="Delete">
                               <Trash2 size={18} />
                             </button>
                           )}
@@ -733,15 +733,15 @@ const WeatherList = () => {
             </div>
           ) : modalMode === 'edit' ? (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-emerald-900/30 rounded-lg">
-                <Edit className="text-emerald-400" size={24} />
+              <div className="p-2 bg-cyan-900/30 rounded-lg">
+                <Edit className="text-cyan-400" size={24} />
               </div>
               <span className="text-slate-100">Edit Weather Log</span>
             </div>
           ) : (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-violet-900/30 rounded-lg">
-                <Eye className="text-violet-400" size={24} />
+              <div className="p-2 bg-sky-900/30 rounded-lg">
+                <Eye className="text-sky-400" size={24} />
               </div>
               <span className="text-slate-100">Weather Log Details</span>
             </div>
@@ -792,19 +792,19 @@ const WeatherList = () => {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-orange-50 to-red-50 p-4 rounded-lg border border-orange-200">
-              <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center space-x-2">
-                <Thermometer className="text-orange-600" size={18} />
+            <div className="bg-gradient-to-br from-sky-900/30 to-blue-900/30 p-4 rounded-lg border border-sky-500/20">
+              <h4 className="text-sm font-semibold text-slate-300 mb-3 flex items-center space-x-2">
+                <Thermometer className="text-sky-400" size={18} />
                 <span>Temperature & Humidity</span>
               </h4>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white p-3 rounded-lg border border-orange-100">
-                  <label className="text-xs font-medium text-gray-600">Temperature</label>
-                  <p className="text-2xl font-bold text-orange-600 mt-1">
+                <div className="bg-slate-800/50 p-3 rounded-lg border border-sky-500/20">
+                  <label className="text-xs font-medium text-slate-400">Temperature</label>
+                  <p className="text-2xl font-bold text-sky-400 mt-1">
                     {selectedWeather.temperature ? selectedWeather.temperature.toFixed(1) : '-'} <span className="text-sm">°C</span>
                   </p>
                 </div>
-                <div className="bg-white p-3 rounded-lg border border-orange-100">
+                <div className="bg-slate-800/50 p-3 rounded-lg border border-sky-500/20">
                   <label className="text-xs font-medium text-gray-600">Humidity</label>
                   <p className="text-2xl font-bold text-cyan-600 mt-1">
                     {selectedWeather.humidity ? selectedWeather.humidity.toFixed(1) : '-'} <span className="text-sm">%</span>

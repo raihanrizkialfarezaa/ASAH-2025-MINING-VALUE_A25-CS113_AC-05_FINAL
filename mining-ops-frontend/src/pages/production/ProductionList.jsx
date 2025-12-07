@@ -27,7 +27,7 @@ import { authService } from '../../services/authService';
 const HAULING_STATUS_OPTIONS = [
   { value: 'LOADING', label: 'Loading', color: 'bg-blue-100 text-blue-800' },
   { value: 'HAULING', label: 'Hauling', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'DUMPING', label: 'Dumping', color: 'bg-orange-100 text-orange-800' },
+  { value: 'DUMPING', label: 'Dumping', color: 'bg-sky-100 text-sky-800' },
   { value: 'RETURNING', label: 'Returning', color: 'bg-purple-100 text-purple-800' },
   { value: 'COMPLETED', label: 'Completed', color: 'bg-green-100 text-green-800' },
   { value: 'CANCELLED', label: 'Cancelled', color: 'bg-red-100 text-red-800' },
@@ -1371,39 +1371,39 @@ const ProductionList = () => {
               </div>
             </div>
           </div>
-          <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-b from-emerald-900/20 to-emerald-950/20 p-5 shadow-lg">
+          <div className="rounded-xl border border-cyan-500/20 bg-gradient-to-b from-cyan-900/20 to-cyan-950/20 p-5 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-400 text-sm font-medium">Average Achievement</p>
                 <p className="text-3xl font-bold mt-1 text-slate-100">{statistics.avgAchievement?.toFixed(1) || 0}%</p>
                 <p className="text-slate-500 text-xs mt-1">performance</p>
               </div>
-              <div className="bg-emerald-500/20 p-3 rounded-lg">
-                <CheckCircle size={28} className="text-emerald-400" />
+              <div className="bg-cyan-500/20 p-3 rounded-lg">
+                <CheckCircle size={28} className="text-cyan-400" />
               </div>
             </div>
           </div>
-          <div className="rounded-xl border border-amber-500/20 bg-gradient-to-b from-amber-900/20 to-amber-950/20 p-5 shadow-lg">
+          <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-sky-900/20 to-sky-950/20 p-5 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-400 text-sm font-medium">Total Trips</p>
                 <p className="text-3xl font-bold mt-1 text-slate-100">{(statistics.totalTrips / 1000)?.toFixed(1) || 0}K</p>
                 <p className="text-slate-500 text-xs mt-1">hauling trips</p>
               </div>
-              <div className="bg-amber-500/20 p-3 rounded-lg">
-                <Truck size={28} className="text-amber-400" />
+              <div className="bg-sky-500/20 p-3 rounded-lg">
+                <Truck size={28} className="text-sky-400" />
               </div>
             </div>
           </div>
-          <div className="rounded-xl border border-violet-500/20 bg-gradient-to-b from-violet-900/20 to-violet-950/20 p-5 shadow-lg">
+          <div className="rounded-xl border border-blue-500/20 bg-gradient-to-b from-blue-900/20 to-blue-950/20 p-5 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-400 text-sm font-medium">Avg Cycle Time</p>
                 <p className="text-3xl font-bold mt-1 text-slate-100">{statistics.avgCycleTime?.toFixed(1) || 0}</p>
                 <p className="text-slate-500 text-xs mt-1">minutes</p>
               </div>
-              <div className="bg-violet-500/20 p-3 rounded-lg">
-                <RefreshCw size={28} className="text-violet-400" />
+              <div className="bg-blue-500/20 p-3 rounded-lg">
+                <RefreshCw size={28} className="text-blue-400" />
               </div>
             </div>
           </div>
@@ -1520,7 +1520,7 @@ const ProductionList = () => {
                   setFilterEndDate('');
                   setPagination((prev) => ({ ...prev, page: 1 }));
                 }}
-                className="text-xs text-rose-400 hover:text-rose-300 underline"
+                className="text-xs text-blue-300 hover:text-blue-200 underline"
               >
                 Clear Filters
               </button>
@@ -1570,7 +1570,7 @@ const ProductionList = () => {
                   <td className="px-4 py-3">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        production.shift === 'SHIFT_1' ? 'bg-amber-900/30 text-amber-400' : production.shift === 'SHIFT_2' ? 'bg-sky-900/30 text-sky-400' : 'bg-violet-900/30 text-violet-400'
+                        production.shift === 'SHIFT_1' ? 'bg-sky-900/30 text-sky-400' : production.shift === 'SHIFT_2' ? 'bg-cyan-900/30 text-cyan-400' : 'bg-blue-900/30 text-blue-400'
                       }`}
                     >
                       {production.shift?.replace('_', ' ')}
@@ -1596,12 +1596,12 @@ const ProductionList = () => {
                     <div className="flex items-center justify-center">
                       <div
                         className={`px-3 py-1.5 rounded-lg ${
-                          (production.calculatedAchievement ?? production.achievement) >= 100 ? 'bg-emerald-900/30' : (production.calculatedAchievement ?? production.achievement) >= 80 ? 'bg-amber-900/30' : 'bg-rose-900/30'
+                          (production.calculatedAchievement ?? production.achievement) >= 100 ? 'bg-cyan-900/30' : (production.calculatedAchievement ?? production.achievement) >= 80 ? 'bg-sky-900/30' : 'bg-blue-900/30'
                         }`}
                       >
                         <span
                           className={`text-sm font-bold ${
-                            (production.calculatedAchievement ?? production.achievement) >= 100 ? 'text-emerald-400' : (production.calculatedAchievement ?? production.achievement) >= 80 ? 'text-amber-400' : 'text-rose-400'
+                            (production.calculatedAchievement ?? production.achievement) >= 100 ? 'text-cyan-400' : (production.calculatedAchievement ?? production.achievement) >= 80 ? 'text-sky-400' : 'text-blue-300'
                           }`}
                         >
                           {(production.calculatedAchievement ?? production.achievement)?.toFixed(1)}%
@@ -1618,12 +1618,12 @@ const ProductionList = () => {
                         <Eye size={18} />
                       </button>
                       {canEdit && (
-                        <button onClick={() => handleEdit(production)} className="p-2 rounded-lg text-emerald-400 hover:bg-emerald-900/30 transition-colors" title="Edit">
+                        <button onClick={() => handleEdit(production)} className="p-2 rounded-lg text-cyan-400 hover:bg-cyan-900/30 transition-colors" title="Edit">
                           <Edit size={18} />
                         </button>
                       )}
                       {canEdit && (
-                        <button onClick={() => handleDelete(production.id)} className="p-2 rounded-lg text-rose-400 hover:bg-rose-900/30 transition-colors" title="Delete">
+                        <button onClick={() => handleDelete(production.id)} className="p-2 rounded-lg text-blue-300 hover:bg-blue-900/30 transition-colors" title="Delete">
                           <Trash2 size={18} />
                         </button>
                       )}
@@ -1649,16 +1649,16 @@ const ProductionList = () => {
                 </div>
                 <p className="text-xl font-bold text-slate-100">{new Date(selectedProduction.recordDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
               </div>
-              <div className="bg-gradient-to-b from-emerald-900/20 to-emerald-950/20 rounded-lg p-4 border border-emerald-500/30">
+              <div className="bg-gradient-to-b from-cyan-900/20 to-cyan-950/20 rounded-lg p-4 border border-cyan-500/30">
                 <span className="text-sm font-medium text-slate-400">Mining Site</span>
                 <p className="text-xl font-bold text-slate-100">{selectedProduction.miningSite?.name || '-'}</p>
                 <p className="text-xs text-slate-500 mt-1">{selectedProduction.miningSite?.siteType || ''}</p>
               </div>
-              <div className="bg-gradient-to-b from-violet-900/20 to-violet-950/20 rounded-lg p-4 border border-violet-500/30">
+              <div className="bg-gradient-to-b from-blue-900/20 to-blue-950/20 rounded-lg p-4 border border-blue-500/30">
                 <span className="text-sm font-medium text-slate-400">Achievement</span>
                 <p
                   className={`text-3xl font-bold ${
-                    (haulingAchievement?.achievement ?? selectedProduction.achievement) >= 100 ? 'text-emerald-400' : (haulingAchievement?.achievement ?? selectedProduction.achievement) >= 80 ? 'text-amber-400' : 'text-rose-400'
+                    (haulingAchievement?.achievement ?? selectedProduction.achievement) >= 100 ? 'text-cyan-400' : (haulingAchievement?.achievement ?? selectedProduction.achievement) >= 80 ? 'text-sky-400' : 'text-blue-300'
                   }`}
                 >
                   {(haulingAchievement?.achievement ?? selectedProduction.achievement)?.toFixed(1) || 0}%
@@ -1679,12 +1679,12 @@ const ProductionList = () => {
               </div>
               <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 shadow-sm">
                 <span className="text-xs text-slate-500 uppercase tracking-wide">Total Trips</span>
-                <p className="text-2xl font-bold text-amber-400">{selectedProduction.totalTrips || 0}</p>
+                <p className="text-2xl font-bold text-sky-400">{selectedProduction.totalTrips || 0}</p>
                 <span className="text-sm text-slate-500">trips</span>
               </div>
               <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 shadow-sm">
                 <span className="text-xs text-slate-500 uppercase tracking-wide">Avg Cycle Time</span>
-                <p className="text-2xl font-bold text-violet-400">{selectedProduction.avgCycleTime?.toFixed(1) || 0}</p>
+                <p className="text-2xl font-bold text-blue-400">{selectedProduction.avgCycleTime?.toFixed(1) || 0}</p>
                 <span className="text-sm text-slate-500">minutes</span>
               </div>
             </div>
@@ -1739,7 +1739,7 @@ const ProductionList = () => {
                 </h4>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                   <div className="bg-slate-800/50 rounded p-3 text-center border border-slate-700/50">
-                    <span className={`text-2xl font-bold ${haulingAchievement.achievement >= 100 ? 'text-emerald-400' : 'text-amber-400'}`}>{haulingAchievement.achievement?.toFixed(1) || 0}%</span>
+                    <span className={`text-2xl font-bold ${haulingAchievement.achievement >= 100 ? 'text-cyan-400' : 'text-sky-400'}`}>{haulingAchievement.achievement?.toFixed(1) || 0}%</span>
                     <p className="text-xs text-slate-500 mt-1">Achievement</p>
                   </div>
                   <div className="bg-slate-800/50 rounded p-3 text-center border border-slate-700/50">
@@ -1749,7 +1749,7 @@ const ProductionList = () => {
                     <p className="text-xs text-slate-500 mt-1">Completed</p>
                   </div>
                   <div className="bg-slate-800/50 rounded p-3 text-center border border-slate-700/50">
-                    <span className="text-2xl font-bold text-emerald-400">{haulingAchievement.totalLoadWeight?.toFixed(1) || 0}</span>
+                    <span className="text-2xl font-bold text-cyan-400">{haulingAchievement.totalLoadWeight?.toFixed(1) || 0}</span>
                     <p className="text-xs text-slate-500 mt-1">Ton Loaded</p>
                   </div>
                   <div className="bg-slate-800/50 rounded p-3 text-center border border-slate-700/50">
@@ -1757,7 +1757,7 @@ const ProductionList = () => {
                     <p className="text-xs text-slate-500 mt-1">Target Weight</p>
                   </div>
                   <div className="bg-slate-800/50 rounded p-3 text-center border border-slate-700/50">
-                    <span className="text-2xl font-bold text-violet-400">{haulingAchievement.loadWeightProgress?.toFixed(1) || 0}%</span>
+                    <span className="text-2xl font-bold text-blue-400">{haulingAchievement.loadWeightProgress?.toFixed(1) || 0}%</span>
                     <p className="text-xs text-slate-500 mt-1">Weight Progress</p>
                   </div>
                 </div>
@@ -1795,19 +1795,13 @@ const ProductionList = () => {
                           <td className="px-3 py-2 font-mono text-xs text-slate-400">{ha.activityNumber}</td>
                           <td className="px-3 py-2 text-slate-300">{ha.truck?.code || '-'}</td>
                           <td className="px-3 py-2">
-                            <span className={ha.loadWeight >= ha.targetWeight ? 'text-emerald-400 font-semibold' : 'text-slate-300'}>{ha.loadWeight || 0}</span>
+                            <span className={ha.loadWeight >= ha.targetWeight ? 'text-cyan-400 font-semibold' : 'text-slate-300'}>{ha.loadWeight || 0}</span>
                             <span className="text-slate-500">/{ha.targetWeight || 0}t</span>
                           </td>
                           <td className="px-3 py-2">
                             <span
                               className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                ha.status === 'COMPLETED'
-                                  ? 'bg-emerald-900/30 text-emerald-400'
-                                  : ha.status === 'LOADING'
-                                  ? 'bg-sky-900/30 text-sky-400'
-                                  : ha.status === 'HAULING'
-                                  ? 'bg-amber-900/30 text-amber-400'
-                                  : 'bg-slate-700 text-slate-300'
+                                ha.status === 'COMPLETED' ? 'bg-cyan-900/30 text-cyan-400' : ha.status === 'LOADING' ? 'bg-sky-900/30 text-sky-400' : ha.status === 'HAULING' ? 'bg-blue-900/30 text-blue-400' : 'bg-slate-700 text-slate-300'
                               }`}
                             >
                               {ha.status}
@@ -1822,8 +1816,8 @@ const ProductionList = () => {
             )}
 
             {selectedProduction.remarks && (
-              <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
-                <span className="text-xs text-amber-400 font-medium uppercase tracking-wide">Remarks</span>
+              <div className="bg-sky-900/20 border border-sky-500/30 rounded-lg p-4">
+                <span className="text-xs text-sky-400 font-medium uppercase tracking-wide">Remarks</span>
                 <p className="text-slate-300 mt-1">{selectedProduction.remarks}</p>
               </div>
             )}
@@ -1838,19 +1832,19 @@ const ProductionList = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Hauling Activity Info Banner - Shows details of created hauling activities */}
             {haulingActivityInfo && haulingActivityInfo.createdCount > 0 && (
-              <div className="bg-gradient-to-r from-emerald-900/30 to-emerald-950/30 border border-emerald-500/30 rounded-lg p-4">
+              <div className="bg-gradient-to-r from-cyan-900/30 to-cyan-950/30 border border-cyan-500/30 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-emerald-400 text-lg flex items-center">
-                    <span className="bg-emerald-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">OK</span>
+                  <h4 className="font-semibold text-cyan-400 text-lg flex items-center">
+                    <span className="bg-cyan-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">OK</span>
                     Hauling Activities Created Successfully
                   </h4>
-                  <span className="bg-emerald-900/50 text-emerald-400 px-3 py-1 rounded-full text-sm font-medium">{haulingActivityInfo.createdCount} activities</span>
+                  <span className="bg-cyan-900/50 text-cyan-400 px-3 py-1 rounded-full text-sm font-medium">{haulingActivityInfo.createdCount} activities</span>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
                   <div className="bg-slate-800/50 rounded p-2 border border-slate-700/50">
                     <span className="text-xs text-slate-500">Strategy</span>
-                    <p className="font-medium text-emerald-400">#{haulingActivityInfo.strategyRank}</p>
+                    <p className="font-medium text-cyan-400">#{haulingActivityInfo.strategyRank}</p>
                   </div>
                   <div className="bg-slate-800/50 rounded p-2 border border-slate-700/50">
                     <span className="text-xs text-slate-500">Trucks</span>
@@ -1858,21 +1852,21 @@ const ProductionList = () => {
                   </div>
                   <div className="bg-slate-800/50 rounded p-2 border border-slate-700/50">
                     <span className="text-xs text-slate-500">Excavators</span>
-                    <p className="font-medium text-amber-400">{haulingActivityInfo.equipmentAllocation?.excavator_ids?.length || 0}</p>
+                    <p className="font-medium text-sky-400">{haulingActivityInfo.equipmentAllocation?.excavator_ids?.length || 0}</p>
                   </div>
                   <div className="bg-slate-800/50 rounded p-2 border border-slate-700/50">
                     <span className="text-xs text-slate-500">Operators</span>
-                    <p className="font-medium text-violet-400">{haulingActivityInfo.equipmentAllocation?.operator_ids?.length || 0}</p>
+                    <p className="font-medium text-blue-400">{haulingActivityInfo.equipmentAllocation?.operator_ids?.length || 0}</p>
                   </div>
                 </div>
 
                 {/* Activity Numbers List */}
                 {haulingActivityInfo.createdActivities && haulingActivityInfo.createdActivities.length > 0 && (
-                  <div className="mt-3 border-t border-emerald-500/30 pt-3">
+                  <div className="mt-3 border-t border-cyan-500/30 pt-3">
                     <span className="text-xs text-slate-400 font-medium">Activity IDs:</span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {haulingActivityInfo.createdActivities.slice(0, 10).map((activity, idx) => (
-                        <span key={idx} className="bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded text-xs font-mono">
+                        <span key={idx} className="bg-cyan-900/50 text-cyan-400 px-2 py-0.5 rounded text-xs font-mono">
                           {activity.activityNumber || activity.id}
                         </span>
                       ))}
@@ -1883,7 +1877,7 @@ const ProductionList = () => {
 
                 {/* Aggregated Data Summary */}
                 {haulingActivityInfo.aggregatedData && (
-                  <div className="mt-3 border-t border-emerald-500/30 pt-3">
+                  <div className="mt-3 border-t border-cyan-500/30 pt-3">
                     <span className="text-xs text-slate-400 font-medium mb-2 block">Aggregated Metrics:</span>
                     <div className="grid grid-cols-4 gap-2 text-center">
                       <div>
@@ -1891,11 +1885,11 @@ const ProductionList = () => {
                         <span className="text-xs text-slate-500">Tons</span>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-emerald-400">{parseFloat(haulingActivityInfo.aggregatedData.total_distance_km || 0).toFixed(1)}</p>
+                        <p className="text-lg font-bold text-cyan-400">{parseFloat(haulingActivityInfo.aggregatedData.total_distance_km || 0).toFixed(1)}</p>
                         <span className="text-xs text-slate-500">km Distance</span>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-amber-400">
+                        <p className="text-lg font-bold text-sky-400">
                           {(() => {
                             const fuel = parseFloat(haulingActivityInfo.aggregatedData.total_fuel_liter || 0);
                             if (fuel > 0) return fuel.toFixed(1);
@@ -1908,7 +1902,7 @@ const ProductionList = () => {
                         <span className="text-xs text-slate-500">L Fuel</span>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-violet-400">{parseFloat(haulingActivityInfo.aggregatedData.avg_cycle_time_minutes || 0).toFixed(1)}</p>
+                        <p className="text-lg font-bold text-blue-400">{parseFloat(haulingActivityInfo.aggregatedData.avg_cycle_time_minutes || 0).toFixed(1)}</p>
                         <span className="text-xs text-slate-500">min/cycle</span>
                       </div>
                     </div>
@@ -1927,7 +1921,7 @@ const ProductionList = () => {
                   </h4>
                   <div className="flex items-center space-x-4">
                     <div className="text-center">
-                      <span className={`text-xl font-bold ${haulingAchievement.achievement >= 100 ? 'text-emerald-400' : 'text-amber-400'}`}>{haulingAchievement.achievement.toFixed(1)}%</span>
+                      <span className={`text-xl font-bold ${haulingAchievement.achievement >= 100 ? 'text-cyan-400' : 'text-sky-400'}`}>{haulingAchievement.achievement.toFixed(1)}%</span>
                       <p className="text-xs text-slate-500">Achievement</p>
                     </div>
                     <div className="text-center">
@@ -1937,7 +1931,7 @@ const ProductionList = () => {
                       <p className="text-xs text-slate-500">Completed</p>
                     </div>
                     <div className="text-center">
-                      <span className="text-lg font-semibold text-emerald-400">{haulingAchievement.totalLoadWeight?.toFixed(1) || 0}</span>
+                      <span className="text-lg font-semibold text-cyan-400">{haulingAchievement.totalLoadWeight?.toFixed(1) || 0}</span>
                       <p className="text-xs text-slate-500">ton Loaded</p>
                     </div>
                   </div>
@@ -1946,13 +1940,13 @@ const ProductionList = () => {
             )}
 
             {isManualMode && (
-              <div className="bg-gradient-to-r from-violet-900/30 to-violet-950/30 border border-violet-500/30 rounded-lg p-4">
+              <div className="bg-gradient-to-r from-blue-900/30 to-blue-950/30 border border-blue-500/30 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-semibold text-violet-400 text-lg flex items-center">
+                  <h4 className="font-semibold text-blue-400 text-lg flex items-center">
                     <Package size={20} className="mr-2" />
                     {modalMode === 'edit' ? 'Edit Hauling Activities' : 'Manual Hauling Activities'} ({manualHaulingList.length})
                   </h4>
-                  <button type="button" onClick={handleAddManualHauling} className="text-sm bg-violet-600 text-white px-3 py-1 rounded hover:bg-violet-700 flex items-center">
+                  <button type="button" onClick={handleAddManualHauling} className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 flex items-center">
                     <Plus size={14} className="mr-1" /> Add Hauling
                   </button>
                 </div>
@@ -1960,10 +1954,10 @@ const ProductionList = () => {
                 {manualHaulingList.length > 0 ? (
                   <div className="space-y-4 max-h-96 overflow-y-auto">
                     {manualHaulingList.map((hauling, idx) => (
-                      <div key={hauling.tempId} className={`bg-slate-800/50 rounded-lg border p-4 shadow-sm ${hauling.isExisting ? 'border-sky-500/30' : 'border-violet-500/30'}`}>
+                      <div key={hauling.tempId} className={`bg-slate-800/50 rounded-lg border p-4 shadow-sm ${hauling.isExisting ? 'border-sky-500/30' : 'border-blue-500/30'}`}>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-2">
-                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${hauling.isExisting ? 'bg-sky-900/50 text-sky-400' : 'bg-violet-900/50 text-violet-400'}`}>
+                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${hauling.isExisting ? 'bg-sky-900/50 text-sky-400' : 'bg-blue-900/50 text-blue-400'}`}>
                               {hauling.isExisting ? `Existing #${idx + 1}` : `New #${idx + 1}`}
                             </span>
                             {hauling.activityNumber && <span className="bg-slate-700 text-slate-400 px-2 py-0.5 rounded text-xs font-mono">{hauling.activityNumber}</span>}
@@ -1971,7 +1965,7 @@ const ProductionList = () => {
                           <button
                             type="button"
                             onClick={() => handleRemoveManualHauling(hauling.tempId)}
-                            className={`p-1 rounded ${hauling.isExisting ? 'text-rose-400 hover:bg-rose-900/30' : 'text-slate-400 hover:bg-slate-700/50'}`}
+                            className={`p-1 rounded ${hauling.isExisting ? 'text-blue-300 hover:bg-blue-900/30' : 'text-slate-400 hover:bg-slate-700/50'}`}
                             title={hauling.isExisting ? 'Delete from database' : 'Remove'}
                           >
                             <Trash2 size={18} />
@@ -1986,7 +1980,7 @@ const ProductionList = () => {
                             <select
                               value={hauling.truckId}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'truckId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
+                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
                               disabled={hauling.isExisting}
                             >
                               <option value="">Select Truck</option>
@@ -2004,7 +1998,7 @@ const ProductionList = () => {
                             <select
                               value={hauling.excavatorId}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'excavatorId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
+                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
                               disabled={hauling.isExisting}
                             >
                               <option value="">Select Excavator</option>
@@ -2027,7 +2021,7 @@ const ProductionList = () => {
                             <select
                               value={hauling.operatorId}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'operatorId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
+                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
                               disabled={hauling.isExisting}
                             >
                               <option value="">Select Operator</option>
@@ -2047,7 +2041,7 @@ const ProductionList = () => {
                             <select
                               value={hauling.roadSegmentId}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'roadSegmentId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 ${filteredRoadSegments.length > 0 ? 'border-sky-500/30' : 'border-slate-700/50'}`}
+                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${filteredRoadSegments.length > 0 ? 'border-sky-500/30' : 'border-slate-700/50'}`}
                             >
                               <option value="">Select Road</option>
                               {(filteredRoadSegments.length > 0 ? filteredRoadSegments : roadSegments.filter((rs) => rs.isActive !== false)).map((rs) => (
@@ -2062,12 +2056,12 @@ const ProductionList = () => {
                         <div className="grid grid-cols-2 gap-3 mb-3">
                           <div>
                             <label className="text-xs font-medium text-slate-400 mb-1 flex items-center">
-                              <MapPin size={12} className="mr-1 text-emerald-400" /> Loading Point {filteredLoadingPoints.length > 0 && <span className="text-xs text-emerald-400 ml-1">({filteredLoadingPoints.length} for site)</span>}
+                              <MapPin size={12} className="mr-1 text-cyan-400" /> Loading Point {filteredLoadingPoints.length > 0 && <span className="text-xs text-cyan-400 ml-1">({filteredLoadingPoints.length} for site)</span>}
                             </label>
                             <select
                               value={hauling.loadingPointId}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'loadingPointId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 ${filteredLoadingPoints.length > 0 ? 'border-emerald-500/30' : 'border-slate-700/50'}`}
+                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${filteredLoadingPoints.length > 0 ? 'border-cyan-500/30' : 'border-slate-700/50'}`}
                             >
                               <option value="">Select Loading Point</option>
                               {(filteredLoadingPoints.length > 0 ? filteredLoadingPoints : loadingPoints.filter((lp) => lp.isActive !== false)).map((lp) => (
@@ -2079,12 +2073,12 @@ const ProductionList = () => {
                           </div>
                           <div>
                             <label className="text-xs font-medium text-slate-400 mb-1 flex items-center">
-                              <MapPin size={12} className="mr-1 text-rose-400" /> Dumping Point {filteredDumpingPoints.length > 0 && <span className="text-xs text-amber-400 ml-1">({filteredDumpingPoints.length} for site)</span>}
+                              <MapPin size={12} className="mr-1 text-sky-400" /> Dumping Point {filteredDumpingPoints.length > 0 && <span className="text-xs text-sky-400 ml-1">({filteredDumpingPoints.length} for site)</span>}
                             </label>
                             <select
                               value={hauling.dumpingPointId}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'dumpingPointId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 ${filteredDumpingPoints.length > 0 ? 'border-amber-500/30' : 'border-slate-700/50'}`}
+                              className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${filteredDumpingPoints.length > 0 ? 'border-sky-500/30' : 'border-slate-700/50'}`}
                             >
                               <option value="">Select Dumping Point</option>
                               {(filteredDumpingPoints.length > 0 ? filteredDumpingPoints : dumpingPoints.filter((dp) => dp.isActive !== false)).map((dp) => (
@@ -2104,7 +2098,7 @@ const ProductionList = () => {
                               step="0.1"
                               value={hauling.targetWeight?.toFixed?.(1) || hauling.targetWeight || ''}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'targetWeight', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200"
+                              className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200"
                             />
                           </div>
                           <div>
@@ -2115,7 +2109,7 @@ const ProductionList = () => {
                               placeholder="Actual load"
                               value={hauling.loadWeight}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'loadWeight', e.target.value)}
-                              className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200 placeholder-slate-500"
+                              className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 placeholder-slate-500"
                             />
                           </div>
                           <div>
@@ -2125,7 +2119,7 @@ const ProductionList = () => {
                               step="0.1"
                               value={hauling.distance?.toFixed?.(2) || hauling.distance || ''}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'distance', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200"
+                              className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200"
                             />
                           </div>
                           <div>
@@ -2133,7 +2127,7 @@ const ProductionList = () => {
                             <select
                               value={hauling.status}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'status', e.target.value)}
-                              className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-violet-500 bg-slate-900/50 text-slate-200"
+                              className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200"
                             >
                               {HAULING_STATUS_OPTIONS.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
@@ -2154,8 +2148,8 @@ const ProductionList = () => {
                   </div>
                 )}
 
-                <div className="mt-4 pt-3 border-t border-violet-500/30">
-                  <p className="text-xs text-violet-400">
+                <div className="mt-4 pt-3 border-t border-blue-500/30">
+                  <p className="text-xs text-blue-400">
                     <strong>Note:</strong>{' '}
                     {modalMode === 'edit'
                       ? 'Perubahan pada hauling yang sudah ada akan langsung disimpan. Hauling baru akan dibuat saat Production Record diupdate.'
@@ -2167,7 +2161,7 @@ const ProductionList = () => {
 
             {loadingHaulingActivities && (
               <div className="flex items-center justify-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-violet-500"></div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500"></div>
                 <span className="ml-2 text-slate-400">Loading hauling activities...</span>
               </div>
             )}
@@ -2214,13 +2208,13 @@ const ProductionList = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center">
-                      <CheckCircle size={14} className="text-emerald-400 mr-1" />
+                      <CheckCircle size={14} className="text-cyan-400 mr-1" />
                       <span className="text-xs text-slate-400">Auto-filled from site data</span>
                     </div>
                     <div className="flex items-center space-x-3 text-xs">
                       <span className="bg-sky-900/50 text-sky-400 px-2 py-0.5 rounded">{siteAutoFillInfo.roadCount} Roads</span>
-                      <span className="bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded">{siteAutoFillInfo.lpCount} Loading Pts</span>
-                      <span className="bg-amber-900/50 text-amber-400 px-2 py-0.5 rounded">{siteAutoFillInfo.dpCount} Dumping Pts</span>
+                      <span className="bg-cyan-900/50 text-cyan-400 px-2 py-0.5 rounded">{siteAutoFillInfo.lpCount} Loading Pts</span>
+                      <span className="bg-sky-900/50 text-sky-400 px-2 py-0.5 rounded">{siteAutoFillInfo.dpCount} Dumping Pts</span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2 text-xs">
@@ -2230,7 +2224,7 @@ const ProductionList = () => {
                     <span className="text-slate-500">Road:</span>
                     <span
                       className={`font-semibold ${
-                        siteAutoFillInfo.roadCondition === 'EXCELLENT' ? 'text-emerald-400' : siteAutoFillInfo.roadCondition === 'GOOD' ? 'text-sky-400' : siteAutoFillInfo.roadCondition === 'FAIR' ? 'text-amber-400' : 'text-rose-400'
+                        siteAutoFillInfo.roadCondition === 'EXCELLENT' ? 'text-cyan-400' : siteAutoFillInfo.roadCondition === 'GOOD' ? 'text-sky-400' : siteAutoFillInfo.roadCondition === 'FAIR' ? 'text-sky-400' : 'text-blue-300'
                       }`}
                     >
                       {siteAutoFillInfo.roadCondition}
@@ -2257,13 +2251,13 @@ const ProductionList = () => {
                   <input type="number" step="0.01" value={formData.targetProduction} onChange={(e) => setFormData({ ...formData, targetProduction: e.target.value })} className="input-field" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Haul Distance (km) {siteAutoFillInfo && <span className="text-xs text-emerald-400 ml-1">auto-filled</span>}</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Haul Distance (km) {siteAutoFillInfo && <span className="text-xs text-cyan-400 ml-1">auto-filled</span>}</label>
                   <input
                     type="number"
                     step="0.1"
                     value={formData.haulDistance}
                     onChange={(e) => setFormData({ ...formData, haulDistance: e.target.value })}
-                    className={`input-field ${siteAutoFillInfo ? 'border-emerald-500/30' : ''}`}
+                    className={`input-field ${siteAutoFillInfo ? 'border-cyan-500/30' : ''}`}
                     placeholder="One-way distance"
                   />
                 </div>
@@ -2271,8 +2265,8 @@ const ProductionList = () => {
 
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Weather Condition {siteAutoFillInfo && <span className="text-xs text-emerald-400 ml-1">auto-filled</span>}</label>
-                  <select value={formData.weatherCondition} onChange={(e) => setFormData({ ...formData, weatherCondition: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'border-emerald-500/30' : ''}`}>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Weather Condition {siteAutoFillInfo && <span className="text-xs text-cyan-400 ml-1">auto-filled</span>}</label>
+                  <select value={formData.weatherCondition} onChange={(e) => setFormData({ ...formData, weatherCondition: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'border-cyan-500/30' : ''}`}>
                     <option value="CERAH">Cerah</option>
                     <option value="BERAWAN">Berawan</option>
                     <option value="HUJAN_RINGAN">Hujan Ringan</option>
@@ -2283,8 +2277,8 @@ const ProductionList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Road Condition {siteAutoFillInfo && <span className="text-xs text-emerald-400 ml-1">auto-filled</span>}</label>
-                  <select value={formData.roadCondition} onChange={(e) => setFormData({ ...formData, roadCondition: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'border-emerald-500/30' : ''}`}>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Road Condition {siteAutoFillInfo && <span className="text-xs text-cyan-400 ml-1">auto-filled</span>}</label>
+                  <select value={formData.roadCondition} onChange={(e) => setFormData({ ...formData, roadCondition: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'border-cyan-500/30' : ''}`}>
                     <option value="EXCELLENT">Excellent</option>
                     <option value="GOOD">Good</option>
                     <option value="FAIR">Fair</option>
@@ -2293,8 +2287,8 @@ const ProductionList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Risk Level {siteAutoFillInfo && <span className="text-xs text-emerald-400 ml-1">auto-filled</span>}</label>
-                  <select value={formData.riskLevel} onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'border-emerald-500/30' : ''}`}>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Risk Level {siteAutoFillInfo && <span className="text-xs text-cyan-400 ml-1">auto-filled</span>}</label>
+                  <select value={formData.riskLevel} onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value })} className={`input-field ${siteAutoFillInfo ? 'border-cyan-500/30' : ''}`}>
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
                     <option value="HIGH">High</option>
@@ -2335,9 +2329,7 @@ const ProductionList = () => {
                               <span className="ml-2 text-sm flex-1 text-slate-200">
                                 {truck.code} - {truck.model} ({truck.capacity}t)
                               </span>
-                              <span
-                                className={`text-xs px-1.5 py-0.5 rounded ${truck.status === 'IDLE' ? 'bg-emerald-900/50 text-emerald-400' : truck.status === 'STANDBY' ? 'bg-sky-900/50 text-sky-400' : 'bg-amber-900/50 text-amber-400'}`}
-                              >
+                              <span className={`text-xs px-1.5 py-0.5 rounded ${truck.status === 'IDLE' ? 'bg-cyan-900/50 text-cyan-400' : truck.status === 'STANDBY' ? 'bg-sky-900/50 text-sky-400' : 'bg-sky-900/50 text-sky-400'}`}>
                                 {truck.status}
                               </span>
                             </div>
@@ -2349,7 +2341,7 @@ const ProductionList = () => {
                 </div>
                 <div className="relative">
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Pilih Excavator ({selectedExcavatorIds.length})<span className="text-xs text-emerald-400 ml-1">({availableExcavators.length} tersedia)</span>
+                    Pilih Excavator ({selectedExcavatorIds.length})<span className="text-xs text-cyan-400 ml-1">({availableExcavators.length} tersedia)</span>
                   </label>
                   <div className="relative">
                     <button type="button" onClick={() => setExcavatorDropdownOpen(!excavatorDropdownOpen)} className="w-full input-field flex items-center justify-between">
@@ -2373,16 +2365,12 @@ const ProductionList = () => {
                         </div>
                         <div className="overflow-y-auto max-h-48">
                           {filteredExcavators.map((exc) => (
-                            <div
-                              key={exc.id}
-                              className={`flex items-center px-3 py-2 hover:bg-slate-700/50 cursor-pointer ${selectedExcavatorIds.includes(exc.id) ? 'bg-emerald-900/30' : ''}`}
-                              onClick={() => toggleExcavatorSelection(exc.id)}
-                            >
+                            <div key={exc.id} className={`flex items-center px-3 py-2 hover:bg-slate-700/50 cursor-pointer ${selectedExcavatorIds.includes(exc.id) ? 'bg-cyan-900/30' : ''}`} onClick={() => toggleExcavatorSelection(exc.id)}>
                               <input type="checkbox" checked={selectedExcavatorIds.includes(exc.id)} onChange={() => toggleExcavatorSelection(exc.id)} className="rounded text-sky-500" onClick={(e) => e.stopPropagation()} />
                               <span className="ml-2 text-sm flex-1 text-slate-200">
                                 {exc.code} - {exc.model} ({exc.productionRate}t/m)
                               </span>
-                              <span className={`text-xs px-1.5 py-0.5 rounded ${exc.status === 'IDLE' ? 'bg-emerald-900/50 text-emerald-400' : exc.status === 'ACTIVE' ? 'bg-sky-900/50 text-sky-400' : 'bg-amber-900/50 text-amber-400'}`}>
+                              <span className={`text-xs px-1.5 py-0.5 rounded ${exc.status === 'IDLE' ? 'bg-cyan-900/50 text-cyan-400' : exc.status === 'ACTIVE' ? 'bg-sky-900/50 text-sky-400' : 'bg-sky-900/50 text-sky-400'}`}>
                                 {exc.status}
                               </span>
                             </div>
@@ -2455,19 +2443,19 @@ const ProductionList = () => {
                       <div className="mt-3 pt-2 border-t-2 border-sky-500/30">
                         <h5 className="font-semibold text-sky-300 mb-1">Financial Projection (Estimasi)</h5>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                          <div className="flex justify-between text-emerald-400">
+                          <div className="flex justify-between text-cyan-400">
                             <span>Revenue:</span>
                             <strong>{strategyFinancials.REVENUE}</strong>
                           </div>
-                          <div className="flex justify-between text-rose-400">
+                          <div className="flex justify-between text-blue-300">
                             <span>Fuel Cost:</span>
                             <span>{strategyFinancials.FUEL_COST}</span>
                           </div>
-                          <div className="flex justify-between text-rose-400">
+                          <div className="flex justify-between text-blue-300">
                             <span>Queue Cost:</span>
                             <span>{strategyFinancials.QUEUE_COST}</span>
                           </div>
-                          <div className="flex justify-between text-rose-400">
+                          <div className="flex justify-between text-blue-300">
                             <span>Demurrage:</span>
                             <span>{strategyFinancials.DEMURRAGE}</span>
                           </div>

@@ -347,47 +347,47 @@ const VesselList = () => {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <div className="rounded-xl border border-sky-500/20 bg-gradient-to-br from-sky-900/20 to-sky-950/20 p-5">
+        <div className="rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-900/20 to-blue-950/20 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Total Vessels</p>
-              <p className="text-3xl font-bold text-sky-400">{allVessels.length}</p>
+              <p className="text-sm text-slate-300 mb-1">Total Vessels</p>
+              <p className="text-3xl font-bold text-blue-400">{allVessels.length}</p>
+            </div>
+            <div className="p-3 bg-blue-500/20 rounded-xl">
+              <Ship className="text-blue-400" size={28} />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-900/20 to-cyan-950/20 backdrop-blur-sm p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-300 mb-1">Available</p>
+              <p className="text-3xl font-bold text-cyan-400">{allVessels.filter((v) => v.status === 'AVAILABLE').length}</p>
+            </div>
+            <div className="p-3 bg-cyan-500/20 rounded-xl">
+              <CheckCircle className="text-cyan-400" size={28} />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-sky-500/20 bg-gradient-to-br from-sky-900/20 to-sky-950/20 backdrop-blur-sm p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-300 mb-1">Sailing</p>
+              <p className="text-3xl font-bold text-sky-400">{allVessels.filter((v) => ['LOADING', 'SAILING', 'DISCHARGING'].includes(v.status)).length}</p>
             </div>
             <div className="p-3 bg-sky-500/20 rounded-xl">
-              <Ship className="text-sky-400" size={28} />
+              <Activity className="text-sky-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-900/20 to-emerald-950/20 p-5">
+        <div className="rounded-xl border border-blue-300/20 bg-gradient-to-br from-blue-900/20 to-blue-950/20 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Available</p>
-              <p className="text-3xl font-bold text-emerald-400">{allVessels.filter((v) => v.status === 'AVAILABLE').length}</p>
+              <p className="text-sm text-slate-300 mb-1">Maintenance</p>
+              <p className="text-3xl font-bold text-blue-300">{allVessels.filter((v) => v.status === 'MAINTENANCE').length}</p>
             </div>
-            <div className="p-3 bg-emerald-500/20 rounded-xl">
-              <CheckCircle className="text-emerald-400" size={28} />
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-violet-500/20 bg-gradient-to-br from-violet-900/20 to-violet-950/20 p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400 mb-1">Sailing</p>
-              <p className="text-3xl font-bold text-violet-400">{allVessels.filter((v) => ['LOADING', 'SAILING', 'DISCHARGING'].includes(v.status)).length}</p>
-            </div>
-            <div className="p-3 bg-violet-500/20 rounded-xl">
-              <Activity className="text-violet-400" size={28} />
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-rose-500/20 bg-gradient-to-br from-rose-900/20 to-rose-950/20 p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400 mb-1">Maintenance</p>
-              <p className="text-3xl font-bold text-rose-400">{allVessels.filter((v) => v.status === 'MAINTENANCE').length}</p>
-            </div>
-            <div className="p-3 bg-rose-500/20 rounded-xl">
-              <AlertCircle className="text-rose-400" size={28} />
+            <div className="p-3 bg-blue-300/20 rounded-xl">
+              <AlertCircle className="text-blue-300" size={28} />
             </div>
           </div>
         </div>
@@ -577,7 +577,7 @@ const VesselList = () => {
                       <span className="font-medium text-slate-200">{vessel.name}</span>
                     </td>
                     <td className="table-cell">
-                      <span className="text-xs px-2 py-1 rounded-full bg-violet-500/20 text-violet-300 font-medium">{vessel.vesselType === 'MOTHER_VESSEL' ? 'Mother Vessel' : vessel.vesselType === 'TUG_BOAT' ? 'Tug Boat' : 'Barge'}</span>
+                      <span className="text-xs px-2 py-1 rounded-full bg-sky-500/20 text-sky-300 font-medium">{vessel.vesselType === 'MOTHER_VESSEL' ? 'Mother Vessel' : vessel.vesselType === 'TUG_BOAT' ? 'Tug Boat' : 'Barge'}</span>
                     </td>
                     <td className="table-cell">
                       <span className="font-semibold text-slate-200">{vessel.capacity?.toFixed(2) || 0}</span>
@@ -591,8 +591,8 @@ const VesselList = () => {
                     </td>
                     <td className="table-cell">
                       <div className="flex flex-col">
-                        <span className="text-slate-200 font-medium">{vessel.owner || '-'}</span>
-                        {vessel.isOwned !== undefined && <span className={`text-xs ${vessel.isOwned ? 'text-emerald-400' : 'text-amber-400'}`}>{vessel.isOwned ? 'Owned' : 'Chartered'}</span>}
+                        <span className="text-slate-100 font-medium">{vessel.owner || '-'}</span>
+                        {vessel.isOwned !== undefined && <span className={`text-xs ${vessel.isOwned ? 'text-cyan-400' : 'text-sky-400'}`}>{vessel.isOwned ? 'Owned' : 'Chartered'}</span>}
                       </div>
                     </td>
                     <td className="table-cell">
@@ -606,16 +606,16 @@ const VesselList = () => {
                     </td>
                     <td className="table-cell">
                       <div className="flex space-x-1">
-                        <button onClick={() => handleView(vessel)} className="p-2 text-sky-400 hover:bg-sky-500/20 rounded-lg transition-colors" title="View Details">
+                        <button onClick={() => handleView(vessel)} className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors" title="View Details">
                           <Eye size={18} />
                         </button>
                         {canEdit && (
-                          <button onClick={() => handleEdit(vessel)} className="p-2 text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-colors" title="Edit">
+                          <button onClick={() => handleEdit(vessel)} className="p-2 text-cyan-400 hover:bg-cyan-500/20 rounded-lg transition-colors" title="Edit">
                             <Edit size={18} />
                           </button>
                         )}
                         {canEdit && (
-                          <button onClick={() => handleDelete(vessel.id)} className="p-2 text-rose-400 hover:bg-rose-500/20 rounded-lg transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(vessel.id)} className="p-2 text-blue-300 hover:bg-blue-300/20 rounded-lg transition-colors" title="Delete">
                             <Trash2 size={18} />
                           </button>
                         )}
@@ -651,22 +651,22 @@ const VesselList = () => {
         title={
           mode === 'create' ? (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-sky-500/20 rounded-lg">
-                <Plus className="text-sky-400" size={24} />
+              <div className="p-2 bg-blue-500/20 rounded-lg">
+                <Plus className="text-blue-400" size={24} />
               </div>
               <span className="text-slate-100">Add New Vessel</span>
             </div>
           ) : mode === 'edit' ? (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-emerald-500/20 rounded-lg">
-                <Edit className="text-emerald-400" size={24} />
+              <div className="p-2 bg-cyan-500/20 rounded-lg">
+                <Edit className="text-cyan-400" size={24} />
               </div>
               <span className="text-slate-100">Edit Vessel</span>
             </div>
           ) : (
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-violet-500/20 rounded-lg">
-                <Eye className="text-violet-400" size={24} />
+              <div className="p-2 bg-sky-500/20 rounded-lg">
+                <Eye className="text-sky-400" size={24} />
               </div>
               <span className="text-slate-100">Vessel Details</span>
             </div>
@@ -676,90 +676,90 @@ const VesselList = () => {
       >
         {mode === 'view' && selected ? (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-sky-900/30 to-sky-950/30 p-6 rounded-xl border border-sky-500/20">
+            <div className="bg-gradient-to-r from-blue-900/30 to-blue-950/30 p-6 rounded-xl border border-blue-500/20">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-2xl font-bold text-slate-100">{selected.code}</h3>
-                  <p className="text-slate-400 mt-1">{selected.name}</p>
+                  <p className="text-slate-300 mt-1">{selected.name}</p>
                 </div>
                 <StatusBadge status={selected.status} />
               </div>
               <div className="flex items-center space-x-4 text-sm">
-                <span className="px-3 py-1 bg-slate-800/50 rounded-full text-violet-300 font-medium">{selected.vesselType === 'MOTHER_VESSEL' ? 'Mother Vessel' : selected.vesselType === 'TUG_BOAT' ? 'Tug Boat' : 'Barge'}</span>
-                {selected.isOwned !== undefined && <span className={`px-3 py-1 bg-slate-800/50 rounded-full font-medium ${selected.isOwned ? 'text-emerald-300' : 'text-amber-300'}`}>{selected.isOwned ? 'Owned' : 'Chartered'}</span>}
+                <span className="px-3 py-1 bg-slate-800/50 rounded-full text-sky-300 font-medium">{selected.vesselType === 'MOTHER_VESSEL' ? 'Mother Vessel' : selected.vesselType === 'TUG_BOAT' ? 'Tug Boat' : 'Barge'}</span>
+                {selected.isOwned !== undefined && <span className={`px-3 py-1 bg-slate-800/50 rounded-full font-medium ${selected.isOwned ? 'text-cyan-300' : 'text-sky-300'}`}>{selected.isOwned ? 'Owned' : 'Chartered'}</span>}
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Package className="text-sky-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Capacity</label>
+                  <Package className="text-blue-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Capacity</label>
                 </div>
-                <p className="text-2xl font-bold text-sky-400">
+                <p className="text-2xl font-bold text-blue-400">
                   {selected.capacity?.toFixed(2) || 0} <span className="text-lg">ton</span>
                 </p>
               </div>
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Anchor className="text-emerald-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Gross Tonnage (GT)</label>
+                  <Anchor className="text-cyan-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Gross Tonnage (GT)</label>
                 </div>
-                <p className="text-2xl font-bold text-emerald-400">{selected.gt?.toFixed(2) || '-'}</p>
+                <p className="text-2xl font-bold text-cyan-400">{selected.gt?.toFixed(2) || '-'}</p>
               </div>
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <BarChart3 className="text-violet-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Deadweight Tonnage (DWT)</label>
+                  <BarChart3 className="text-sky-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Deadweight Tonnage (DWT)</label>
                 </div>
-                <p className="text-2xl font-bold text-violet-400">{selected.dwt?.toFixed(2) || '-'}</p>
+                <p className="text-2xl font-bold text-sky-400">{selected.dwt?.toFixed(2) || '-'}</p>
               </div>
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <TrendingUp className="text-amber-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Length Overall (LOA)</label>
+                  <TrendingUp className="text-blue-300" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Length Overall (LOA)</label>
                 </div>
-                <p className="text-lg font-medium text-slate-200">
+                <p className="text-lg font-medium text-slate-100">
                   {selected.loa?.toFixed(2) || '-'} {selected.loa ? <span className="text-sm">m</span> : ''}
                 </p>
               </div>
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <User className="text-sky-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Owner</label>
+                  <User className="text-blue-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Owner</label>
                 </div>
-                <p className="text-lg font-medium text-slate-200">{selected.owner || '-'}</p>
+                <p className="text-lg font-medium text-slate-100">{selected.owner || '-'}</p>
               </div>
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <MapPin className="text-rose-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Current Location</label>
+                  <MapPin className="text-cyan-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Current Location</label>
                 </div>
-                <p className="text-lg font-medium text-slate-200">{selected.currentLocation || '-'}</p>
+                <p className="text-lg font-medium text-slate-100">{selected.currentLocation || '-'}</p>
               </div>
             </div>
 
             {selected.remarks && (
               <div className="bg-slate-800/30 p-4 rounded-lg border border-slate-700/50">
-                <label className="text-sm font-semibold text-slate-400 mb-2 block">Remarks</label>
-                <p className="text-slate-200">{selected.remarks}</p>
+                <label className="text-sm font-semibold text-slate-300 mb-2 block">Remarks</label>
+                <p className="text-slate-100">{selected.remarks}</p>
               </div>
             )}
 
-            <div className="bg-sky-500/10 p-4 rounded-lg border border-sky-500/20">
+            <div className="bg-blue-500/10 p-4 rounded-lg border border-blue-500/20">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-slate-400">Created:</span>
-                  <span className="ml-2 font-medium text-slate-200">{selected.createdAt ? new Date(selected.createdAt).toLocaleDateString() : '-'}</span>
+                  <span className="text-slate-300">Created:</span>
+                  <span className="ml-2 font-medium text-slate-100">{selected.createdAt ? new Date(selected.createdAt).toLocaleDateString() : '-'}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400">Last Updated:</span>
-                  <span className="ml-2 font-medium text-slate-200">{selected.updatedAt ? new Date(selected.updatedAt).toLocaleDateString() : '-'}</span>
+                  <span className="text-slate-300">Last Updated:</span>
+                  <span className="ml-2 font-medium text-slate-100">{selected.updatedAt ? new Date(selected.updatedAt).toLocaleDateString() : '-'}</span>
                 </div>
               </div>
             </div>

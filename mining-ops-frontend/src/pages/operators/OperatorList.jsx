@@ -467,12 +467,12 @@ const OperatorList = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/20">
-              <Users className="text-sky-400" size={28} />
+            <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
+              <Users className="text-blue-400" size={28} />
             </div>
             <span>Operators Management</span>
           </h1>
-          <p className="text-sm text-slate-400 mt-1 ml-14">Manage and monitor operator workforce in real-time</p>
+          <p className="text-sm text-slate-300 mt-1 ml-14">Manage and monitor operator workforce in real-time</p>
         </div>
         <div className="flex gap-3">
           {canEdit && (
@@ -489,47 +489,47 @@ const OperatorList = () => {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-blue-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Total Operators</p>
-              <p className="text-3xl font-bold text-sky-400">{allOperators.length}</p>
+              <p className="text-sm text-slate-300 mb-1">Total Operators</p>
+              <p className="text-3xl font-bold text-blue-400">{allOperators.length}</p>
+            </div>
+            <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+              <Users className="text-blue-400" size={28} />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-300 mb-1">Active</p>
+              <p className="text-3xl font-bold text-cyan-400">{allOperators.filter((o) => o.status === 'ACTIVE').length}</p>
+            </div>
+            <div className="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+              <UserCheck className="text-cyan-400" size={28} />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-300 mb-1">On Leave</p>
+              <p className="text-3xl font-bold text-sky-400">{allOperators.filter((o) => o.status === 'ON_LEAVE').length}</p>
             </div>
             <div className="p-3 bg-sky-500/10 rounded-xl border border-sky-500/20">
-              <Users className="text-sky-400" size={28} />
+              <Clock className="text-sky-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-blue-300/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Active</p>
-              <p className="text-3xl font-bold text-emerald-400">{allOperators.filter((o) => o.status === 'ACTIVE').length}</p>
+              <p className="text-sm text-slate-300 mb-1">Sick</p>
+              <p className="text-3xl font-bold text-blue-300">{allOperators.filter((o) => o.status === 'SICK').length}</p>
             </div>
-            <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-              <UserCheck className="text-emerald-400" size={28} />
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-amber-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400 mb-1">On Leave</p>
-              <p className="text-3xl font-bold text-amber-400">{allOperators.filter((o) => o.status === 'ON_LEAVE').length}</p>
-            </div>
-            <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
-              <Clock className="text-amber-400" size={28} />
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-rose-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400 mb-1">Sick</p>
-              <p className="text-3xl font-bold text-rose-400">{allOperators.filter((o) => o.status === 'SICK').length}</p>
-            </div>
-            <div className="p-3 bg-rose-500/10 rounded-xl border border-rose-500/20">
-              <UserX className="text-rose-400" size={28} />
+            <div className="p-3 bg-blue-300/10 rounded-xl border border-blue-300/20">
+              <UserX className="text-blue-300" size={28} />
             </div>
           </div>
         </div>
@@ -584,12 +584,12 @@ const OperatorList = () => {
               <button
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                 className={`px-4 py-2 rounded-lg border font-medium transition-colors flex items-center gap-2 ${
-                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-sky-500/15 border-sky-500/30 text-sky-400' : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-700'
+                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-blue-500/15 border-blue-500/30 text-blue-400' : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-700'
                 }`}
               >
                 <Filter size={18} />
                 <span>Filters</span>
-                {activeFiltersCount > 0 && <span className="bg-sky-500 text-slate-900 text-xs px-2 py-0.5 rounded-full font-semibold">{activeFiltersCount}</span>}
+                {activeFiltersCount > 0 && <span className="bg-blue-500 text-slate-900 text-xs px-2 py-0.5 rounded-full font-semibold">{activeFiltersCount}</span>}
                 <ChevronDown className={`transform transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} size={16} />
               </button>
 
@@ -746,53 +746,53 @@ const OperatorList = () => {
                 </tr>
               ) : (
                 operators.map((operator) => (
-                  <tr key={operator.id} className="hover:bg-sky-500/5 transition-colors">
+                  <tr key={operator.id} className="hover:bg-blue-500/5 transition-colors">
                     <td className="px-4 py-3 text-sm">
-                      <span className="font-bold text-sky-400">{operator.employeeNumber}</span>
+                      <span className="font-bold text-blue-400">{operator.employeeNumber}</span>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex items-center gap-2">
-                        <User className="text-slate-500" size={16} />
-                        <span className="font-medium text-slate-200">{operator.user?.fullName || '-'}</span>
+                        <User className="text-slate-400" size={16} />
+                        <span className="font-medium text-slate-100">{operator.user?.fullName || '-'}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium text-slate-200">{getLicenseTypeLabel(operator.licenseType)}</span>
-                        <span className="text-xs text-slate-500">{operator.licenseNumber || '-'}</span>
+                        <span className="text-sm font-medium text-slate-100">{getLicenseTypeLabel(operator.licenseType)}</span>
+                        <span className="text-xs text-slate-400">{operator.licenseNumber || '-'}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <span className="text-slate-400">{operator.shift?.replace('SHIFT_', 'Shift ') || '-'}</span>
+                      <span className="text-slate-300">{operator.shift?.replace('SHIFT_', 'Shift ') || '-'}</span>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <StatusBadge status={operator.status} />
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex items-center gap-1">
-                        <Star className="text-amber-400" size={16} fill="currentColor" />
-                        <span className="font-semibold text-slate-200">{operator.rating?.toFixed(2) || '-'}</span>
+                        <Star className="text-sky-400" size={16} fill="currentColor" />
+                        <span className="font-semibold text-slate-100">{operator.rating?.toFixed(2) || '-'}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <span className="font-semibold text-slate-200">{formatCurrency(operator.salary)}</span>
+                      <span className="font-semibold text-slate-100">{formatCurrency(operator.salary)}</span>
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <span className="font-semibold text-slate-200">{operator.totalHours || 0}</span>
-                      <span className="text-slate-500 ml-1">hrs</span>
+                      <span className="font-semibold text-slate-100">{operator.totalHours || 0}</span>
+                      <span className="text-slate-400 ml-1">hrs</span>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex gap-1">
-                        <button onClick={() => handleView(operator)} className="p-2 text-sky-400 hover:bg-sky-500/10 rounded-lg transition-colors" title="View Details">
+                        <button onClick={() => handleView(operator)} className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="View Details">
                           <Eye size={18} />
                         </button>
                         {canEdit && (
-                          <button onClick={() => handleEdit(operator)} className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Edit">
+                          <button onClick={() => handleEdit(operator)} className="p-2 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-colors" title="Edit">
                             <Edit size={18} />
                           </button>
                         )}
                         {canEdit && (
-                          <button onClick={() => handleDelete(operator.id)} className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(operator.id)} className="p-2 text-blue-300 hover:bg-blue-300/10 rounded-lg transition-colors" title="Delete">
                             <Trash2 size={18} />
                           </button>
                         )}
@@ -832,22 +832,22 @@ const OperatorList = () => {
         title={
           modalMode === 'edit' ? (
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-                <Edit className="text-emerald-400" size={24} />
+              <div className="p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
+                <Edit className="text-cyan-400" size={24} />
               </div>
               <span className="text-slate-100">Edit Operator</span>
             </div>
           ) : modalMode === 'create' ? (
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-sky-500/10 rounded-lg border border-sky-500/20">
-                <Plus className="text-sky-400" size={24} />
+              <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                <Plus className="text-blue-400" size={24} />
               </div>
               <span className="text-slate-100">Create New Operator</span>
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-violet-500/10 rounded-lg border border-violet-500/20">
-                <Eye className="text-violet-400" size={24} />
+              <div className="p-2 bg-sky-500/10 rounded-lg border border-sky-500/20">
+                <Eye className="text-sky-400" size={24} />
               </div>
               <span className="text-slate-100">Operator Details</span>
             </div>
@@ -857,7 +857,7 @@ const OperatorList = () => {
       >
         {modalMode === 'view' && selectedOperator ? (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-sky-500/10 to-violet-500/10 p-6 rounded-xl border border-sky-500/20">
+            <div className="bg-gradient-to-r from-sky-500/10 to-blue-500/10 p-6 rounded-xl border border-sky-500/20">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-2xl font-bold text-slate-100">{selectedOperator.employeeNumber}</h3>
@@ -870,7 +870,7 @@ const OperatorList = () => {
             <div className="grid grid-cols-2 gap-6">
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Mail className="text-sky-400" size={18} />
+                  <Mail className="text-blue-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Email</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{selectedOperator.user?.email || '-'}</p>
@@ -878,7 +878,7 @@ const OperatorList = () => {
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Shield className="text-violet-400" size={18} />
+                  <Shield className="text-sky-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">License Type</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{getLicenseTypeLabel(selectedOperator.licenseType)}</p>
@@ -887,7 +887,7 @@ const OperatorList = () => {
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="text-emerald-400" size={18} />
+                  <Calendar className="text-cyan-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">License Expiry</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{formatDate(selectedOperator.licenseExpiry)}</p>
@@ -895,7 +895,7 @@ const OperatorList = () => {
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock className="text-cyan-400" size={18} />
+                  <Clock className="text-sky-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Shift</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{getShiftLabel(selectedOperator.shift)}</p>
@@ -903,35 +903,35 @@ const OperatorList = () => {
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Star className="text-amber-400" size={18} />
+                  <Star className="text-blue-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Rating</label>
                 </div>
-                <p className="text-2xl font-bold text-amber-400">
+                <p className="text-2xl font-bold text-blue-400">
                   {selectedOperator.rating?.toFixed(2) || '-'} <span className="text-lg text-slate-400">/5.0</span>
                 </p>
               </div>
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Activity className="text-orange-400" size={18} />
+                  <Activity className="text-sky-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Total Hours</label>
                 </div>
-                <p className="text-2xl font-bold text-orange-400">
+                <p className="text-2xl font-bold text-sky-400">
                   {selectedOperator.totalHours || 0} <span className="text-lg text-slate-400">hrs</span>
                 </p>
               </div>
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <CreditCard className="text-emerald-400" size={18} />
+                  <CreditCard className="text-cyan-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Salary</label>
                 </div>
-                <p className="text-xl font-bold text-emerald-400">{formatCurrency(selectedOperator.salary)}</p>
+                <p className="text-xl font-bold text-cyan-400">{formatCurrency(selectedOperator.salary)}</p>
               </div>
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="text-violet-400" size={18} />
+                  <Calendar className="text-sky-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Join Date</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{formatDate(selectedOperator.joinDate)}</p>
@@ -955,9 +955,9 @@ const OperatorList = () => {
               )}
 
               {selectedOperator.competency && (
-                <div className="col-span-2 bg-violet-500/10 p-4 rounded-lg border border-violet-500/20">
+                <div className="col-span-2 bg-sky-500/10 p-4 rounded-lg border border-sky-500/20">
                   <div className="flex items-center gap-2 mb-3">
-                    <Award className="text-violet-400" size={18} />
+                    <Award className="text-sky-400" size={18} />
                     <label className="text-sm font-semibold text-slate-400">Competency</label>
                   </div>
                   <div className="grid grid-cols-3 gap-3">

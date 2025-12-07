@@ -466,12 +466,12 @@ const ExcavatorList = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
-              <Shovel className="text-amber-400" size={28} />
+            <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
+              <Shovel className="text-blue-400" size={28} />
             </div>
             <span>Excavators Management</span>
           </h1>
-          <p className="text-sm text-slate-400 mt-1 ml-14">Manage and monitor excavator operations in real-time</p>
+          <p className="text-sm text-slate-300 mt-1 ml-14">Manage and monitor excavator operations in real-time</p>
         </div>
         <div className="flex gap-3">
           <button onClick={fetchExcavators} className="bg-slate-800/80 hover:bg-slate-700 px-4 py-2 rounded-lg border border-slate-700 text-slate-300 font-medium transition-colors flex items-center gap-2">
@@ -488,32 +488,32 @@ const ExcavatorList = () => {
       </div>
 
       <div className="grid grid-cols-5 gap-4">
-        <div className="rounded-xl border border-amber-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-blue-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Total Excavators</p>
-              <p className="text-3xl font-bold text-amber-400">{allExcavators.length}</p>
+              <p className="text-sm text-slate-300 mb-1">Total Excavators</p>
+              <p className="text-3xl font-bold text-blue-400">{allExcavators.length}</p>
             </div>
-            <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
-              <Shovel className="text-amber-400" size={28} />
+            <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+              <Shovel className="text-blue-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Active</p>
-              <p className="text-3xl font-bold text-emerald-400">{allExcavators.filter((e) => e.status === 'ACTIVE').length}</p>
+              <p className="text-sm text-slate-300 mb-1">Active</p>
+              <p className="text-3xl font-bold text-cyan-400">{allExcavators.filter((e) => e.status === 'ACTIVE').length}</p>
             </div>
-            <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-              <Activity className="text-emerald-400" size={28} />
+            <div className="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+              <Activity className="text-cyan-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Idle</p>
+              <p className="text-sm text-slate-300 mb-1">Idle</p>
               <p className="text-3xl font-bold text-sky-400">{allExcavators.filter((e) => e.status === 'IDLE').length}</p>
             </div>
             <div className="p-3 bg-sky-500/10 rounded-xl border border-sky-500/20">
@@ -521,72 +521,72 @@ const ExcavatorList = () => {
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-amber-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-blue-400/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Maintenance</p>
-              <p className="text-3xl font-bold text-amber-400">{allExcavators.filter((e) => e.status === 'MAINTENANCE').length}</p>
+              <p className="text-sm text-slate-300 mb-1">Maintenance</p>
+              <p className="text-3xl font-bold text-blue-300">{allExcavators.filter((e) => e.status === 'MAINTENANCE').length}</p>
             </div>
-            <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
-              <Wrench className="text-amber-400" size={28} />
+            <div className="p-3 bg-blue-400/10 rounded-xl border border-blue-400/20">
+              <Wrench className="text-blue-300" size={28} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-rose-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-sky-300/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Breakdown</p>
-              <p className="text-3xl font-bold text-rose-400">{allExcavators.filter((e) => e.status === 'BREAKDOWN').length}</p>
+              <p className="text-sm text-slate-300 mb-1">Breakdown</p>
+              <p className="text-3xl font-bold text-sky-300">{allExcavators.filter((e) => e.status === 'BREAKDOWN').length}</p>
             </div>
-            <div className="p-3 bg-rose-500/10 rounded-xl border border-rose-500/20">
-              <AlertCircle className="text-rose-400" size={28} />
+            <div className="p-3 bg-sky-300/10 rounded-xl border border-sky-300/20">
+              <AlertCircle className="text-sky-300" size={28} />
             </div>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <div className="rounded-xl border border-violet-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-blue-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Standby</p>
-              <p className="text-2xl font-bold text-violet-400">{allExcavators.filter((e) => e.status === 'STANDBY').length}</p>
+              <p className="text-sm text-slate-300 mb-1">Standby</p>
+              <p className="text-2xl font-bold text-blue-400">{allExcavators.filter((e) => e.status === 'STANDBY').length}</p>
             </div>
-            <div className="p-3 bg-violet-500/10 rounded-xl border border-violet-500/20">
-              <Settings className="text-violet-400" size={24} />
+            <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+              <Settings className="text-blue-400" size={24} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-indigo-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Avg Bucket Capacity</p>
-              <p className="text-2xl font-bold text-indigo-400">{formatNumber(avgBucketCapacity)} m3</p>
+              <p className="text-sm text-slate-300 mb-1">Avg Bucket Capacity</p>
+              <p className="text-2xl font-bold text-cyan-400">{formatNumber(avgBucketCapacity)} m3</p>
             </div>
-            <div className="p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-              <Gauge className="text-indigo-400" size={24} />
+            <div className="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+              <Gauge className="text-cyan-400" size={24} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-teal-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Total Operating Hours</p>
-              <p className="text-2xl font-bold text-teal-400">{totalOperatingHours.toLocaleString()}</p>
+              <p className="text-sm text-slate-300 mb-1">Total Operating Hours</p>
+              <p className="text-2xl font-bold text-sky-400">{totalOperatingHours.toLocaleString()}</p>
             </div>
-            <div className="p-3 bg-teal-500/10 rounded-xl border border-teal-500/20">
-              <Clock className="text-teal-400" size={24} />
+            <div className="p-3 bg-sky-500/10 rounded-xl border border-sky-500/20">
+              <Clock className="text-sky-400" size={24} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-pink-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-blue-300/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400 mb-1">Unique Brands</p>
-              <p className="text-2xl font-bold text-pink-400">{uniqueBrands.length}</p>
+              <p className="text-sm text-slate-300 mb-1">Unique Brands</p>
+              <p className="text-2xl font-bold text-blue-300">{uniqueBrands.length}</p>
             </div>
-            <div className="p-3 bg-pink-500/10 rounded-xl border border-pink-500/20">
-              <Package className="text-pink-400" size={24} />
+            <div className="p-3 bg-blue-300/10 rounded-xl border border-blue-300/20">
+              <Package className="text-blue-300" size={24} />
             </div>
           </div>
         </div>
@@ -628,12 +628,12 @@ const ExcavatorList = () => {
               <button
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                 className={`px-4 py-2 rounded-lg border font-medium transition-colors flex items-center gap-2 ${
-                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-amber-500/15 border-amber-500/30 text-amber-400' : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-700'
+                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-blue-500/15 border-blue-500/30 text-blue-400' : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-700'
                 }`}
               >
                 <Filter size={18} />
                 <span>Filters</span>
-                {activeFiltersCount > 0 && <span className="bg-amber-500 text-slate-900 text-xs px-2 py-0.5 rounded-full font-semibold">{activeFiltersCount}</span>}
+                {activeFiltersCount > 0 && <span className="bg-blue-500 text-slate-900 text-xs px-2 py-0.5 rounded-full font-semibold">{activeFiltersCount}</span>}
                 <ChevronDown className={`transform transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} size={16} />
               </button>
 
@@ -745,44 +745,44 @@ const ExcavatorList = () => {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('code')}>
                   <div className="flex items-center justify-between">
                     <span>Code</span>
-                    {sortField === 'code' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-amber-400" /> : <SortDesc size={16} className="text-amber-400" />)}
+                    {sortField === 'code' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-400" /> : <SortDesc size={16} className="text-blue-400" />)}
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('name')}>
                   <div className="flex items-center justify-between">
                     <span>Name</span>
-                    {sortField === 'name' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-amber-400" /> : <SortDesc size={16} className="text-amber-400" />)}
+                    {sortField === 'name' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-400" /> : <SortDesc size={16} className="text-blue-400" />)}
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('brand')}>
                   <div className="flex items-center justify-between">
                     <span>Brand</span>
-                    {sortField === 'brand' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-amber-400" /> : <SortDesc size={16} className="text-amber-400" />)}
+                    {sortField === 'brand' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-400" /> : <SortDesc size={16} className="text-blue-400" />)}
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Model</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('bucketCapacity')}>
                   <div className="flex items-center justify-between">
                     <span>Bucket (m3)</span>
-                    {sortField === 'bucketCapacity' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-amber-400" /> : <SortDesc size={16} className="text-amber-400" />)}
+                    {sortField === 'bucketCapacity' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-400" /> : <SortDesc size={16} className="text-blue-400" />)}
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('totalHours')}>
                   <div className="flex items-center justify-between">
                     <span>Hours</span>
-                    {sortField === 'totalHours' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-amber-400" /> : <SortDesc size={16} className="text-amber-400" />)}
+                    {sortField === 'totalHours' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-400" /> : <SortDesc size={16} className="text-blue-400" />)}
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('currentLocation')}>
                   <div className="flex items-center justify-between">
                     <span>Location</span>
-                    {sortField === 'currentLocation' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-amber-400" /> : <SortDesc size={16} className="text-amber-400" />)}
+                    {sortField === 'currentLocation' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-400" /> : <SortDesc size={16} className="text-blue-400" />)}
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => handleSort('status')}>
                   <div className="flex items-center justify-between">
                     <span>Status</span>
-                    {sortField === 'status' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-amber-400" /> : <SortDesc size={16} className="text-amber-400" />)}
+                    {sortField === 'status' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-blue-400" /> : <SortDesc size={16} className="text-blue-400" />)}
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Actions</th>
@@ -801,25 +801,25 @@ const ExcavatorList = () => {
                 </tr>
               ) : (
                 excavators.map((excavator) => (
-                  <tr key={excavator.id} className="hover:bg-amber-500/5 transition-colors">
+                  <tr key={excavator.id} className="hover:bg-blue-500/5 transition-colors">
                     <td className="px-4 py-3 text-sm">
-                      <span className="font-bold text-amber-400">{excavator.code}</span>
+                      <span className="font-bold text-blue-400">{excavator.code}</span>
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <span className="font-medium text-slate-200">{excavator.name}</span>
+                      <span className="font-medium text-slate-100">{excavator.name}</span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-400">{excavator.brand || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-slate-400">{excavator.model || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-slate-300">{excavator.brand || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-slate-300">{excavator.model || '-'}</td>
                     <td className="px-4 py-3 text-sm">
-                      <span className="font-semibold text-slate-200">{formatNumber(excavator.bucketCapacity)}</span>
+                      <span className="font-semibold text-slate-100">{formatNumber(excavator.bucketCapacity)}</span>
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <span className="font-medium text-slate-200">{(excavator.totalHours || 0).toLocaleString()}</span>
+                      <span className="font-medium text-slate-100">{(excavator.totalHours || 0).toLocaleString()}</span>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex items-center gap-1">
-                        <MapPin size={14} className="text-slate-500" />
-                        <span className="text-slate-400">{excavator.currentLocation || '-'}</span>
+                        <MapPin size={14} className="text-slate-400" />
+                        <span className="text-slate-300">{excavator.currentLocation || '-'}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm">
@@ -827,19 +827,19 @@ const ExcavatorList = () => {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex gap-1">
-                        <button onClick={() => handleView(excavator)} className="p-2 text-sky-400 hover:bg-sky-500/10 rounded-lg transition-colors" title="View Details">
+                        <button onClick={() => handleView(excavator)} className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="View Details">
                           <Eye size={18} />
                         </button>
                         {canEdit && (
-                          <button onClick={() => handleEdit(excavator)} className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Edit">
+                          <button onClick={() => handleEdit(excavator)} className="p-2 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-colors" title="Edit">
                             <Edit size={18} />
                           </button>
                         )}
-                        <button onClick={() => handlePerformance(excavator)} className="p-2 text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors" title="Performance">
+                        <button onClick={() => handlePerformance(excavator)} className="p-2 text-sky-400 hover:bg-sky-500/10 rounded-lg transition-colors" title="Performance">
                           <Activity size={18} />
                         </button>
                         {canEdit && (
-                          <button onClick={() => handleDelete(excavator.id)} className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(excavator.id)} className="p-2 text-blue-300 hover:bg-blue-300/10 rounded-lg transition-colors" title="Delete">
                             <Trash2 size={18} />
                           </button>
                         )}
@@ -879,22 +879,22 @@ const ExcavatorList = () => {
         title={
           modalMode === 'create' ? (
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                <Plus className="text-amber-400" size={24} />
+              <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                <Plus className="text-blue-400" size={24} />
               </div>
               <span className="text-slate-100">Add New Excavator</span>
             </div>
           ) : modalMode === 'edit' ? (
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-                <Edit className="text-emerald-400" size={24} />
+              <div className="p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
+                <Edit className="text-cyan-400" size={24} />
               </div>
               <span className="text-slate-100">Edit Excavator</span>
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-violet-500/10 rounded-lg border border-violet-500/20">
-                <Eye className="text-violet-400" size={24} />
+              <div className="p-2 bg-sky-500/10 rounded-lg border border-sky-500/20">
+                <Eye className="text-sky-400" size={24} />
               </div>
               <span className="text-slate-100">Excavator Details</span>
             </div>
@@ -904,11 +904,11 @@ const ExcavatorList = () => {
       >
         {modalMode === 'view' && selectedExcavator ? (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-amber-500/10 to-slate-900 p-6 rounded-xl border border-amber-500/20">
+            <div className="bg-gradient-to-r from-blue-500/10 to-slate-900 p-6 rounded-xl border border-blue-500/20">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-2xl font-bold text-slate-100">{selectedExcavator.code}</h3>
-                  <p className="text-slate-400 mt-1">{selectedExcavator.name}</p>
+                  <p className="text-slate-300 mt-1">{selectedExcavator.name}</p>
                 </div>
                 <StatusBadge status={selectedExcavator.status} />
               </div>
@@ -917,59 +917,59 @@ const ExcavatorList = () => {
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                 <div className="flex items-center gap-2 mb-2">
-                  <Shovel className="text-amber-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Brand & Model</label>
+                  <Shovel className="text-blue-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Brand & Model</label>
                 </div>
-                <p className="text-lg font-medium text-slate-200">{selectedExcavator.brand || '-'}</p>
-                <p className="text-sm text-slate-400">{selectedExcavator.model || '-'}</p>
+                <p className="text-lg font-medium text-slate-100">{selectedExcavator.brand || '-'}</p>
+                <p className="text-sm text-slate-300">{selectedExcavator.model || '-'}</p>
               </div>
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                 <div className="flex items-center gap-2 mb-2">
-                  <Gauge className="text-emerald-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Bucket Capacity</label>
+                  <Gauge className="text-cyan-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Bucket Capacity</label>
                 </div>
-                <p className="text-2xl font-bold text-emerald-400">
+                <p className="text-2xl font-bold text-cyan-400">
                   {formatNumber(selectedExcavator.bucketCapacity)} <span className="text-lg">m3</span>
                 </p>
               </div>
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="text-violet-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Year of Manufacture</label>
+                  <Calendar className="text-sky-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Year of Manufacture</label>
                 </div>
-                <p className="text-lg font-medium text-slate-200">{selectedExcavator.yearManufacture || '-'}</p>
+                <p className="text-lg font-medium text-slate-100">{selectedExcavator.yearManufacture || '-'}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                 <div className="flex items-center gap-2 mb-2">
-                  <Zap className="text-sky-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Production Rate</label>
+                  <Zap className="text-blue-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Production Rate</label>
                 </div>
-                <p className="text-lg font-medium text-slate-200">
+                <p className="text-lg font-medium text-slate-100">
                   {selectedExcavator.productionRate || '-'} <span className="text-sm">ton/min</span>
                 </p>
               </div>
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                 <div className="flex items-center gap-2 mb-2">
-                  <Fuel className="text-amber-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Fuel Consumption</label>
+                  <Fuel className="text-cyan-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Fuel Consumption</label>
                 </div>
-                <p className="text-lg font-medium text-slate-200">
+                <p className="text-lg font-medium text-slate-100">
                   {selectedExcavator.fuelConsumption || '-'} <span className="text-sm">L/hr</span>
                 </p>
               </div>
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock className="text-indigo-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Total Hours</label>
+                  <Clock className="text-sky-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Total Hours</label>
                 </div>
-                <p className="text-lg font-medium text-slate-200">
+                <p className="text-lg font-medium text-slate-100">
                   {(selectedExcavator.totalHours || 0).toLocaleString()} <span className="text-sm">hours</span>
                 </p>
               </div>
@@ -978,52 +978,52 @@ const ExcavatorList = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                 <div className="flex items-center gap-2 mb-2">
-                  <MapPin className="text-rose-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Current Location</label>
+                  <MapPin className="text-blue-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Current Location</label>
                 </div>
-                <p className="text-lg font-medium text-slate-200">{selectedExcavator.currentLocation || '-'}</p>
+                <p className="text-lg font-medium text-slate-100">{selectedExcavator.currentLocation || '-'}</p>
               </div>
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                 <div className="flex items-center gap-2 mb-2">
-                  <DollarSign className="text-emerald-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Maintenance Cost</label>
+                  <DollarSign className="text-cyan-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Maintenance Cost</label>
                 </div>
-                <p className="text-lg font-medium text-slate-200">{selectedExcavator.maintenanceCost ? `$${selectedExcavator.maintenanceCost}/hr` : '-'}</p>
+                <p className="text-lg font-medium text-slate-100">{selectedExcavator.maintenanceCost ? `$${selectedExcavator.maintenanceCost}/hr` : '-'}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-sky-500/10 p-4 rounded-lg border border-sky-500/20">
+              <div className="bg-blue-500/10 p-4 rounded-lg border border-blue-500/20">
                 <div className="flex items-center gap-2 mb-2">
-                  <Wrench className="text-sky-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Maintenance Schedule</label>
+                  <Wrench className="text-blue-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Maintenance Schedule</label>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <p className="text-xs text-slate-500">Last Maintenance</p>
-                    <p className="text-sm font-medium text-slate-200">{formatDate(selectedExcavator.lastMaintenance)}</p>
+                    <p className="text-xs text-slate-400">Last Maintenance</p>
+                    <p className="text-sm font-medium text-slate-100">{formatDate(selectedExcavator.lastMaintenance)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Next Maintenance</p>
-                    <p className="text-sm font-medium text-slate-200">{formatDate(selectedExcavator.nextMaintenance)}</p>
+                    <p className="text-xs text-slate-400">Next Maintenance</p>
+                    <p className="text-sm font-medium text-slate-100">{formatDate(selectedExcavator.nextMaintenance)}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-emerald-500/10 p-4 rounded-lg border border-emerald-500/20">
+              <div className="bg-cyan-500/10 p-4 rounded-lg border border-cyan-500/20">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="text-emerald-400" size={18} />
-                  <label className="text-sm font-semibold text-slate-400">Asset Timeline</label>
+                  <Calendar className="text-cyan-400" size={18} />
+                  <label className="text-sm font-semibold text-slate-300">Asset Timeline</label>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <p className="text-xs text-slate-500">Purchase Date</p>
-                    <p className="text-sm font-medium text-slate-200">{formatDate(selectedExcavator.purchaseDate)}</p>
+                    <p className="text-xs text-slate-400">Purchase Date</p>
+                    <p className="text-sm font-medium text-slate-100">{formatDate(selectedExcavator.purchaseDate)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Retirement Date</p>
-                    <p className="text-sm font-medium text-slate-200">{formatDate(selectedExcavator.retirementDate)}</p>
+                    <p className="text-xs text-slate-400">Retirement Date</p>
+                    <p className="text-sm font-medium text-slate-100">{formatDate(selectedExcavator.retirementDate)}</p>
                   </div>
                 </div>
               </div>
@@ -1031,13 +1031,13 @@ const ExcavatorList = () => {
 
             {selectedExcavator.remarks && (
               <div className="bg-slate-800/40 p-4 rounded-lg border border-slate-700/40">
-                <label className="text-sm font-semibold text-slate-400 mb-2 block">Remarks</label>
-                <p className="text-slate-200">{selectedExcavator.remarks}</p>
+                <label className="text-sm font-semibold text-slate-300 mb-2 block">Remarks</label>
+                <p className="text-slate-100">{selectedExcavator.remarks}</p>
               </div>
             )}
 
             <div className="bg-slate-800/40 p-4 rounded-lg border border-slate-700/40">
-              <div className="flex items-center justify-between text-sm text-slate-500">
+              <div className="flex items-center justify-between text-sm text-slate-400">
                 <span>Active: {selectedExcavator.isActive ? 'Yes' : 'No'}</span>
                 <span>Created: {formatDate(selectedExcavator.createdAt)}</span>
                 <span>Updated: {formatDate(selectedExcavator.updatedAt)}</span>
@@ -1046,9 +1046,9 @@ const ExcavatorList = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-amber-500/10 p-4 rounded-lg border border-amber-500/20">
-              <p className="text-sm text-amber-300">
-                <strong className="text-amber-200">Note:</strong> Fields marked with * are required. Make sure to enter valid data.
+            <div className="bg-blue-500/10 p-4 rounded-lg border border-blue-500/20">
+              <p className="text-sm text-blue-300">
+                <strong className="text-blue-200">Note:</strong> Fields marked with * are required. Make sure to enter valid data.
               </p>
             </div>
 
@@ -1279,27 +1279,27 @@ const ExcavatorList = () => {
       <Modal isOpen={showPerformanceModal} onClose={() => setShowPerformanceModal(false)} title={<span className="text-slate-100">Performance Metrics: {selectedExcavator?.code}</span>} size="lg">
         {performanceData ? (
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-amber-500/10 to-slate-900 p-4 rounded-lg border border-amber-500/20">
+            <div className="bg-gradient-to-br from-blue-500/10 to-slate-900 p-4 rounded-lg border border-blue-500/20">
               <div className="flex items-center gap-2 mb-4">
-                <BarChart3 className="text-amber-400" size={20} />
+                <BarChart3 className="text-blue-400" size={20} />
                 <h3 className="text-lg font-semibold text-slate-100">Production Metrics</h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                   <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="text-amber-400" size={18} />
-                    <p className="text-sm font-medium text-slate-400">Total Production</p>
+                    <TrendingUp className="text-blue-400" size={18} />
+                    <p className="text-sm font-medium text-slate-300">Total Production</p>
                   </div>
-                  <p className="text-2xl font-bold text-amber-400">{performanceData.totalProduction || 0}</p>
-                  <p className="text-xs text-slate-500 mt-1">metric tons</p>
+                  <p className="text-2xl font-bold text-blue-400">{performanceData.totalProduction || 0}</p>
+                  <p className="text-xs text-slate-400 mt-1">metric tons</p>
                 </div>
                 <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                   <div className="flex items-center gap-2 mb-2">
-                    <Zap className="text-emerald-400" size={18} />
-                    <p className="text-sm font-medium text-slate-400">Avg Production Rate</p>
+                    <Zap className="text-cyan-400" size={18} />
+                    <p className="text-sm font-medium text-slate-300">Avg Production Rate</p>
                   </div>
-                  <p className="text-2xl font-bold text-emerald-400">{performanceData.avgProductionRate || 0}</p>
-                  <p className="text-xs text-slate-500 mt-1">ton/hour</p>
+                  <p className="text-2xl font-bold text-cyan-400">{performanceData.avgProductionRate || 0}</p>
+                  <p className="text-xs text-slate-400 mt-1">ton/hour</p>
                 </div>
               </div>
             </div>
@@ -1313,58 +1313,58 @@ const ExcavatorList = () => {
                 <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                   <div className="flex items-center gap-2 mb-2">
                     <Gauge className="text-sky-400" size={18} />
-                    <p className="text-sm font-medium text-slate-400">Utilization</p>
+                    <p className="text-sm font-medium text-slate-300">Utilization</p>
                   </div>
                   <p className="text-2xl font-bold text-sky-400">{performanceData.utilization || 0}%</p>
-                  <p className="text-xs text-slate-500 mt-1">machine utilization</p>
+                  <p className="text-xs text-slate-400 mt-1">machine utilization</p>
                 </div>
                 <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                   <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle className="text-violet-400" size={18} />
-                    <p className="text-sm font-medium text-slate-400">Efficiency</p>
+                    <CheckCircle className="text-blue-400" size={18} />
+                    <p className="text-sm font-medium text-slate-300">Efficiency</p>
                   </div>
-                  <p className="text-2xl font-bold text-violet-400">{performanceData.efficiency || 'N/A'}</p>
-                  <p className="text-xs text-slate-500 mt-1">operational efficiency</p>
+                  <p className="text-2xl font-bold text-blue-400">{performanceData.efficiency || 'N/A'}</p>
+                  <p className="text-xs text-slate-400 mt-1">operational efficiency</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-amber-500/10 to-slate-900 p-4 rounded-lg border border-amber-500/20">
+            <div className="bg-gradient-to-br from-cyan-500/10 to-slate-900 p-4 rounded-lg border border-cyan-500/20">
               <div className="flex items-center gap-2 mb-4">
-                <Fuel className="text-amber-400" size={20} />
+                <Fuel className="text-cyan-400" size={20} />
                 <h3 className="text-lg font-semibold text-slate-100">Fuel & Cost Metrics</h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                   <div className="flex items-center gap-2 mb-2">
-                    <Fuel className="text-amber-400" size={18} />
-                    <p className="text-sm font-medium text-slate-400">Total Fuel Used</p>
+                    <Fuel className="text-cyan-400" size={18} />
+                    <p className="text-sm font-medium text-slate-300">Total Fuel Used</p>
                   </div>
-                  <p className="text-2xl font-bold text-amber-400">{performanceData.totalFuel || 0}</p>
-                  <p className="text-xs text-slate-500 mt-1">liters</p>
+                  <p className="text-2xl font-bold text-cyan-400">{performanceData.totalFuel || 0}</p>
+                  <p className="text-xs text-slate-400 mt-1">liters</p>
                 </div>
                 <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/40">
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign className="text-emerald-400" size={18} />
-                    <p className="text-sm font-medium text-slate-400">Fuel Efficiency</p>
+                    <DollarSign className="text-blue-400" size={18} />
+                    <p className="text-sm font-medium text-slate-300">Fuel Efficiency</p>
                   </div>
-                  <p className="text-2xl font-bold text-emerald-400">{performanceData.totalProduction > 0 ? (performanceData.totalFuel / performanceData.totalProduction).toFixed(2) : 0}</p>
-                  <p className="text-xs text-slate-500 mt-1">L/ton</p>
+                  <p className="text-2xl font-bold text-blue-400">{performanceData.totalProduction > 0 ? (performanceData.totalFuel / performanceData.totalProduction).toFixed(2) : 0}</p>
+                  <p className="text-xs text-slate-400 mt-1">L/ton</p>
                 </div>
               </div>
             </div>
 
             <div className="bg-slate-800/40 p-4 rounded-lg border border-slate-700/40">
-              <p className="text-xs text-slate-400">
-                <strong className="text-slate-300">Note:</strong> Performance metrics are calculated from actual hauling operations. Data is updated in real-time based on recorded activities and fuel consumption.
+              <p className="text-xs text-slate-300">
+                <strong className="text-slate-200">Note:</strong> Performance metrics are calculated from actual hauling operations. Data is updated in real-time based on recorded activities and fuel consumption.
               </p>
             </div>
           </div>
         ) : (
           <div className="text-center py-12">
             <AlertCircle className="mx-auto text-slate-600 mb-4" size={48} />
-            <p className="text-slate-300">No performance data available for this excavator.</p>
-            <p className="text-sm text-slate-500 mt-2">Data will appear once hauling operations are recorded.</p>
+            <p className="text-slate-200">No performance data available for this excavator.</p>
+            <p className="text-sm text-slate-400 mt-2">Data will appear once hauling operations are recorded.</p>
           </div>
         )}
       </Modal>

@@ -596,36 +596,36 @@ const HaulingList = () => {
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-violet-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">In Progress</p>
-              <p className="text-3xl font-bold text-violet-400">{allActivities.filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'RETURNING'].includes(a.status)).length}</p>
+              <p className="text-3xl font-bold text-sky-400">{allActivities.filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'RETURNING'].includes(a.status)).length}</p>
             </div>
-            <div className="p-3 bg-violet-500/10 rounded-xl border border-violet-500/20">
-              <TrendingUp className="text-violet-400" size={28} />
+            <div className="p-3 bg-sky-500/10 rounded-xl border border-sky-500/20">
+              <TrendingUp className="text-sky-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Completed</p>
-              <p className="text-3xl font-bold text-emerald-400">{allActivities.filter((a) => a.status === 'COMPLETED').length}</p>
+              <p className="text-3xl font-bold text-cyan-400">{allActivities.filter((a) => a.status === 'COMPLETED').length}</p>
             </div>
-            <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-              <CheckCircle className="text-emerald-400" size={28} />
+            <div className="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+              <CheckCircle className="text-cyan-400" size={28} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-rose-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+        <div className="rounded-xl border border-blue-300/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Delayed</p>
-              <p className="text-3xl font-bold text-rose-400">{allActivities.filter((a) => a.isDelayed || a.status === 'DELAYED').length}</p>
+              <p className="text-3xl font-bold text-blue-300">{allActivities.filter((a) => a.isDelayed || a.status === 'DELAYED').length}</p>
             </div>
-            <div className="p-3 bg-rose-500/10 rounded-xl border border-rose-500/20">
-              <AlertCircle className="text-rose-400" size={28} />
+            <div className="p-3 bg-blue-300/10 rounded-xl border border-blue-300/20">
+              <AlertCircle className="text-blue-300" size={28} />
             </div>
           </div>
         </div>
@@ -871,7 +871,7 @@ const HaulingList = () => {
                   <tr key={activity.id} className="hover:bg-sky-500/5 transition-colors">
                     <td className="px-4 py-3 text-sm">
                       <span className="font-bold text-sky-400">{activity.activityNumber}</span>
-                      {activity.isDelayed && <span className="ml-2 text-xs bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full border border-rose-500/30">Delayed</span>}
+                      {activity.isDelayed && <span className="ml-2 text-xs bg-blue-300/20 text-blue-300 px-2 py-0.5 rounded-full border border-blue-300/30">Delayed</span>}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span className="font-medium text-slate-200">{activity.truck?.code || '-'}</span>
@@ -888,7 +888,7 @@ const HaulingList = () => {
                     <td className="px-4 py-3 text-sm">
                       <span className="font-semibold text-slate-200">{activity.loadWeight}</span>
                       <p className="text-xs text-slate-500">Target: {activity.targetWeight}</p>
-                      {activity.loadEfficiency && <p className="text-xs text-emerald-400">{activity.loadEfficiency.toFixed(1)}%</p>}
+                      {activity.loadEfficiency && <p className="text-xs text-cyan-400">{activity.loadEfficiency.toFixed(1)}%</p>}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span className="font-semibold text-slate-200">{activity.distance}</span>
@@ -903,12 +903,12 @@ const HaulingList = () => {
                           <Eye size={18} />
                         </button>
                         {canEdit && (
-                          <button onClick={() => handleEdit(activity)} className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Edit">
+                          <button onClick={() => handleEdit(activity)} className="p-2 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-colors" title="Edit">
                             <Edit size={18} />
                           </button>
                         )}
                         {canEdit && (
-                          <button onClick={() => handleDelete(activity.id)} className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors" title="Cancel">
+                          <button onClick={() => handleDelete(activity.id)} className="p-2 text-blue-300 hover:bg-blue-300/10 rounded-lg transition-colors" title="Cancel">
                             <Trash2 size={18} />
                           </button>
                         )}
@@ -948,22 +948,22 @@ const HaulingList = () => {
         title={
           modalMode === 'create' ? (
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-sky-500/10 rounded-lg border border-sky-500/20">
-                <Plus className="text-sky-400" size={24} />
+              <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                <Plus className="text-blue-400" size={24} />
               </div>
               <span className="text-slate-100">Add Hauling Activity</span>
             </div>
           ) : modalMode === 'edit' ? (
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-                <Edit className="text-emerald-400" size={24} />
+              <div className="p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
+                <Edit className="text-cyan-400" size={24} />
               </div>
               <span className="text-slate-100">Edit Hauling Activity</span>
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-violet-500/10 rounded-lg border border-violet-500/20">
-                <Eye className="text-violet-400" size={24} />
+              <div className="p-2 bg-sky-500/10 rounded-lg border border-sky-500/20">
+                <Eye className="text-sky-400" size={24} />
               </div>
               <span className="text-slate-100">Hauling Activity Details</span>
             </div>
@@ -973,7 +973,7 @@ const HaulingList = () => {
       >
         {modalMode === 'view' && selectedActivity ? (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-sky-500/10 to-violet-500/10 p-6 rounded-xl border border-sky-500/20">
+            <div className="bg-gradient-to-r from-sky-500/10 to-blue-500/10 p-6 rounded-xl border border-sky-500/20">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-2xl font-bold text-slate-100">{selectedActivity.activityNumber}</h3>
@@ -1023,7 +1023,7 @@ const HaulingList = () => {
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Construction className="text-orange-400" size={18} />
+                  <Construction className="text-blue-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Excavator</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{selectedActivity.excavator?.code || '-'}</p>
@@ -1035,7 +1035,7 @@ const HaulingList = () => {
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <User className="text-emerald-400" size={18} />
+                  <User className="text-cyan-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Operator</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{selectedActivity.operator?.user?.fullName || '-'}</p>
@@ -1044,7 +1044,7 @@ const HaulingList = () => {
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <User className="text-violet-400" size={18} />
+                  <User className="text-sky-400" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Supervisor</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{selectedActivity.supervisor?.fullName || '-'}</p>
@@ -1053,7 +1053,7 @@ const HaulingList = () => {
 
               <div className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <MapPin className="text-rose-400" size={18} />
+                  <MapPin className="text-blue-300" size={18} />
                   <label className="text-sm font-semibold text-slate-400">Loading Point</label>
                 </div>
                 <p className="text-lg font-medium text-slate-200">{selectedActivity.loadingPoint?.code || '-'}</p>
@@ -1082,15 +1082,15 @@ const HaulingList = () => {
               )}
             </div>
 
-            <div className="bg-emerald-500/10 p-4 rounded-lg border border-emerald-500/20">
+            <div className="bg-cyan-500/10 p-4 rounded-lg border border-cyan-500/20">
               <h4 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-                <Package className="text-emerald-400" size={18} />
+                <Package className="text-cyan-400" size={18} />
                 <span>Load Information</span>
               </h4>
               <div className="grid grid-cols-4 gap-4">
                 <div className="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
                   <label className="text-xs font-medium text-slate-400">Load Weight</label>
-                  <p className="text-2xl font-bold text-emerald-400 mt-1">
+                  <p className="text-2xl font-bold text-cyan-400 mt-1">
                     {selectedActivity.loadWeight} <span className="text-sm text-slate-400">ton</span>
                   </p>
                 </div>
@@ -1106,16 +1106,16 @@ const HaulingList = () => {
                 </div>
                 <div className="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
                   <label className="text-xs font-medium text-slate-400">Distance</label>
-                  <p className="text-2xl font-bold text-violet-400 mt-1">
+                  <p className="text-2xl font-bold text-sky-400 mt-1">
                     {selectedActivity.distance} <span className="text-sm text-slate-400">km</span>
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-violet-500/10 p-4 rounded-lg border border-violet-500/20">
+            <div className="bg-sky-500/10 p-4 rounded-lg border border-sky-500/20">
               <h4 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-                <Clock className="text-violet-400" size={18} />
+                <Clock className="text-sky-400" size={18} />
                 <span>Time Breakdown</span>
               </h4>
               <div className="grid grid-cols-3 gap-4">
@@ -1166,9 +1166,9 @@ const HaulingList = () => {
                   </p>
                   {selectedActivity.returnTime && <p className="text-xs text-slate-500 mt-1">Returned at: {new Date(selectedActivity.returnTime).toLocaleTimeString()}</p>}
                 </div>
-                <div className="bg-violet-500/20 p-3 rounded-lg border border-violet-500/30">
-                  <label className="text-xs font-medium text-violet-300">Total Cycle Time</label>
-                  <p className="text-2xl font-bold text-violet-400 mt-1">
+                <div className="bg-sky-500/20 p-3 rounded-lg border border-sky-500/30">
+                  <label className="text-xs font-medium text-sky-300">Total Cycle Time</label>
+                  <p className="text-2xl font-bold text-sky-400 mt-1">
                     {selectedActivity.totalCycleTime || 0} <span className="text-sm text-slate-400">min</span>
                   </p>
                 </div>
@@ -1176,15 +1176,15 @@ const HaulingList = () => {
             </div>
 
             {(selectedActivity.isDelayed || selectedActivity.delayMinutes > 0) && (
-              <div className="bg-rose-500/10 p-4 rounded-lg border border-rose-500/20">
-                <h4 className="text-sm font-semibold text-rose-300 mb-3 flex items-center gap-2">
-                  <AlertCircle className="text-rose-400" size={18} />
+              <div className="bg-blue-300/10 p-4 rounded-lg border border-blue-300/20">
+                <h4 className="text-sm font-semibold text-blue-300 mb-3 flex items-center gap-2">
+                  <AlertCircle className="text-blue-300" size={18} />
                   <span>Delay Information</span>
                 </h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
                     <label className="text-xs font-medium text-slate-400">Delay Minutes</label>
-                    <p className="text-xl font-bold text-rose-400 mt-1">
+                    <p className="text-xl font-bold text-blue-300 mt-1">
                       {selectedActivity.delayMinutes || 0} <span className="text-sm text-slate-400">min</span>
                     </p>
                   </div>
@@ -1199,12 +1199,12 @@ const HaulingList = () => {
             )}
 
             {selectedActivity.fuelConsumed && (
-              <div className="bg-orange-500/10 p-4 rounded-lg border border-orange-500/20">
-                <h4 className="text-sm font-semibold text-orange-300 mb-2 flex items-center gap-2">
-                  <Gauge className="text-orange-400" size={18} />
+              <div className="bg-blue-400/10 p-4 rounded-lg border border-blue-400/20">
+                <h4 className="text-sm font-semibold text-blue-300 mb-2 flex items-center gap-2">
+                  <Gauge className="text-blue-400" size={18} />
                   <span>Fuel Consumption</span>
                 </h4>
-                <p className="text-2xl font-bold text-orange-400">
+                <p className="text-2xl font-bold text-blue-400">
                   {selectedActivity.fuelConsumed} <span className="text-sm text-slate-400">liters</span>
                 </p>
               </div>
@@ -1225,9 +1225,9 @@ const HaulingList = () => {
             )}
 
             {(selectedActivity.predictedDelayRisk || selectedActivity.predictedDelayMinutes) && (
-              <div className="bg-amber-500/10 p-4 rounded-lg border border-amber-500/20">
-                <h4 className="text-sm font-semibold text-amber-300 mb-3 flex items-center gap-2">
-                  <TrendingUp className="text-amber-400" size={18} />
+              <div className="bg-sky-500/10 p-4 rounded-lg border border-sky-500/20">
+                <h4 className="text-sm font-semibold text-sky-300 mb-3 flex items-center gap-2">
+                  <TrendingUp className="text-sky-400" size={18} />
                   <span>AI Predictions</span>
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
@@ -1263,8 +1263,8 @@ const HaulingList = () => {
         ) : modalMode === 'edit' ? (
           // EDIT MODE - Single equipment selection
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-emerald-500/10 p-4 rounded-lg border border-emerald-500/20">
-              <p className="text-sm text-emerald-300">
+            <div className="bg-cyan-500/10 p-4 rounded-lg border border-cyan-500/20">
+              <p className="text-sm text-cyan-300">
                 <strong>Edit Mode:</strong> Update the hauling activity details below.
               </p>
             </div>
@@ -1284,7 +1284,7 @@ const HaulingList = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-300 mb-2">
-                  Shift * <span className="text-xs text-violet-400">(Filters operators by shift)</span>
+                  Shift * <span className="text-xs text-sky-400">(Filters operators by shift)</span>
                 </label>
                 <select
                   value={formData.shift}
@@ -1493,7 +1493,7 @@ const HaulingList = () => {
               <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 border border-slate-600 rounded-lg text-slate-300 font-medium hover:bg-slate-700 transition-colors">
                 Cancel
               </button>
-              <button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
+              <button type="submit" className="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
                 <CheckCircle size={18} />
                 <span>Update Activity</span>
               </button>
@@ -1512,7 +1512,7 @@ const HaulingList = () => {
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-semibold text-slate-300 mb-2">
-                  Shift * <span className="text-xs text-violet-400">(Filters operators by shift)</span>
+                  Shift * <span className="text-xs text-sky-400">(Filters operators by shift)</span>
                 </label>
                 <select
                   value={formData.shift}
@@ -1578,12 +1578,12 @@ const HaulingList = () => {
               {/* Multi-select Excavators */}
               <div>
                 <label className="block text-sm font-semibold text-slate-300 mb-2">
-                  <Construction size={16} className="inline mr-2 text-orange-400" />
+                  <Construction size={16} className="inline mr-2 text-blue-400" />
                   Select Excavators * <span className="text-xs text-slate-500">({formData.excavatorIds.length} selected)</span>
                 </label>
                 <div className="border border-slate-700 rounded-lg p-3 max-h-40 overflow-y-auto bg-slate-800/60">
                   <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-700">
-                    <button type="button" onClick={() => setFormData({ ...formData, excavatorIds: excavators.map((e) => e.id) })} className="text-xs text-orange-400 hover:text-orange-300">
+                    <button type="button" onClick={() => setFormData({ ...formData, excavatorIds: excavators.map((e) => e.id) })} className="text-xs text-blue-400 hover:text-blue-300">
                       Select All
                     </button>
                     <button type="button" onClick={() => setFormData({ ...formData, excavatorIds: [] })} className="text-xs text-slate-400 hover:text-slate-300">
@@ -1591,7 +1591,7 @@ const HaulingList = () => {
                     </button>
                   </div>
                   {excavators.map((exc) => (
-                    <label key={exc.id} className="flex items-center gap-2 p-2 hover:bg-orange-500/10 rounded cursor-pointer">
+                    <label key={exc.id} className="flex items-center gap-2 p-2 hover:bg-blue-500/10 rounded cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.excavatorIds.includes(exc.id)}
@@ -1602,7 +1602,7 @@ const HaulingList = () => {
                             setFormData({ ...formData, excavatorIds: formData.excavatorIds.filter((id) => id !== exc.id) });
                           }
                         }}
-                        className="rounded text-orange-500 bg-slate-700 border-slate-600"
+                        className="rounded text-blue-500 bg-slate-700 border-slate-600"
                       />
                       <span className="text-sm text-slate-300">
                         <strong className="text-slate-200">{exc.code}</strong> - {exc.name}
@@ -1616,7 +1616,7 @@ const HaulingList = () => {
               {/* Multi-select Operators - Filtered by Shift */}
               <div>
                 <label className="block text-sm font-semibold text-slate-300 mb-2">
-                  <User size={16} className="inline mr-2 text-emerald-400" />
+                  <User size={16} className="inline mr-2 text-cyan-400" />
                   Select Operators *{' '}
                   <span className="text-xs text-slate-500">
                     ({formData.operatorIds.length} selected, {filteredOperators.length} available for {formData.shift})
@@ -1624,7 +1624,7 @@ const HaulingList = () => {
                 </label>
                 <div className="border border-slate-700 rounded-lg p-3 max-h-40 overflow-y-auto bg-slate-800/60">
                   <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-700">
-                    <button type="button" onClick={() => setFormData({ ...formData, operatorIds: filteredOperators.map((o) => o.id) })} className="text-xs text-emerald-400 hover:text-emerald-300">
+                    <button type="button" onClick={() => setFormData({ ...formData, operatorIds: filteredOperators.map((o) => o.id) })} className="text-xs text-cyan-400 hover:text-cyan-300">
                       Select All
                     </button>
                     <button type="button" onClick={() => setFormData({ ...formData, operatorIds: [] })} className="text-xs text-slate-400 hover:text-slate-300">
@@ -1632,7 +1632,7 @@ const HaulingList = () => {
                     </button>
                   </div>
                   {filteredOperators.map((op) => (
-                    <label key={op.id} className="flex items-center gap-2 p-2 hover:bg-emerald-500/10 rounded cursor-pointer">
+                    <label key={op.id} className="flex items-center gap-2 p-2 hover:bg-cyan-500/10 rounded cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.operatorIds.includes(op.id)}
@@ -1643,7 +1643,7 @@ const HaulingList = () => {
                             setFormData({ ...formData, operatorIds: formData.operatorIds.filter((id) => id !== op.id) });
                           }
                         }}
-                        className="rounded text-emerald-500 bg-slate-700 border-slate-600"
+                        className="rounded text-cyan-500 bg-slate-700 border-slate-600"
                       />
                       <span className="text-sm text-slate-300">
                         <strong className="text-slate-200">{op.employeeNumber}</strong> - {op.user?.fullName} <span className="text-xs text-slate-500">({op.shift})</span>
@@ -1776,11 +1776,11 @@ const HaulingList = () => {
 
             {/* Preview - Shows when equipment is selected */}
             {formData.truckIds.length > 0 && formData.excavatorIds.length > 0 && formData.operatorIds.length > 0 && (
-              <div className="bg-emerald-500/10 p-4 rounded-lg border border-emerald-500/20">
-                <h4 className="font-semibold text-emerald-300 mb-2">
+              <div className="bg-cyan-500/10 p-4 rounded-lg border border-cyan-500/20">
+                <h4 className="font-semibold text-cyan-300 mb-2">
                   Preview: {formData.truckIds.length} hauling {formData.truckIds.length > 1 ? 'activities' : 'activity'} will be created
                 </h4>
-                <div className="text-sm text-emerald-400/80 max-h-32 overflow-y-auto">
+                <div className="text-sm text-cyan-400/80 max-h-32 overflow-y-auto">
                   {formData.truckIds.map((truckId, idx) => {
                     const truck = trucks.find((t) => t.id === truckId);
                     const excId = formData.excavatorIds[idx % formData.excavatorIds.length];
@@ -1788,7 +1788,7 @@ const HaulingList = () => {
                     const exc = excavators.find((e) => e.id === excId);
                     const op = filteredOperators.find((o) => o.id === opId);
                     return (
-                      <div key={idx} className="py-1 border-b border-emerald-500/20 last:border-0">
+                      <div key={idx} className="py-1 border-b border-cyan-500/20 last:border-0">
                         <span className="font-medium text-slate-200">{truck?.code}</span> → Excavator: {exc?.code || 'N/A'}, Operator: {op?.employeeNumber || 'N/A'}
                       </div>
                     );
