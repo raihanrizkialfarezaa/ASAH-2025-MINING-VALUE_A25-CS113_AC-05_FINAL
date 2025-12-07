@@ -31,43 +31,45 @@ import {
   Shield,
   Fuel,
   Navigation,
+  Layers,
+  Zap,
 } from 'lucide-react';
 import MiningMap from '../components/MiningMap';
 
 // ============================================
-// MINING OPS PRO - DARK THEME STYLES
+// MINING OPS PRO - PROFESSIONAL BLUE THEME
 // ============================================
 const theme = {
-  // Cards
-  card: 'rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 shadow-xl',
-  cardHover: 'hover:border-sky-500/30 hover:shadow-sky-500/5 transition-all duration-300',
-  cardAccent: 'rounded-xl border border-sky-500/30 bg-gradient-to-br from-slate-900 to-slate-950 shadow-xl shadow-sky-500/5',
+  // Cards - Clean blue-tinted dark theme
+  card: 'rounded-xl border border-slate-700/60 bg-gradient-to-b from-slate-900/95 to-slate-950/95 shadow-lg backdrop-blur-sm',
+  cardHover: 'hover:border-sky-500/40 hover:shadow-sky-500/10 transition-all duration-300',
+  cardAccent: 'rounded-xl border border-sky-500/40 bg-gradient-to-br from-slate-900 to-slate-950 shadow-lg shadow-sky-500/5',
 
   // Text
   title: 'text-slate-100 font-bold',
   subtitle: 'text-slate-400 text-sm',
-  label: 'text-slate-500 text-xs font-medium uppercase tracking-wider',
+  label: 'text-slate-500 text-xs font-semibold uppercase tracking-wider',
   value: 'text-slate-100 font-bold',
 
-  // Icons
-  iconBox: 'p-3 rounded-xl bg-slate-800/60 border border-slate-700/50',
-  iconBoxAccent: 'p-3 rounded-xl bg-sky-500/10 border border-sky-500/20',
+  // Icons - Consistent blue theme
+  iconBox: 'p-3 rounded-xl bg-slate-800/70 border border-slate-700/60',
+  iconBoxAccent: 'p-3 rounded-xl bg-sky-500/15 border border-sky-500/30',
 
   // Stats
   statPositive: 'text-emerald-400',
   statNegative: 'text-rose-400',
   statNeutral: 'text-slate-400',
 
-  // Badges
-  badge: 'px-2.5 py-1 rounded-full text-xs font-semibold',
-  badgeSuccess: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20',
-  badgeWarning: 'bg-amber-500/15 text-amber-400 border border-amber-500/20',
-  badgeDanger: 'bg-rose-500/15 text-rose-400 border border-rose-500/20',
-  badgeInfo: 'bg-sky-500/15 text-sky-400 border border-sky-500/20',
-  badgeNeutral: 'bg-slate-700/50 text-slate-400 border border-slate-600/50',
+  // Badges - Professional styling
+  badge: 'px-2.5 py-1 rounded-lg text-xs font-semibold',
+  badgeSuccess: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25',
+  badgeWarning: 'bg-amber-500/15 text-amber-400 border border-amber-500/25',
+  badgeDanger: 'bg-rose-500/15 text-rose-400 border border-rose-500/25',
+  badgeInfo: 'bg-sky-500/15 text-sky-400 border border-sky-500/25',
+  badgeNeutral: 'bg-slate-700/60 text-slate-400 border border-slate-600/60',
 
   // Grids
-  gridItem: 'rounded-xl p-4 bg-slate-800/40 border border-slate-700/40',
+  gridItem: 'rounded-xl p-4 bg-slate-800/50 border border-slate-700/50',
 };
 
 const Dashboard = () => {
@@ -143,7 +145,7 @@ const Dashboard = () => {
     return <LoadingSpinner fullScreen />;
   }
 
-  // Stats configuration with dark theme colors
+  // Stats configuration - Blue color family theme
   const stats = [
     {
       icon: Truck,
@@ -151,7 +153,7 @@ const Dashboard = () => {
       value: overview?.fleetStatus?.trucksOperating || 0,
       total: operationalData.trucks.length,
       color: 'text-sky-400',
-      iconBg: 'bg-sky-500/10 border-sky-500/20',
+      iconBg: 'bg-sky-500/15 border-sky-500/30',
       trend: '+5%',
       trendUp: true,
     },
@@ -160,18 +162,18 @@ const Dashboard = () => {
       label: 'Active Excavators',
       value: overview?.fleetStatus?.excavatorsOperating || 0,
       total: operationalData.excavators.length,
-      color: 'text-emerald-400',
-      iconBg: 'bg-emerald-500/10 border-emerald-500/20',
+      color: 'text-cyan-400',
+      iconBg: 'bg-cyan-500/15 border-cyan-500/30',
       trend: '+2%',
       trendUp: true,
     },
     {
-      icon: Package,
+      icon: Layers,
       label: 'Active Hauling',
       value: overview?.activeHauling || 0,
       subtext: 'trips in progress',
-      color: 'text-violet-400',
-      iconBg: 'bg-violet-500/10 border-violet-500/20',
+      color: 'text-blue-400',
+      iconBg: 'bg-blue-500/15 border-blue-500/30',
       trend: '+12%',
       trendUp: true,
     },
@@ -181,20 +183,20 @@ const Dashboard = () => {
       value: `${(overview?.todayProduction || 0).toFixed(1)}`,
       unit: 'ton',
       subtext: `Target: ${(overview?.production?.todayTarget || 0).toFixed(0)} ton`,
-      color: 'text-amber-400',
-      iconBg: 'bg-amber-500/10 border-amber-500/20',
+      color: 'text-emerald-400',
+      iconBg: 'bg-emerald-500/15 border-emerald-500/30',
       trend: `${(overview?.production?.todayAchievement || 0).toFixed(1)}%`,
       trendUp: (overview?.production?.todayAchievement || 0) >= 100,
     },
   ];
 
-  // Secondary stats
+  // Secondary stats - Consistent blue palette
   const detailedStats = [
     { icon: Activity, label: 'Fleet Efficiency', value: '87.5%', color: 'text-sky-400', description: 'Average utilization' },
     { icon: Timer, label: 'Avg Cycle Time', value: '45.2', unit: 'min', color: 'text-cyan-400', description: 'Per hauling cycle' },
-    { icon: Fuel, label: 'Fuel Consumed', value: (overview?.production?.todayFuel || 0).toFixed(0), unit: 'L', color: 'text-orange-400', description: 'Today total' },
-    { icon: Users, label: 'Active Operators', value: operationalData.operators.filter((o) => o.status === 'ACTIVE').length, total: operationalData.operators.length, color: 'text-violet-400', description: 'On duty' },
-    { icon: Wrench, label: 'Maintenance Due', value: maintenanceOverview?.upcoming || 0, color: 'text-amber-400', description: 'Next 7 days' },
+    { icon: Fuel, label: 'Fuel Consumed', value: (overview?.production?.todayFuel || 0).toFixed(0), unit: 'L', color: 'text-amber-400', description: 'Today total' },
+    { icon: Users, label: 'Active Operators', value: operationalData.operators.filter((o) => o.status === 'ACTIVE').length, total: operationalData.operators.length, color: 'text-blue-400', description: 'On duty' },
+    { icon: Wrench, label: 'Maintenance Due', value: maintenanceOverview?.upcoming || 0, color: 'text-slate-400', description: 'Next 7 days' },
     { icon: Shield, label: 'Safety Incidents', value: overview?.safety?.recentIncidents || 0, color: 'text-rose-400', description: 'Last 7 days' },
   ];
 
@@ -207,14 +209,15 @@ const Dashboard = () => {
           <p className="text-sm text-slate-500 mt-1">Real-time mining operations monitoring and analytics</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className={`${theme.card} px-4 py-2.5`}>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50"></div>
-              <span className="text-sm font-semibold text-emerald-400">Live</span>
+          <div className={`${theme.card} px-4 py-2.5 flex items-center gap-2`}>
+            <div className="relative">
+              <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></div>
+              <div className="absolute inset-0 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping opacity-75"></div>
             </div>
+            <span className="text-sm font-semibold text-emerald-400">Live</span>
           </div>
           <div className={`${theme.card} px-4 py-2`}>
-            <p className="text-[10px] text-slate-500 uppercase tracking-wider">Last Update</p>
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Last Update</p>
             <p className="text-sm font-bold text-slate-200">{new Date().toLocaleTimeString('id-ID')}</p>
           </div>
         </div>
@@ -228,23 +231,23 @@ const Dashboard = () => {
             <div key={index} className={`${theme.card} ${theme.cardHover} p-5`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">{stat.label}</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{stat.label}</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-slate-100">{stat.value}</span>
-                    {stat.unit && <span className="text-lg text-slate-500">{stat.unit}</span>}
-                    {stat.total !== undefined && <span className="text-sm text-slate-600">/ {stat.total}</span>}
+                    {stat.unit && <span className="text-lg text-slate-500 font-medium">{stat.unit}</span>}
+                    {stat.total !== undefined && <span className="text-sm text-slate-600 font-medium">/ {stat.total}</span>}
                   </div>
-                  {stat.subtext && <p className="text-xs text-slate-500 mt-1">{stat.subtext}</p>}
+                  {stat.subtext && <p className="text-xs text-slate-500 mt-1.5">{stat.subtext}</p>}
                   {stat.trend && (
                     <div className="flex items-center gap-1.5 mt-3">
-                      {stat.trendUp ? <ArrowUp size={14} className="text-emerald-400" /> : <ArrowDown size={14} className="text-rose-400" />}
-                      <span className={`text-xs font-semibold ${stat.trendUp ? 'text-emerald-400' : 'text-rose-400'}`}>{stat.trend}</span>
+                      {stat.trendUp ? <ArrowUp size={14} className="text-emerald-400" strokeWidth={2.5} /> : <ArrowDown size={14} className="text-rose-400" strokeWidth={2.5} />}
+                      <span className={`text-xs font-bold ${stat.trendUp ? 'text-emerald-400' : 'text-rose-400'}`}>{stat.trend}</span>
                       <span className="text-xs text-slate-600">vs yesterday</span>
                     </div>
                   )}
                 </div>
                 <div className={`p-3 rounded-xl border ${stat.iconBg}`}>
-                  <Icon className={stat.color} size={24} />
+                  <Icon className={stat.color} size={24} strokeWidth={1.5} />
                 </div>
               </div>
             </div>
@@ -259,15 +262,15 @@ const Dashboard = () => {
           return (
             <div key={index} className={`${theme.card} ${theme.cardHover} p-4`}>
               <div className="flex items-center gap-2 mb-2">
-                <Icon className={stat.color} size={16} />
-                <span className="text-xs font-medium text-slate-500">{stat.label}</span>
+                <Icon className={stat.color} size={16} strokeWidth={2} />
+                <span className="text-xs font-semibold text-slate-500">{stat.label}</span>
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-xl font-bold text-slate-100">{stat.value}</span>
-                {stat.unit && <span className="text-sm text-slate-500">{stat.unit}</span>}
-                {stat.total !== undefined && <span className="text-xs text-slate-600">/{stat.total}</span>}
+                {stat.unit && <span className="text-sm text-slate-500 font-medium">{stat.unit}</span>}
+                {stat.total !== undefined && <span className="text-xs text-slate-600 font-medium">/{stat.total}</span>}
               </div>
-              <p className="text-[10px] text-slate-600 mt-1">{stat.description}</p>
+              <p className="text-[10px] text-slate-600 mt-1.5 font-medium">{stat.description}</p>
             </div>
           );
         })}
@@ -279,29 +282,29 @@ const Dashboard = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className={theme.iconBoxAccent}>
-                <CloudRain className="text-sky-400" size={28} />
+                <CloudRain className="text-sky-400" size={28} strokeWidth={1.5} />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-100">Weather Conditions</h3>
-                <p className="text-xs text-slate-500">Updated: {new Date(weatherData.recordDate).toLocaleString('id-ID')}</p>
+                <p className="text-xs text-slate-500 font-medium">Updated: {weatherData.recordDate ? new Date(weatherData.recordDate).toLocaleString('id-ID') : 'N/A'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-6 sm:gap-8">
+            <div className="flex items-center gap-6 sm:gap-10">
               <div className="text-center">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Condition</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Condition</p>
                 <p className="text-lg font-bold text-slate-200">{weatherData.condition || 'N/A'}</p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Temperature</p>
-                <p className="text-lg font-bold text-slate-200">{weatherData.temperature || 'N/A'}°C</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Temperature</p>
+                <p className="text-lg font-bold text-sky-400">{weatherData.temperature || 'N/A'}°C</p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Rainfall</p>
-                <p className="text-lg font-bold text-slate-200">{weatherData.rainfall || 0} mm</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Rainfall</p>
+                <p className="text-lg font-bold text-cyan-400">{weatherData.rainfall || 0} mm</p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Status</p>
-                {weatherData.isOperational ? <CheckCircle className="text-emerald-400 mx-auto" size={24} /> : <XCircle className="text-rose-400 mx-auto" size={24} />}
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Status</p>
+                {weatherData.isOperational ? <CheckCircle className="text-emerald-400 mx-auto" size={24} strokeWidth={2} /> : <XCircle className="text-rose-400 mx-auto" size={24} strokeWidth={2} />}
               </div>
             </div>
           </div>
@@ -313,17 +316,17 @@ const Dashboard = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className={theme.iconBox}>
-              <MapIcon className="text-sky-400" size={22} />
+              <MapIcon className="text-sky-400" size={22} strokeWidth={1.5} />
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-100">Live Operations Map</h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 font-medium">
                 {mapData.sites.length} Sites | {mapData.loadingPoints.length} Loading | {mapData.dumpingPoints.length} Dumping
               </p>
             </div>
           </div>
         </div>
-        <div className="rounded-xl overflow-hidden border border-slate-800/50">
+        <div className="rounded-xl overflow-hidden border border-slate-700/60">
           <MiningMap sites={mapData.sites} loadingPoints={mapData.loadingPoints} dumpingPoints={mapData.dumpingPoints} roads={mapData.roads} />
         </div>
       </div>
@@ -335,7 +338,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
               <div className={theme.iconBox}>
-                <Activity className="text-sky-400" size={20} />
+                <Activity className="text-sky-400" size={20} strokeWidth={1.5} />
               </div>
               <h2 className="text-lg font-bold text-slate-100">Fleet Status</h2>
             </div>
@@ -346,47 +349,47 @@ const Dashboard = () => {
             <div>
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-2">
-                  <Truck className="text-sky-400" size={18} />
+                  <Truck className="text-sky-400" size={18} strokeWidth={1.5} />
                   <span className="font-semibold text-slate-300">Trucks</span>
                 </div>
-                <span className="text-xs text-slate-500">{operationalData.trucks.length} Total</span>
+                <span className="text-xs text-slate-500 font-medium">{operationalData.trucks.length} Total</span>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div className={theme.gridItem}>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Operating</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Operating</p>
                   <p className="text-2xl font-bold text-emerald-400">{overview?.fleetStatus?.trucksOperating || 0}</p>
                 </div>
                 <div className={theme.gridItem}>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Idle</p>
-                  <p className="text-2xl font-bold text-amber-400">{operationalData.trucks.filter((t) => t.status === 'IDLE').length}</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Idle</p>
+                  <p className="text-2xl font-bold text-slate-400">{operationalData.trucks.filter((t) => t.status === 'IDLE').length}</p>
                 </div>
                 <div className={theme.gridItem}>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Breakdown</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Breakdown</p>
                   <p className="text-2xl font-bold text-rose-400">{operationalData.trucks.filter((t) => t.status === 'BREAKDOWN' || t.status === 'MAINTENANCE').length}</p>
                 </div>
               </div>
             </div>
-            <div className="h-px bg-slate-800/50"></div>
+            <div className="h-px bg-slate-700/50"></div>
             {/* Excavators */}
             <div>
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-2">
-                  <Construction className="text-emerald-400" size={18} />
+                  <Construction className="text-cyan-400" size={18} strokeWidth={1.5} />
                   <span className="font-semibold text-slate-300">Excavators</span>
                 </div>
-                <span className="text-xs text-slate-500">{operationalData.excavators.length} Total</span>
+                <span className="text-xs text-slate-500 font-medium">{operationalData.excavators.length} Total</span>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div className={theme.gridItem}>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Active</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Active</p>
                   <p className="text-2xl font-bold text-emerald-400">{overview?.fleetStatus?.excavatorsOperating || 0}</p>
                 </div>
                 <div className={theme.gridItem}>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Standby</p>
-                  <p className="text-2xl font-bold text-amber-400">{operationalData.excavators.filter((e) => e.status === 'STANDBY').length}</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Standby</p>
+                  <p className="text-2xl font-bold text-slate-400">{operationalData.excavators.filter((e) => e.status === 'STANDBY').length}</p>
                 </div>
                 <div className={theme.gridItem}>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Breakdown</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Breakdown</p>
                   <p className="text-2xl font-bold text-rose-400">{operationalData.excavators.filter((e) => e.status === 'BREAKDOWN' || e.status === 'MAINTENANCE').length}</p>
                 </div>
               </div>
@@ -399,7 +402,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
               <div className={theme.iconBox}>
-                <Target className="text-amber-400" size={20} />
+                <Target className="text-emerald-400" size={20} strokeWidth={1.5} />
               </div>
               <h2 className="text-lg font-bold text-slate-100">Production Performance</h2>
             </div>
@@ -407,19 +410,19 @@ const Dashboard = () => {
           </div>
           <div className="space-y-4">
             {/* Achievement */}
-            <div className="rounded-xl p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20">
+            <div className="rounded-xl p-4 bg-gradient-to-br from-sky-500/10 to-cyan-500/5 border border-sky-500/25">
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Today's Achievement</p>
-                  <p className="text-4xl font-bold text-amber-400">{(overview?.production?.todayAchievement || 0).toFixed(1)}%</p>
+                  <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Today's Achievement</p>
+                  <p className="text-4xl font-bold text-sky-400">{(overview?.production?.todayAchievement || 0).toFixed(1)}%</p>
                 </div>
-                <div className={`p-2 rounded-lg ${(overview?.production?.todayAchievement || 0) >= 100 ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
-                  {(overview?.production?.todayAchievement || 0) >= 100 ? <CheckCircle className="text-emerald-400" size={24} /> : <AlertCircle className="text-amber-400" size={24} />}
+                <div className={`p-2 rounded-lg ${(overview?.production?.todayAchievement || 0) >= 100 ? 'bg-emerald-500/20' : 'bg-sky-500/20'}`}>
+                  {(overview?.production?.todayAchievement || 0) >= 100 ? <CheckCircle className="text-emerald-400" size={24} strokeWidth={2} /> : <Zap className="text-sky-400" size={24} strokeWidth={2} />}
                 </div>
               </div>
               <div className="w-full bg-slate-800/60 rounded-full h-2.5 overflow-hidden">
                 <div
-                  className={`h-2.5 rounded-full transition-all duration-500 ${(overview?.production?.todayAchievement || 0) >= 100 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                  className={`h-2.5 rounded-full transition-all duration-500 ${(overview?.production?.todayAchievement || 0) >= 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-sky-500 to-cyan-500'}`}
                   style={{ width: `${Math.min(overview?.production?.todayAchievement || 0, 100)}%` }}
                 ></div>
               </div>
@@ -427,24 +430,24 @@ const Dashboard = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-2">
               <div className={theme.gridItem}>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Target Today</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Target Today</p>
                 <p className="text-xl font-bold text-slate-200">{(overview?.production?.todayTarget || 0).toFixed(0)}</p>
-                <p className="text-[10px] text-slate-600">tons</p>
+                <p className="text-[10px] text-slate-600 font-medium">tons</p>
               </div>
               <div className={theme.gridItem}>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Actual Today</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Actual Today</p>
                 <p className="text-xl font-bold text-emerald-400">{(overview?.production?.todayActual || 0).toFixed(0)}</p>
-                <p className="text-[10px] text-slate-600">tons</p>
+                <p className="text-[10px] text-slate-600 font-medium">tons</p>
               </div>
               <div className={theme.gridItem}>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Active Trips</p>
-                <p className="text-xl font-bold text-violet-400">{overview?.activeHauling || 0}</p>
-                <p className="text-[10px] text-slate-600">in progress</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Active Trips</p>
+                <p className="text-xl font-bold text-blue-400">{overview?.activeHauling || 0}</p>
+                <p className="text-[10px] text-slate-600 font-medium">in progress</p>
               </div>
               <div className={theme.gridItem}>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Completed</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Completed</p>
                 <p className="text-xl font-bold text-sky-400">{operationalData.productions.filter((p) => p.actualProduction >= p.targetProduction).length}</p>
-                <p className="text-[10px] text-slate-600">targets met</p>
+                <p className="text-[10px] text-slate-600 font-medium">targets met</p>
               </div>
             </div>
           </div>
@@ -453,22 +456,22 @@ const Dashboard = () => {
 
       {/* === ALERTS SECTION === */}
       {overview?.alerts && overview.alerts.length > 0 && (
-        <div className="rounded-xl border border-rose-500/30 bg-gradient-to-br from-rose-500/10 to-slate-900 p-5 shadow-xl">
+        <div className="rounded-xl border border-rose-500/30 bg-gradient-to-br from-rose-500/10 to-slate-900 p-5 shadow-lg">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/30">
-              <AlertTriangle className="text-rose-400" size={22} />
+              <AlertTriangle className="text-rose-400" size={22} strokeWidth={1.5} />
             </div>
             <h2 className="text-lg font-bold text-slate-100">Critical Alerts</h2>
-            <span className="ml-auto px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">{overview.alerts.length}</span>
+            <span className="ml-auto px-3 py-1 rounded-lg text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">{overview.alerts.length}</span>
           </div>
           <div className="space-y-2">
             {overview.alerts.map((alert, index) => (
               <div key={index} className="p-4 rounded-xl bg-slate-900/60 border-l-4 border-rose-500 hover:bg-slate-800/60 transition-colors">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="text-rose-400 flex-shrink-0 mt-0.5" size={18} />
+                  <AlertCircle className="text-rose-400 flex-shrink-0 mt-0.5" size={18} strokeWidth={2} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-200">{alert.message}</p>
-                    <p className="text-xs text-slate-500 mt-1">{new Date().toLocaleString('id-ID')}</p>
+                    <p className="text-xs text-slate-500 mt-1 font-medium">{new Date().toLocaleString('id-ID')}</p>
                   </div>
                   <button className="text-xs font-semibold text-rose-400 hover:text-rose-300 transition-colors">View</button>
                 </div>
@@ -484,28 +487,28 @@ const Dashboard = () => {
         <div className={`${theme.card} p-5`}>
           <div className="flex items-center gap-3 mb-4">
             <div className={theme.iconBox}>
-              <Wrench className="text-amber-400" size={20} />
+              <Wrench className="text-slate-400" size={20} strokeWidth={1.5} />
             </div>
             <h2 className="text-base font-bold text-slate-100">Maintenance Status</h2>
           </div>
           <div className="space-y-2">
-            <div className="flex justify-between items-center p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <div className="flex justify-between items-center p-3 rounded-xl bg-sky-500/10 border border-sky-500/25">
               <div className="flex items-center gap-2">
-                <Calendar className="text-amber-400" size={16} />
+                <Calendar className="text-sky-400" size={16} strokeWidth={2} />
                 <span className="text-sm font-medium text-slate-300">Upcoming</span>
               </div>
-              <span className="text-xl font-bold text-amber-400">{maintenanceOverview?.upcoming || 0}</span>
+              <span className="text-xl font-bold text-sky-400">{maintenanceOverview?.upcoming || 0}</span>
             </div>
-            <div className="flex justify-between items-center p-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
+            <div className="flex justify-between items-center p-3 rounded-xl bg-rose-500/10 border border-rose-500/25">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="text-rose-400" size={16} />
+                <AlertTriangle className="text-rose-400" size={16} strokeWidth={2} />
                 <span className="text-sm font-medium text-slate-300">Overdue</span>
               </div>
               <span className="text-xl font-bold text-rose-400">{maintenanceOverview?.overdue || 0}</span>
             </div>
-            <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
               <div className="flex items-center gap-2">
-                <CheckCircle className="text-emerald-400" size={16} />
+                <CheckCircle className="text-emerald-400" size={16} strokeWidth={2} />
                 <span className="text-sm font-medium text-slate-300">Completed (30d)</span>
               </div>
               <span className="text-xl font-bold text-emerald-400">{maintenanceOverview?.completed || 0}</span>
@@ -517,23 +520,23 @@ const Dashboard = () => {
         <div className={`${theme.card} p-5`}>
           <div className="flex items-center gap-3 mb-4">
             <div className={theme.iconBox}>
-              <DollarSign className="text-emerald-400" size={20} />
+              <DollarSign className="text-emerald-400" size={20} strokeWidth={1.5} />
             </div>
             <h2 className="text-base font-bold text-slate-100">Financial Overview</h2>
           </div>
           <div className="space-y-3">
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Fuel Cost (Today)</p>
+            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Fuel Cost (Today)</p>
               <p className="text-lg font-bold text-emerald-400">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(overview?.financials?.estimatedFuelCost || 0)}</p>
             </div>
-            <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20">
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Operator Cost (Daily)</p>
+            <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/25">
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Operator Cost (Daily)</p>
               <p className="text-lg font-bold text-sky-400">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(overview?.financials?.estimatedOperatorCost || 0)}</p>
             </div>
-            <div className="pt-3 border-t border-slate-800/50">
+            <div className="pt-3 border-t border-slate-700/50">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-semibold text-slate-400">Total Daily Cost</span>
-                <span className="text-lg font-bold text-rose-400">
+                <span className="text-lg font-bold text-slate-200">
                   {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format((overview?.financials?.estimatedFuelCost || 0) + (overview?.financials?.estimatedOperatorCost || 0))}
                 </span>
               </div>
@@ -545,20 +548,20 @@ const Dashboard = () => {
         <div className={`${theme.card} p-5`}>
           <div className="flex items-center gap-3 mb-4">
             <div className={theme.iconBox}>
-              <Users className="text-violet-400" size={20} />
+              <Users className="text-blue-400" size={20} strokeWidth={1.5} />
             </div>
             <h2 className="text-base font-bold text-slate-100">Operators Summary</h2>
           </div>
           <div className="space-y-2">
-            <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
               <span className="text-sm font-medium text-slate-300">Active</span>
               <span className="text-xl font-bold text-emerald-400">{operationalData.operators.filter((o) => o.status === 'ACTIVE').length}</span>
             </div>
-            <div className="flex justify-between items-center p-3 rounded-xl bg-slate-700/40 border border-slate-600/40">
+            <div className="flex justify-between items-center p-3 rounded-xl bg-slate-700/50 border border-slate-600/50">
               <span className="text-sm font-medium text-slate-300">Off Duty</span>
               <span className="text-xl font-bold text-slate-400">{operationalData.operators.filter((o) => o.status === 'OFF_DUTY').length}</span>
             </div>
-            <div className="flex justify-between items-center p-3 rounded-xl bg-sky-500/10 border border-sky-500/20">
+            <div className="flex justify-between items-center p-3 rounded-xl bg-sky-500/10 border border-sky-500/25">
               <span className="text-sm font-medium text-slate-300">Total Operators</span>
               <span className="text-xl font-bold text-sky-400">{operationalData.operators.length}</span>
             </div>
@@ -572,7 +575,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className={theme.iconBox}>
-                <Gauge className="text-violet-400" size={20} />
+                <Gauge className="text-blue-400" size={20} strokeWidth={1.5} />
               </div>
               <h2 className="text-base font-bold text-slate-100">Equipment Utilization</h2>
             </div>
@@ -580,20 +583,20 @@ const Dashboard = () => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {equipmentUtilization.trucks?.length > 0 && (
-              <div className="rounded-xl p-4 bg-slate-800/40 border border-slate-700/40">
+              <div className="rounded-xl p-4 bg-slate-800/50 border border-slate-700/50">
                 <h3 className="font-semibold text-slate-200 mb-3 flex items-center gap-2">
-                  <Truck className="text-sky-400" size={16} />
+                  <Truck className="text-sky-400" size={16} strokeWidth={1.5} />
                   <span>Top Trucks by Trips</span>
                 </h3>
                 <div className="space-y-2">
                   {equipmentUtilization.trucks.slice(0, 5).map((truck, idx) => (
-                    <div key={idx} className="p-3 rounded-xl bg-slate-900/60 hover:bg-slate-800/60 border border-slate-700/30 transition-colors">
+                    <div key={idx} className="p-3 rounded-xl bg-slate-900/60 hover:bg-slate-800/60 border border-slate-700/40 transition-colors">
                       <div className="flex justify-between items-center mb-1.5">
                         <span className="font-medium text-slate-200">{truck.code || truck.name}</span>
                         <span className="text-sm font-bold text-sky-400">{truck.trips} trips</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <Timer size={12} />
+                        <Timer size={12} strokeWidth={2} />
                         <span>Avg Cycle: {(truck.avgCycleTime || 0).toFixed(1)} min</span>
                       </div>
                     </div>
@@ -602,20 +605,20 @@ const Dashboard = () => {
               </div>
             )}
             {equipmentUtilization.excavators?.length > 0 && (
-              <div className="rounded-xl p-4 bg-slate-800/40 border border-slate-700/40">
+              <div className="rounded-xl p-4 bg-slate-800/50 border border-slate-700/50">
                 <h3 className="font-semibold text-slate-200 mb-3 flex items-center gap-2">
-                  <Construction className="text-emerald-400" size={16} />
+                  <Construction className="text-cyan-400" size={16} strokeWidth={1.5} />
                   <span>Top Excavators by Loads</span>
                 </h3>
                 <div className="space-y-2">
                   {equipmentUtilization.excavators.slice(0, 5).map((excavator, idx) => (
-                    <div key={idx} className="p-3 rounded-xl bg-slate-900/60 hover:bg-slate-800/60 border border-slate-700/30 transition-colors">
+                    <div key={idx} className="p-3 rounded-xl bg-slate-900/60 hover:bg-slate-800/60 border border-slate-700/40 transition-colors">
                       <div className="flex justify-between items-center mb-1.5">
                         <span className="font-medium text-slate-200">{excavator.code || excavator.name}</span>
-                        <span className="text-sm font-bold text-emerald-400">{excavator.loads} loads</span>
+                        <span className="text-sm font-bold text-cyan-400">{excavator.loads} loads</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <Timer size={12} />
+                        <Timer size={12} strokeWidth={2} />
                         <span>Avg Loading: {(excavator.avgLoadingTime || 0).toFixed(1)} min</span>
                       </div>
                     </div>
@@ -632,21 +635,21 @@ const Dashboard = () => {
         <div className={`${theme.card} p-5`}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/30">
-                <Clock className="text-rose-400" size={20} />
+              <div className="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/25">
+                <Clock className="text-rose-400" size={20} strokeWidth={1.5} />
               </div>
               <h2 className="text-base font-bold text-slate-100">Delay Analysis</h2>
             </div>
-            <div className="px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/20">
+            <div className="px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/25">
               <span className="text-sm font-bold text-rose-400">Total: {(delayAnalysis.totalDelays || 0).toFixed(0)} min</span>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(delayAnalysis.byCategory).map(([category, data], idx) => (
-              <div key={idx} className="p-4 rounded-xl bg-gradient-to-br from-rose-500/10 to-amber-500/5 border border-rose-500/20">
+              <div key={idx} className="p-4 rounded-xl bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/50">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-semibold text-slate-200 capitalize">{category.toLowerCase().replace('_', ' ')}</h3>
-                  <span className="text-[10px] font-bold bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full border border-rose-500/30">{data.count}x</span>
+                  <span className="text-[10px] font-bold bg-slate-700/60 text-slate-400 px-2 py-0.5 rounded-lg border border-slate-600/50">{data.count}x</span>
                 </div>
                 <p className="text-2xl font-bold text-rose-400 mb-2">{(data.totalDuration || 0).toFixed(0)} min</p>
                 {data.reasons && data.reasons.length > 0 && (
@@ -672,7 +675,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <div className={theme.iconBoxAccent}>
-                  <Database className="text-sky-400" size={24} />
+                  <Database className="text-sky-400" size={24} strokeWidth={1.5} />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-slate-100">Operational Data Real-Time</h2>
@@ -686,10 +689,10 @@ const Dashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Trucks Table */}
-              <div className="rounded-xl p-5 bg-slate-900/60 border border-slate-700/40">
+              <div className="rounded-xl p-5 bg-slate-900/60 border border-slate-700/50">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <Truck className="text-sky-400" size={20} />
+                    <Truck className="text-sky-400" size={20} strokeWidth={1.5} />
                     <h3 className="text-base font-bold text-slate-100">Trucks</h3>
                   </div>
                   <span className={theme.badgeInfo}>{operationalData.trucks.length} units</span>
@@ -712,18 +715,18 @@ const Dashboard = () => {
                           <td className="px-3 py-3 font-medium text-slate-300">{truck.capacity}t</td>
                           <td className="px-3 py-3">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              className={`px-2 py-1 rounded-lg text-xs font-semibold ${
                                 truck.status === 'HAULING'
-                                  ? 'bg-sky-500/15 text-sky-400 border border-sky-500/20'
+                                  ? 'bg-sky-500/15 text-sky-400 border border-sky-500/25'
                                   : truck.status === 'LOADING'
-                                  ? 'bg-violet-500/15 text-violet-400 border border-violet-500/20'
+                                  ? 'bg-blue-500/15 text-blue-400 border border-blue-500/25'
                                   : truck.status === 'DUMPING'
-                                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                                  ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/25'
                                   : truck.status === 'IDLE'
-                                  ? 'bg-slate-700/50 text-slate-400 border border-slate-600/50'
+                                  ? 'bg-slate-700/60 text-slate-400 border border-slate-600/60'
                                   : truck.status === 'BREAKDOWN' || truck.status === 'MAINTENANCE'
-                                  ? 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
-                                  : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                                  ? 'bg-rose-500/15 text-rose-400 border border-rose-500/25'
+                                  : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
                               }`}
                             >
                               {truck.status}
@@ -733,18 +736,18 @@ const Dashboard = () => {
                       ))}
                     </tbody>
                   </table>
-                  {operationalData.trucks.length > 8 && <div className="text-center py-3 text-xs text-slate-500">+{operationalData.trucks.length - 8} more trucks</div>}
+                  {operationalData.trucks.length > 8 && <div className="text-center py-3 text-xs text-slate-500 font-medium">+{operationalData.trucks.length - 8} more trucks</div>}
                 </div>
               </div>
 
               {/* Excavators Table */}
-              <div className="rounded-xl p-5 bg-slate-900/60 border border-slate-700/40">
+              <div className="rounded-xl p-5 bg-slate-900/60 border border-slate-700/50">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <Construction className="text-emerald-400" size={20} />
+                    <Construction className="text-cyan-400" size={20} strokeWidth={1.5} />
                     <h3 className="text-base font-bold text-slate-100">Excavators</h3>
                   </div>
-                  <span className={theme.badgeSuccess}>{operationalData.excavators.length} units</span>
+                  <span className={theme.badgeInfo}>{operationalData.excavators.length} units</span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full text-sm">
@@ -764,14 +767,14 @@ const Dashboard = () => {
                           <td className="px-3 py-3 font-medium text-slate-300">{exc.productionRate}t/m</td>
                           <td className="px-3 py-3">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              className={`px-2 py-1 rounded-lg text-xs font-semibold ${
                                 exc.status === 'ACTIVE' || exc.status === 'LOADING'
-                                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
                                   : exc.status === 'STANDBY'
-                                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                                  ? 'bg-slate-700/60 text-slate-400 border border-slate-600/60'
                                   : exc.status === 'BREAKDOWN' || exc.status === 'MAINTENANCE'
-                                  ? 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
-                                  : 'bg-slate-700/50 text-slate-400 border border-slate-600/50'
+                                  ? 'bg-rose-500/15 text-rose-400 border border-rose-500/25'
+                                  : 'bg-slate-700/60 text-slate-400 border border-slate-600/60'
                               }`}
                             >
                               {exc.status}
@@ -781,18 +784,18 @@ const Dashboard = () => {
                       ))}
                     </tbody>
                   </table>
-                  {operationalData.excavators.length > 8 && <div className="text-center py-3 text-xs text-slate-500">+{operationalData.excavators.length - 8} more excavators</div>}
+                  {operationalData.excavators.length > 8 && <div className="text-center py-3 text-xs text-slate-500 font-medium">+{operationalData.excavators.length - 8} more excavators</div>}
                 </div>
               </div>
 
               {/* Operators Table */}
-              <div className="rounded-xl p-5 bg-slate-900/60 border border-slate-700/40">
+              <div className="rounded-xl p-5 bg-slate-900/60 border border-slate-700/50">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <Users className="text-violet-400" size={20} />
+                    <Users className="text-blue-400" size={20} strokeWidth={1.5} />
                     <h3 className="text-base font-bold text-slate-100">Operators</h3>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-500/15 text-violet-400 border border-violet-500/20">{operationalData.operators.length} operators</span>
+                  <span className={theme.badgeInfo}>{operationalData.operators.length} operators</span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full text-sm">
@@ -810,16 +813,16 @@ const Dashboard = () => {
                           <td className="px-3 py-3 font-semibold text-slate-200">{op.employeeNumber}</td>
                           <td className="px-3 py-3 text-slate-400">{op.user?.name || op.user?.fullName || '-'}</td>
                           <td className="px-3 py-3">
-                            <span className="px-2 py-1 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded text-xs font-medium">{op.shift}</span>
+                            <span className="px-2 py-1 bg-sky-500/15 text-sky-400 border border-sky-500/25 rounded-lg text-xs font-medium">{op.shift}</span>
                           </td>
                           <td className="px-3 py-3">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              className={`px-2 py-1 rounded-lg text-xs font-semibold ${
                                 op.status === 'ACTIVE'
-                                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
                                   : op.status === 'OFF_DUTY'
-                                  ? 'bg-slate-700/50 text-slate-400 border border-slate-600/50'
-                                  : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                                  ? 'bg-slate-700/60 text-slate-400 border border-slate-600/60'
+                                  : 'bg-sky-500/15 text-sky-400 border border-sky-500/25'
                               }`}
                             >
                               {op.status || 'N/A'}
@@ -829,18 +832,18 @@ const Dashboard = () => {
                       ))}
                     </tbody>
                   </table>
-                  {operationalData.operators.length > 8 && <div className="text-center py-3 text-xs text-slate-500">+{operationalData.operators.length - 8} more operators</div>}
+                  {operationalData.operators.length > 8 && <div className="text-center py-3 text-xs text-slate-500 font-medium">+{operationalData.operators.length - 8} more operators</div>}
                 </div>
               </div>
 
               {/* Production Targets Table */}
-              <div className="rounded-xl p-5 bg-slate-900/60 border border-slate-700/40">
+              <div className="rounded-xl p-5 bg-slate-900/60 border border-slate-700/50">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="text-amber-400" size={20} />
+                    <TrendingUp className="text-emerald-400" size={20} strokeWidth={1.5} />
                     <h3 className="text-base font-bold text-slate-100">Production Targets</h3>
                   </div>
-                  <span className={theme.badgeWarning}>{operationalData.productions.length} records</span>
+                  <span className={theme.badgeInfo}>{operationalData.productions.length} records</span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full text-sm">
@@ -864,12 +867,12 @@ const Dashboard = () => {
                             <td className="px-3 py-3 font-semibold text-slate-200">{prod.actualProduction?.toFixed(0)}t</td>
                             <td className="px-3 py-3">
                               <span
-                                className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                className={`px-2 py-1 rounded-lg text-xs font-bold ${
                                   achievement >= 100
-                                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
                                     : achievement >= 80
-                                    ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-                                    : 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
+                                    ? 'bg-sky-500/15 text-sky-400 border border-sky-500/25'
+                                    : 'bg-rose-500/15 text-rose-400 border border-rose-500/25'
                                 }`}
                               >
                                 {achievement.toFixed(0)}%
@@ -880,44 +883,44 @@ const Dashboard = () => {
                       })}
                     </tbody>
                   </table>
-                  {operationalData.productions.length > 8 && <div className="text-center py-3 text-xs text-slate-500">+{operationalData.productions.length - 8} more records</div>}
+                  {operationalData.productions.length > 8 && <div className="text-center py-3 text-xs text-slate-500 font-medium">+{operationalData.productions.length - 8} more records</div>}
                 </div>
               </div>
             </div>
 
             {/* Summary Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-              <div className="rounded-xl p-4 bg-slate-800/40 border border-slate-700/40">
+              <div className="rounded-xl p-4 bg-slate-800/50 border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <MapIcon className="text-sky-400" size={16} />
+                  <MapIcon className="text-sky-400" size={16} strokeWidth={1.5} />
                   <span className="text-xs font-semibold text-slate-400">Mining Sites</span>
                 </div>
                 <p className="text-2xl font-bold text-sky-400">{mapData.sites.length}</p>
-                <p className="text-[10px] text-slate-500 mt-1">Active locations</p>
+                <p className="text-[10px] text-slate-500 mt-1 font-medium">Active locations</p>
               </div>
-              <div className="rounded-xl p-4 bg-slate-800/40 border border-slate-700/40">
+              <div className="rounded-xl p-4 bg-slate-800/50 border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Navigation className="text-emerald-400" size={16} />
+                  <Navigation className="text-cyan-400" size={16} strokeWidth={1.5} />
                   <span className="text-xs font-semibold text-slate-400">Loading Points</span>
                 </div>
-                <p className="text-2xl font-bold text-emerald-400">{mapData.loadingPoints.length}</p>
-                <p className="text-[10px] text-slate-500 mt-1">Operational points</p>
+                <p className="text-2xl font-bold text-cyan-400">{mapData.loadingPoints.length}</p>
+                <p className="text-[10px] text-slate-500 mt-1 font-medium">Operational points</p>
               </div>
-              <div className="rounded-xl p-4 bg-slate-800/40 border border-slate-700/40">
+              <div className="rounded-xl p-4 bg-slate-800/50 border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Package className="text-amber-400" size={16} />
+                  <Package className="text-blue-400" size={16} strokeWidth={1.5} />
                   <span className="text-xs font-semibold text-slate-400">Dumping Points</span>
                 </div>
-                <p className="text-2xl font-bold text-amber-400">{mapData.dumpingPoints.length}</p>
-                <p className="text-[10px] text-slate-500 mt-1">Discharge locations</p>
+                <p className="text-2xl font-bold text-blue-400">{mapData.dumpingPoints.length}</p>
+                <p className="text-[10px] text-slate-500 mt-1 font-medium">Discharge locations</p>
               </div>
-              <div className="rounded-xl p-4 bg-slate-800/40 border border-slate-700/40">
+              <div className="rounded-xl p-4 bg-slate-800/50 border border-slate-700/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Activity className="text-violet-400" size={16} />
+                  <Activity className="text-slate-400" size={16} strokeWidth={1.5} />
                   <span className="text-xs font-semibold text-slate-400">Road Segments</span>
                 </div>
-                <p className="text-2xl font-bold text-violet-400">{mapData.roads.length}</p>
-                <p className="text-[10px] text-slate-500 mt-1">Active routes</p>
+                <p className="text-2xl font-bold text-slate-300">{mapData.roads.length}</p>
+                <p className="text-[10px] text-slate-500 mt-1 font-medium">Active routes</p>
               </div>
             </div>
           </div>
@@ -926,16 +929,16 @@ const Dashboard = () => {
 
       {/* === SHOW DATA BUTTON === */}
       {!showDataPreview && (
-        <div className="rounded-xl border border-sky-500/30 bg-gradient-to-br from-slate-900 to-slate-950 p-6 text-center shadow-xl shadow-sky-500/5">
+        <div className="rounded-xl border border-sky-500/30 bg-gradient-to-br from-slate-900 to-slate-950 p-6 text-center shadow-lg shadow-sky-500/5">
           <button
             onClick={() => setShowDataPreview(true)}
-            className="mx-auto flex items-center gap-3 px-6 py-3 text-base rounded-xl bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 text-white font-semibold shadow-lg shadow-sky-500/25 transition-all duration-300 hover:shadow-sky-500/40"
+            className="mx-auto flex items-center gap-3 px-6 py-3 text-base rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-semibold shadow-lg shadow-sky-500/25 transition-all duration-300 hover:shadow-sky-500/40 hover:scale-[1.02]"
           >
-            <Database size={20} />
+            <Database size={20} strokeWidth={1.5} />
             <span>Show Detailed Operational Data</span>
-            <ChevronRight size={16} />
+            <ChevronRight size={16} strokeWidth={2} />
           </button>
-          <p className="text-sm text-slate-400 mt-3">View comprehensive tables for trucks, excavators, operators, and production records</p>
+          <p className="text-sm text-slate-400 mt-3 font-medium">View comprehensive tables for trucks, excavators, operators, and production records</p>
         </div>
       )}
     </div>
