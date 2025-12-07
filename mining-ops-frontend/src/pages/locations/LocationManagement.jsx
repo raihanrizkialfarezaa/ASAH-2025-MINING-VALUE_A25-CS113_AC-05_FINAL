@@ -457,40 +457,42 @@ const LocationManagement = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100 flex items-center gap-3">
-            <MapIcon className="text-sky-400" size={36} />
-            <span>Location Management</span>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-100 flex items-center gap-2 sm:gap-3">
+            <MapIcon className="text-sky-400 w-6 h-6 sm:w-8 sm:h-8 lg:w-9 lg:h-9" />
+            <span className="hidden sm:inline">Location Management</span>
+            <span className="sm:hidden">Locations</span>
           </h1>
-          <p className="text-sm text-slate-400 mt-1">Manage mining sites, loading points, dumping points, and road segments</p>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">Manage mining sites, loading points, dumping points, and road segments</p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={fetchData} className="bg-slate-800/80 hover:bg-slate-700 px-4 py-2 rounded-lg border border-slate-700 text-slate-300 font-medium transition-colors flex items-center gap-2">
+        <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
+          <button onClick={fetchData} className="flex-1 sm:flex-none bg-slate-800/80 hover:bg-slate-700 px-3 sm:px-4 py-2 rounded-lg border border-slate-700 text-slate-300 font-medium transition-colors flex items-center justify-center gap-2">
             <RefreshCw size={18} />
-            <span>Refresh</span>
+            <span className="hidden sm:inline">Refresh</span>
           </button>
           <div className="bg-slate-800/80 rounded-lg p-1 flex border border-slate-700">
-            <button onClick={() => setViewMode('list')} className={`px-3 py-2 rounded flex items-center gap-1.5 transition-colors ${viewMode === 'list' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-400 hover:bg-slate-700'}`}>
+            <button onClick={() => setViewMode('list')} className={`px-2 sm:px-3 py-2 rounded flex items-center gap-1 sm:gap-1.5 transition-colors ${viewMode === 'list' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-400 hover:bg-slate-700'}`}>
               <List size={18} />
-              <span className="text-sm font-medium">List</span>
+              <span className="text-sm font-medium hidden sm:inline">List</span>
             </button>
-            <button onClick={() => setViewMode('map')} className={`px-3 py-2 rounded flex items-center gap-1.5 transition-colors ${viewMode === 'map' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-400 hover:bg-slate-700'}`}>
+            <button onClick={() => setViewMode('map')} className={`px-2 sm:px-3 py-2 rounded flex items-center gap-1 sm:gap-1.5 transition-colors ${viewMode === 'map' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-400 hover:bg-slate-700'}`}>
               <MapIcon size={18} />
-              <span className="text-sm font-medium">Map</span>
+              <span className="text-sm font-medium hidden sm:inline">Map</span>
             </button>
           </div>
           {canEdit && (
-            <button onClick={handleCreate} className="bg-sky-600 hover:bg-sky-500 text-white flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors">
+            <button onClick={handleCreate} className="flex-1 sm:flex-none bg-sky-600 hover:bg-sky-500 text-white flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-colors">
               <Plus size={20} />
-              <span>Add New</span>
+              <span className="hidden sm:inline">Add New</span>
+              <span className="sm:hidden">Add</span>
             </button>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
           <div className="flex items-center justify-between">
             <div>
@@ -537,8 +539,8 @@ const LocationManagement = () => {
         </div>
       </div>
 
-      <div className="bg-slate-900/90 border-b border-slate-700 rounded-t-xl">
-        <div className="flex gap-1">
+      <div className="bg-slate-900/90 border-b border-slate-700 rounded-t-xl overflow-x-auto">
+        <div className="flex gap-1 min-w-max">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -548,13 +550,13 @@ const LocationManagement = () => {
                   setActiveTab(tab.id);
                   setPagination((prev) => ({ ...prev, page: 1 }));
                 }}
-                className={`flex items-center gap-2 px-5 py-3 border-b-2 transition-all font-medium ${
+                className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 border-b-2 transition-all font-medium whitespace-nowrap ${
                   activeTab === tab.id ? 'border-sky-500 text-sky-400 bg-sky-500/10' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                 }`}
               >
-                <Icon size={18} />
-                <span>{tab.label}</span>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === tab.id ? 'bg-sky-500 text-white' : 'bg-slate-700 text-slate-300'}`}>{tab.count}</span>
+                <Icon size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <span className="text-sm">{tab.label}</span>
+                <span className={`px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === tab.id ? 'bg-sky-500 text-white' : 'bg-slate-700 text-slate-300'}`}>{tab.count}</span>
               </button>
             );
           })}
@@ -562,13 +564,13 @@ const LocationManagement = () => {
       </div>
 
       {viewMode === 'map' ? (
-        <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+        <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-3 sm:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-2">
               <Navigation className="text-sky-400" size={24} />
               <span>Geospatial View</span>
             </h2>
-            <div className="text-sm text-slate-400">
+            <div className="text-xs sm:text-sm text-slate-400">
               Showing {allSites.length} sites, {allLoadingPoints.length} loading points, {allDumpingPoints.length} dumping points
             </div>
           </div>
@@ -576,38 +578,18 @@ const LocationManagement = () => {
         </div>
       ) : (
         <>
-          <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+          <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-3 sm:p-5">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 flex items-center gap-3">
-                  <div className="relative" style={{ minWidth: '360px', maxWidth: '480px', flex: '1' }}>
+              <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+                <div className="flex-1 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+                  <div className="relative w-full sm:w-auto sm:min-w-[260px] lg:min-w-[360px] lg:max-w-[480px] lg:flex-1">
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" size={20} />
                     <input
                       type="text"
                       placeholder="Search by code, name, or mining site..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      style={{
-                        width: '100%',
-                        height: '44px',
-                        paddingLeft: '44px',
-                        paddingRight: '44px',
-                        fontSize: '14px',
-                        color: '#e2e8f0',
-                        backgroundColor: 'rgba(30, 41, 59, 0.8)',
-                        border: '1px solid rgba(71, 85, 105, 0.5)',
-                        borderRadius: '8px',
-                        outline: 'none',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#0ea5e9';
-                        e.target.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.15)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = 'rgba(71, 85, 105, 0.5)';
-                        e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.2)';
-                      }}
+                      className="w-full h-11 pl-11 pr-11 text-sm text-slate-200 bg-slate-800/80 border border-slate-700 rounded-lg focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 outline-none transition-colors placeholder:text-slate-500"
                     />
                     {searchQuery && (
                       <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-300">
@@ -616,14 +598,14 @@ const LocationManagement = () => {
                     )}
                   </div>
 
-                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-slate-800/80 border border-slate-700 text-slate-300 rounded-lg px-3 py-2.5 min-w-[180px] focus:border-sky-500 outline-none">
+                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full sm:w-auto bg-slate-800/80 border border-slate-700 text-slate-300 rounded-lg px-3 py-2.5 sm:min-w-[180px] focus:border-sky-500 outline-none">
                     <option value="">All Status</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
 
                   {activeFiltersCount > 0 && (
-                    <button onClick={handleClearFilters} className="flex items-center gap-1 px-3 py-2 text-sm text-blue-300 hover:bg-blue-300/10 rounded-lg border border-blue-300/30 transition-colors">
+                    <button onClick={handleClearFilters} className="w-full sm:w-auto flex items-center justify-center gap-1 px-3 py-2 text-sm text-blue-300 hover:bg-blue-300/10 rounded-lg border border-blue-300/30 transition-colors">
                       <X size={16} />
                       <span>Clear ({activeFiltersCount})</span>
                     </button>

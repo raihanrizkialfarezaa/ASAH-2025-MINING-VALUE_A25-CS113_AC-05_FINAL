@@ -1343,202 +1343,213 @@ const ProductionList = () => {
   if (loading) return <LoadingSpinner fullScreen />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100">Production Records</h1>
-          <p className="text-slate-400 mt-1">Track and manage daily production activities</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-100">Production Records</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 hidden sm:block">Track and manage daily production activities</p>
         </div>
         {canEdit && (
-          <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 shadow-lg hover:shadow-xl transition-shadow">
-            <Plus size={20} />
-            <span>Add Production Record</span>
+          <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 shadow-lg hover:shadow-xl transition-shadow px-3 sm:px-4 py-2 text-sm sm:text-base w-full sm:w-auto justify-center">
+            <Plus size={18} />
+            <span className="hidden xs:inline">Add Production Record</span>
+            <span className="xs:hidden">Add Record</span>
           </button>
         )}
       </div>
 
+      {/* Statistics Grid - Responsive */}
       {statistics && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-sky-900/20 to-sky-950/20 p-5 shadow-lg">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-sky-900/20 to-sky-950/20 p-3 sm:p-5 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-medium">Total Production</p>
-                <p className="text-3xl font-bold mt-1 text-slate-100">{(statistics.totalProduction / 1000000)?.toFixed(2) || 0}M</p>
+                <p className="text-slate-400 text-xs sm:text-sm font-medium">Total Production</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold mt-1 text-slate-100">{(statistics.totalProduction / 1000000)?.toFixed(2) || 0}M</p>
                 <p className="text-slate-500 text-xs mt-1">ton</p>
               </div>
-              <div className="bg-sky-500/20 p-3 rounded-lg">
-                <Package size={28} className="text-sky-400" />
+              <div className="bg-sky-500/20 p-2 sm:p-3 rounded-lg">
+                <Package size={20} className="text-sky-400" />
               </div>
             </div>
           </div>
-          <div className="rounded-xl border border-cyan-500/20 bg-gradient-to-b from-cyan-900/20 to-cyan-950/20 p-5 shadow-lg">
+          <div className="rounded-xl border border-cyan-500/20 bg-gradient-to-b from-cyan-900/20 to-cyan-950/20 p-3 sm:p-5 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-medium">Average Achievement</p>
-                <p className="text-3xl font-bold mt-1 text-slate-100">{statistics.avgAchievement?.toFixed(1) || 0}%</p>
+                <p className="text-slate-400 text-xs sm:text-sm font-medium">Avg Achievement</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold mt-1 text-slate-100">{statistics.avgAchievement?.toFixed(1) || 0}%</p>
                 <p className="text-slate-500 text-xs mt-1">performance</p>
               </div>
-              <div className="bg-cyan-500/20 p-3 rounded-lg">
-                <CheckCircle size={28} className="text-cyan-400" />
+              <div className="bg-cyan-500/20 p-2 sm:p-3 rounded-lg">
+                <CheckCircle size={20} className="text-cyan-400" />
               </div>
             </div>
           </div>
-          <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-sky-900/20 to-sky-950/20 p-5 shadow-lg">
+          <div className="rounded-xl border border-sky-500/20 bg-gradient-to-b from-sky-900/20 to-sky-950/20 p-3 sm:p-5 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-medium">Total Trips</p>
-                <p className="text-3xl font-bold mt-1 text-slate-100">{(statistics.totalTrips / 1000)?.toFixed(1) || 0}K</p>
+                <p className="text-slate-400 text-xs sm:text-sm font-medium">Total Trips</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold mt-1 text-slate-100">{(statistics.totalTrips / 1000)?.toFixed(1) || 0}K</p>
                 <p className="text-slate-500 text-xs mt-1">hauling trips</p>
               </div>
-              <div className="bg-sky-500/20 p-3 rounded-lg">
-                <Truck size={28} className="text-sky-400" />
+              <div className="bg-sky-500/20 p-2 sm:p-3 rounded-lg">
+                <Truck size={20} className="text-sky-400" />
               </div>
             </div>
           </div>
-          <div className="rounded-xl border border-blue-500/20 bg-gradient-to-b from-blue-900/20 to-blue-950/20 p-5 shadow-lg">
+          <div className="rounded-xl border border-blue-500/20 bg-gradient-to-b from-blue-900/20 to-blue-950/20 p-3 sm:p-5 shadow-lg col-span-2 lg:col-span-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-medium">Avg Cycle Time</p>
-                <p className="text-3xl font-bold mt-1 text-slate-100">{statistics.avgCycleTime?.toFixed(1) || 0}</p>
+                <p className="text-slate-400 text-xs sm:text-sm font-medium">Avg Cycle Time</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold mt-1 text-slate-100">{statistics.avgCycleTime?.toFixed(1) || 0}</p>
                 <p className="text-slate-500 text-xs mt-1">minutes</p>
               </div>
-              <div className="bg-blue-500/20 p-3 rounded-lg">
-                <RefreshCw size={28} className="text-blue-400" />
+              <div className="bg-blue-500/20 p-2 sm:p-3 rounded-lg">
+                <RefreshCw size={20} className="text-blue-400" />
               </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* Filter Section - Responsive */}
       <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 shadow-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/80 to-slate-900/80">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <h2 className="text-lg font-semibold text-slate-100">Production History</h2>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
+        <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/80 to-slate-900/80">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 className="text-base sm:text-lg font-semibold text-slate-100">Production History</h2>
+              
+              {/* Mobile: Stack filters vertically */}
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3">
+                {/* Search Input */}
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setPagination((prev) => ({ ...prev, page: 1 }));
+                    }}
+                    className="pl-9 pr-3 py-2 text-sm border border-slate-700/50 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 w-full sm:w-40 lg:w-48 text-slate-200 placeholder-slate-500 bg-slate-900"
+                  />
+                </div>
+                
+                {/* Filters Row */}
+                <div className="flex flex-wrap gap-2">
+                  <select
+                    value={filterSiteId}
+                    onChange={(e) => {
+                      setFilterSiteId(e.target.value);
+                      setPagination((prev) => ({ ...prev, page: 1 }));
+                    }}
+                    className="flex-1 sm:flex-none text-sm border border-slate-700/50 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200 bg-slate-900 min-w-[100px]"
+                  >
+                    <option value="">All Sites</option>
+                    {miningSites.map((site) => (
+                      <option key={site.id} value={site.id}>
+                        {site.code}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={filterShift}
+                    onChange={(e) => {
+                      setFilterShift(e.target.value);
+                      setPagination((prev) => ({ ...prev, page: 1 }));
+                    }}
+                    className="flex-1 sm:flex-none text-sm border border-slate-700/50 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200 bg-slate-900 min-w-[100px]"
+                  >
+                    <option value="">All Shifts</option>
+                    <option value="SHIFT_1">Shift 1</option>
+                    <option value="SHIFT_2">Shift 2</option>
+                    <option value="SHIFT_3">Shift 3</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            {/* Date Filters - Responsive */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-3">
+              <div className="flex items-center gap-2 flex-1 sm:flex-none">
+                <span className="text-xs text-slate-500 hidden sm:inline">From:</span>
                 <input
-                  type="text"
-                  placeholder="Search site, remarks..."
-                  value={searchQuery}
+                  type="date"
+                  value={filterStartDate}
                   onChange={(e) => {
-                    setSearchQuery(e.target.value);
+                    setFilterStartDate(e.target.value);
                     setPagination((prev) => ({ ...prev, page: 1 }));
                   }}
-                  style={{ backgroundColor: '#0f172a' }}
-                  className="pl-9 pr-4 py-2 text-sm border border-slate-700/50 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 w-48 text-slate-200 placeholder-slate-500"
+                  className="text-sm border border-slate-700/50 rounded-lg px-2 sm:px-3 py-1.5 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200 bg-slate-900 w-full sm:w-auto"
                 />
               </div>
-              <select
-                value={filterSiteId}
-                onChange={(e) => {
-                  setFilterSiteId(e.target.value);
-                  setPagination((prev) => ({ ...prev, page: 1 }));
-                }}
-                style={{ backgroundColor: '#0f172a' }}
-                className="text-sm border border-slate-700/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200"
-              >
-                <option value="">All Sites</option>
-                {miningSites.map((site) => (
-                  <option key={site.id} value={site.id}>
-                    {site.code} - {site.name}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filterShift}
-                onChange={(e) => {
-                  setFilterShift(e.target.value);
-                  setPagination((prev) => ({ ...prev, page: 1 }));
-                }}
-                style={{ backgroundColor: '#0f172a' }}
-                className="text-sm border border-slate-700/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200"
-              >
-                <option value="">All Shifts</option>
-                <option value="SHIFT_1">Shift 1 (Pagi)</option>
-                <option value="SHIFT_2">Shift 2 (Siang)</option>
-                <option value="SHIFT_3">Shift 3 (Malam)</option>
-              </select>
+              <div className="flex items-center gap-2 flex-1 sm:flex-none">
+                <span className="text-xs text-slate-500 hidden sm:inline">To:</span>
+                <input
+                  type="date"
+                  value={filterEndDate}
+                  onChange={(e) => {
+                    setFilterEndDate(e.target.value);
+                    setPagination((prev) => ({ ...prev, page: 1 }));
+                  }}
+                  className="text-sm border border-slate-700/50 rounded-lg px-2 sm:px-3 py-1.5 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200 bg-slate-900 w-full sm:w-auto"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500 hidden sm:inline">Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="text-sm border border-slate-700/50 rounded-lg px-2 sm:px-3 py-1.5 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200 bg-slate-900"
+                >
+                  <option value="recordDate">Date</option>
+                  <option value="targetProduction">Target</option>
+                  <option value="actualProduction">Actual</option>
+                  <option value="achievement">Achievement</option>
+                  <option value="totalTrips">Trips</option>
+                </select>
+                <button
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  className="p-1.5 border border-slate-700/50 rounded-lg hover:bg-slate-700/50 transition-colors text-slate-300"
+                  title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                >
+                  {sortOrder === 'asc' ? '↑' : '↓'}
+                </button>
+              </div>
+              {(searchQuery || filterSiteId || filterShift || filterStartDate || filterEndDate) && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setFilterSiteId('');
+                    setFilterShift('');
+                    setFilterStartDate('');
+                    setFilterEndDate('');
+                    setPagination((prev) => ({ ...prev, page: 1 }));
+                  }}
+                  className="text-xs text-blue-300 hover:text-blue-200 underline"
+                >
+                  Clear
+                </button>
+              )}
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 mt-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">From:</span>
-              <input
-                type="date"
-                value={filterStartDate}
-                onChange={(e) => {
-                  setFilterStartDate(e.target.value);
-                  setPagination((prev) => ({ ...prev, page: 1 }));
-                }}
-                style={{ backgroundColor: '#0f172a' }}
-                className="text-sm border border-slate-700/50 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">To:</span>
-              <input
-                type="date"
-                value={filterEndDate}
-                onChange={(e) => {
-                  setFilterEndDate(e.target.value);
-                  setPagination((prev) => ({ ...prev, page: 1 }));
-                }}
-                style={{ backgroundColor: '#0f172a' }}
-                className="text-sm border border-slate-700/50 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">Sort:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                style={{ backgroundColor: '#0f172a' }}
-                className="text-sm border border-slate-700/50 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-200"
-              >
-                <option value="recordDate">Date</option>
-                <option value="targetProduction">Target</option>
-                <option value="actualProduction">Actual</option>
-                <option value="achievement">Achievement</option>
-                <option value="totalTrips">Trips</option>
-              </select>
-              <button
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className="p-1.5 border border-slate-700/50 rounded-lg hover:bg-slate-700/50 transition-colors text-slate-300"
-                title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
-              >
-                {sortOrder === 'asc' ? '↑' : '↓'}
-              </button>
-            </div>
-            {(searchQuery || filterSiteId || filterShift || filterStartDate || filterEndDate) && (
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setFilterSiteId('');
-                  setFilterShift('');
-                  setFilterStartDate('');
-                  setFilterEndDate('');
-                  setPagination((prev) => ({ ...prev, page: 1 }));
-                }}
-                className="text-xs text-blue-300 hover:text-blue-200 underline"
-              >
-                Clear Filters
-              </button>
-            )}
           </div>
         </div>
+        
+        {/* Table - Responsive with horizontal scroll */}
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[800px]">
             <thead className="bg-gradient-to-r from-slate-800/80 to-slate-900/80 border-b border-slate-700/50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Date</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Shift</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Mining Site</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Target</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Actual</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">Achievement</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">Trips</th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Date</th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Shift</th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Site</th>
+                <th className="px-3 sm:px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Target</th>
+                <th className="px-3 sm:px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Actual</th>
+                <th className="px-3 sm:px-4 py-3 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">%</th>
+                <th className="px-3 sm:px-4 py-3 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">Trips</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>

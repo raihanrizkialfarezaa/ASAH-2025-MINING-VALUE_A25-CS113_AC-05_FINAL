@@ -292,42 +292,42 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
   };
 
   const chatWindowClass = isFullscreen
-    ? 'fixed inset-4 z-[100] bg-slate-900 rounded-2xl shadow-2xl flex flex-col border border-sky-700/30 overflow-hidden'
-    : 'bg-slate-900 rounded-2xl shadow-2xl w-96 h-[600px] flex flex-col border border-sky-700/30 overflow-hidden';
+    ? 'fixed inset-2 sm:inset-4 z-[100] bg-slate-900 rounded-xl sm:rounded-2xl shadow-2xl flex flex-col border border-sky-700/30 overflow-hidden'
+    : 'bg-slate-900 rounded-xl sm:rounded-2xl shadow-2xl w-[calc(100vw-2rem)] sm:w-96 h-[calc(100vh-8rem)] sm:h-[600px] max-h-[600px] flex flex-col border border-sky-700/30 overflow-hidden';
 
   return (
-    <div className={isFullscreen ? '' : 'fixed bottom-6 right-6 z-50'}>
+    <div className={isFullscreen ? '' : 'fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50'}>
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 hover:to-cyan-500 text-white rounded-2xl p-4 shadow-lg shadow-sky-500/20 transition-all transform hover:scale-105 flex items-center space-x-2 group border border-sky-400/30"
+          className="bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 hover:to-cyan-500 text-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg shadow-sky-500/20 transition-all transform hover:scale-105 flex items-center space-x-2 group border border-sky-400/30"
         >
-          <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-          <span className="font-semibold">AI Assistant</span>
+          <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 group-hover:rotate-12 transition-transform" />
+          <span className="font-semibold text-sm sm:text-base hidden sm:inline">AI Assistant</span>
           {aiServiceStatus === 'offline' && <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full animate-pulse"></span>}
         </button>
       )}
 
       {isOpen && (
         <div className={chatWindowClass}>
-          <div className="bg-gradient-to-r from-sky-600 via-sky-500 to-cyan-600 text-white p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                <Bot className="w-6 h-6" />
+          <div className="bg-gradient-to-r from-sky-600 via-sky-500 to-cyan-600 text-white p-3 sm:p-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <Bot className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
-                <h3 className="font-bold text-lg">Mining AI</h3>
+                <h3 className="font-bold text-base sm:text-lg">Mining AI</h3>
                 <p className="text-xs text-sky-100 flex items-center gap-1.5">
                   <span className={`w-2 h-2 rounded-full ${aiServiceStatus === 'online' ? 'bg-emerald-400 shadow-emerald-400/50 shadow-sm' : 'bg-rose-400'}`}></span>
                   {aiServiceStatus === 'online' ? 'Online' : 'Offline'}
                 </p>
               </div>
             </div>
-            <div className="flex space-x-1">
-              <button onClick={clearChat} className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all" title="Clear chat">
+            <div className="flex space-x-0.5 sm:space-x-1">
+              <button onClick={clearChat} className="text-white/80 hover:text-white hover:bg-white/10 p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all" title="Clear chat">
                 <Trash2 className="w-4 h-4" />
               </button>
-              <button onClick={toggleFullscreen} className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all" title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
+              <button onClick={toggleFullscreen} className="text-white/80 hover:text-white hover:bg-white/10 p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all" title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
                 {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
               </button>
               <button
@@ -335,7 +335,7 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
                   setIsOpen(false);
                   setIsFullscreen(false);
                 }}
-                className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all"
+                className="text-white/80 hover:text-white hover:bg-white/10 p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all"
                 title="Close"
               >
                 <X className="w-5 h-5" />
@@ -343,11 +343,11 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
             </div>
           </div>
 
-          <div className={`flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-slate-900 to-slate-950 ${isFullscreen ? 'p-6' : ''}`}>
+          <div className={`flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 bg-gradient-to-b from-slate-900 to-slate-950 ${isFullscreen ? 'sm:p-6' : ''}`}>
             {messages.map((msg, index) => (
               <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} group`}>
                 <div
-                  className={`${isFullscreen ? 'max-w-[70%]' : 'max-w-[85%]'} p-4 rounded-2xl ${
+                  className={`${isFullscreen ? 'max-w-[70%] sm:max-w-[60%]' : 'max-w-[90%] sm:max-w-[85%]'} p-3 sm:p-4 rounded-xl sm:rounded-2xl ${
                     msg.role === 'user' ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-br-sm shadow-lg shadow-sky-500/20' : 'bg-slate-800/80 border border-sky-700/20 text-slate-200 rounded-bl-sm backdrop-blur-sm'
                   }`}
                 >
@@ -359,20 +359,20 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
                     </div>
                   ) : (
                     <div>
-                      <p className={`${isFullscreen ? 'text-base' : 'text-sm'} whitespace-pre-wrap break-words`}>{msg.content}</p>
+                      <p className={`${isFullscreen ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'} whitespace-pre-wrap break-words`}>{msg.content}</p>
                       <MessageActions message={msg} isUser={true} />
                     </div>
                   )}
-                  <p className={`text-xs mt-2 ${msg.role === 'user' ? 'text-sky-100' : 'text-slate-500'}`}>{msg.timestamp.toLocaleTimeString()}</p>
+                  <p className={`text-[10px] sm:text-xs mt-1.5 sm:mt-2 ${msg.role === 'user' ? 'text-sky-100' : 'text-slate-500'}`}>{msg.timestamp.toLocaleTimeString()}</p>
                 </div>
               </div>
             ))}
 
             {loading && (
               <div className="flex justify-start">
-                <div className={`${isFullscreen ? 'max-w-[70%]' : 'max-w-[85%]'} p-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 rounded-bl-sm`}>
+                <div className={`${isFullscreen ? 'max-w-[70%] sm:max-w-[60%]' : 'max-w-[90%] sm:max-w-[85%]'} p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-800/50 border border-slate-700/50 rounded-bl-sm`}>
                   <ThinkingIndicator />
-                  <div className="h-4 w-24 bg-slate-700/50 rounded animate-pulse mt-2"></div>
+                  <div className="h-3 sm:h-4 w-20 sm:w-24 bg-slate-700/50 rounded animate-pulse mt-2"></div>
                 </div>
               </div>
             )}
@@ -381,36 +381,36 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
           </div>
 
           {messages.length <= 1 && (
-            <div className={`p-4 border-t border-sky-700/20 bg-slate-900/80 ${isFullscreen ? 'p-6' : ''}`}>
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-sky-400" />
-                <p className="text-xs text-slate-400 font-medium">Suggested questions:</p>
+            <div className={`p-3 sm:p-4 border-t border-sky-700/20 bg-slate-900/80 ${isFullscreen ? 'sm:p-6' : ''}`}>
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400" />
+                <p className="text-[10px] sm:text-xs text-slate-400 font-medium">Suggested questions:</p>
               </div>
-              <div className={`grid gap-2 ${isFullscreen ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              <div className={`grid gap-2 ${isFullscreen ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                 {suggestedQuestions.map((item, index) => (
                   <button
                     key={index}
                     onClick={() => handleSuggestedQuestion(item.question)}
-                    className="text-left bg-slate-800/50 hover:bg-sky-900/30 border border-sky-700/20 hover:border-sky-500/40 px-4 py-3 rounded-xl transition-all group"
+                    className="text-left bg-slate-800/50 hover:bg-sky-900/30 border border-sky-700/20 hover:border-sky-500/40 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all group"
                   >
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
                       <div
-                        className={`w-5 h-5 rounded-lg flex items-center justify-center text-xs font-bold ${
+                        className={`w-4 h-4 sm:w-5 sm:h-5 rounded-md sm:rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-bold ${
                           index === 0 ? 'bg-sky-500/20 text-sky-400' : index === 1 ? 'bg-cyan-500/20 text-cyan-400' : index === 2 ? 'bg-blue-500/20 text-blue-400' : 'bg-teal-500/20 text-teal-400'
                         }`}
                       >
                         {index + 1}
                       </div>
-                      <span className="text-xs font-semibold text-slate-300 group-hover:text-sky-300 transition-colors">{item.title}</span>
+                      <span className="text-[10px] sm:text-xs font-semibold text-slate-300 group-hover:text-sky-300 transition-colors">{item.title}</span>
                     </div>
-                    <p className={`text-slate-500 group-hover:text-slate-400 transition-colors line-clamp-2 ${isFullscreen ? 'text-sm' : 'text-xs'}`}>{item.question}</p>
+                    <p className={`text-slate-500 group-hover:text-slate-400 transition-colors line-clamp-2 ${isFullscreen ? 'text-xs sm:text-sm' : 'text-[10px] sm:text-xs'}`}>{item.question}</p>
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          <div className={`p-4 border-t border-sky-700/20 bg-slate-900 ${isFullscreen ? 'p-6' : ''}`}>
+          <div className={`p-3 sm:p-4 border-t border-sky-700/20 bg-slate-900 ${isFullscreen ? 'sm:p-6' : ''}`}>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -419,22 +419,22 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
                 onKeyPress={handleKeyPress}
                 placeholder="Ask a question..."
                 disabled={loading || aiServiceStatus === 'offline'}
-                className={`flex-1 bg-slate-800/50 border border-sky-700/30 text-slate-200 placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent disabled:bg-slate-800/30 disabled:text-slate-600 transition-all ${
-                  isFullscreen ? 'text-base' : 'text-sm'
+                className={`flex-1 bg-slate-800/50 border border-sky-700/30 text-slate-200 placeholder-slate-500 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent disabled:bg-slate-800/30 disabled:text-slate-600 transition-all ${
+                  isFullscreen ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'
                 }`}
               />
               <button
                 onClick={handleSend}
                 disabled={loading || !input.trim() || aiServiceStatus === 'offline'}
-                className="bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 hover:to-cyan-500 text-white px-5 py-3 rounded-xl transition-all disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed flex items-center justify-center min-w-[56px] shadow-lg shadow-sky-500/20 disabled:shadow-none"
+                className="bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 hover:to-cyan-500 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg sm:rounded-xl transition-all disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed flex items-center justify-center min-w-[48px] sm:min-w-[56px] shadow-lg shadow-sky-500/20 disabled:shadow-none"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                {loading ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <Send className="w-4 h-4 sm:w-5 sm:h-5" />}
               </button>
             </div>
             {aiServiceStatus === 'offline' && (
-              <div className="flex items-center gap-2 text-xs text-rose-400 mt-3 bg-rose-500/10 border border-rose-500/20 px-4 py-2.5 rounded-xl">
-                <AlertCircle className="w-4 h-4" />
-                <span>AI service is offline. Please start the AI service first.</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-rose-400 mt-2 sm:mt-3 bg-rose-500/10 border border-rose-500/20 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl">
+                <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="line-clamp-2">AI service is offline. Please start the AI service first.</span>
               </div>
             )}
           </div>

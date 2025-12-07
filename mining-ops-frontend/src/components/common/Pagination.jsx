@@ -3,7 +3,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const pages = [];
-  const maxVisible = 5;
+  // Show fewer pages on mobile
+  const maxVisible = typeof window !== 'undefined' && window.innerWidth < 640 ? 3 : 5;
 
   let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
   let endPage = Math.min(totalPages, startPage + maxVisible - 1);
@@ -17,37 +18,59 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   }
 
   return (
-    <div className="flex items-center justify-center space-x-2 mt-4">
-      <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-        <ChevronLeft size={20} />
+    <div className="flex items-center justify-center flex-wrap gap-1 sm:gap-2 mt-3 sm:mt-4">
+      <button 
+        onClick={() => onPageChange(currentPage - 1)} 
+        disabled={currentPage === 1} 
+        className="p-1.5 sm:p-2 rounded-lg hover:bg-slate-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
 
       {startPage > 1 && (
         <>
-          <button onClick={() => onPageChange(1)} className="px-3 py-1 rounded hover:bg-gray-100">
+          <button 
+            onClick={() => onPageChange(1)} 
+            className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg hover:bg-slate-700/50 text-xs sm:text-sm font-medium transition-colors"
+          >
             1
           </button>
-          {startPage > 2 && <span className="px-2">...</span>}
+          {startPage > 2 && <span className="px-1 sm:px-2 text-slate-500 text-xs sm:text-sm">...</span>}
         </>
       )}
 
       {pages.map((page) => (
-        <button key={page} onClick={() => onPageChange(page)} className={`px-3 py-1 rounded ${currentPage === page ? 'bg-primary-600 text-white' : 'hover:bg-gray-100'}`}>
+        <button 
+          key={page} 
+          onClick={() => onPageChange(page)} 
+          className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+            currentPage === page 
+              ? 'bg-sky-600 text-white shadow-md shadow-sky-500/20' 
+              : 'hover:bg-slate-700/50'
+          }`}
+        >
           {page}
         </button>
       ))}
 
       {endPage < totalPages && (
         <>
-          {endPage < totalPages - 1 && <span className="px-2">...</span>}
-          <button onClick={() => onPageChange(totalPages)} className="px-3 py-1 rounded hover:bg-gray-100">
+          {endPage < totalPages - 1 && <span className="px-1 sm:px-2 text-slate-500 text-xs sm:text-sm">...</span>}
+          <button 
+            onClick={() => onPageChange(totalPages)} 
+            className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg hover:bg-slate-700/50 text-xs sm:text-sm font-medium transition-colors"
+          >
             {totalPages}
           </button>
         </>
       )}
 
-      <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-        <ChevronRight size={20} />
+      <button 
+        onClick={() => onPageChange(currentPage + 1)} 
+        disabled={currentPage === totalPages} 
+        className="p-1.5 sm:p-2 rounded-lg hover:bg-slate-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
     </div>
   );

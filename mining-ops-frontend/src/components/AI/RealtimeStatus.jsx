@@ -37,14 +37,15 @@ const RealtimeStatus = ({ data, onRefresh }) => {
   };
 
   return (
-    <div className="rounded-2xl border border-slate-700/50 bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl p-6 mb-6 shadow-xl shadow-black/20">
+    <div className="rounded-xl sm:rounded-2xl border border-slate-700/50 bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl p-4 sm:p-6 mb-4 sm:mb-6 shadow-xl shadow-black/20">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-slate-100 flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-3">
           <div className="p-2 bg-blue-500/20 rounded-xl">
             <Activity className="w-5 h-5 text-blue-400" strokeWidth={2} />
           </div>
-          Real-time Operational Status
+          <span className="hidden sm:inline">Real-time Operational Status</span>
+          <span className="sm:hidden">Realtime Status</span>
         </h2>
         {onRefresh && (
           <button onClick={onRefresh} className="p-2 hover:bg-slate-700/50 rounded-xl transition-colors group" title="Refresh data">
@@ -54,7 +55,7 @@ const RealtimeStatus = ({ data, onRefresh }) => {
       </div>
 
       {/* Status Cards Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {/* Weather Card */}
         <div className={`bg-gradient-to-br ${getWeatherBg(weather?.condition)} border p-4 rounded-2xl transition-all hover:scale-[1.02] hover:shadow-lg`}>
           <div className="flex flex-col items-center text-center">
@@ -120,20 +121,20 @@ const RealtimeStatus = ({ data, onRefresh }) => {
 
       {/* Upcoming Schedules Section */}
       {upcomingSchedules && upcomingSchedules.length > 0 && (
-        <div className="mt-6 pt-5 border-t border-slate-700/50">
-          <h3 className="font-semibold text-slate-200 mb-4 flex items-center gap-2">
-            <Ship className="w-5 h-5 text-blue-400" strokeWidth={1.5} />
+        <div className="mt-4 sm:mt-6 pt-4 sm:pt-5 border-t border-slate-700/50">
+          <h3 className="font-semibold text-slate-200 mb-3 sm:mb-4 flex flex-wrap items-center gap-2 text-sm sm:text-base">
+            <Ship className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" strokeWidth={1.5} />
             <span>Upcoming Sailing Schedules</span>
-            <span className="ml-2 px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full">{upcomingSchedules.length}</span>
+            <span className="ml-auto sm:ml-2 px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full">{upcomingSchedules.length}</span>
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {upcomingSchedules.slice(0, 3).map((schedule, index) => (
-              <div key={index} className="bg-slate-800/50 border border-slate-700/50 p-4 rounded-xl hover:bg-slate-800/70 hover:border-blue-500/30 transition-all group">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="font-medium text-slate-100 group-hover:text-blue-100 transition-colors">{schedule.vessel?.name}</div>
-                    <div className="flex items-center gap-2 text-xs text-slate-400 mt-2">
-                      <Calendar className="w-3.5 h-3.5" />
+              <div key={index} className="bg-slate-800/50 border border-slate-700/50 p-3 sm:p-4 rounded-xl hover:bg-slate-800/70 hover:border-blue-500/30 transition-all group">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-slate-100 group-hover:text-blue-100 transition-colors text-sm sm:text-base truncate">{schedule.vessel?.name}</div>
+                    <div className="flex items-center gap-2 text-xs text-slate-400 mt-1.5 sm:mt-2">
+                      <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                       <span>
                         {new Date(schedule.etsLoading).toLocaleDateString('id-ID', {
                           day: 'numeric',
@@ -143,12 +144,12 @@ const RealtimeStatus = ({ data, onRefresh }) => {
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
-                      <Package className="w-3.5 h-3.5" />
+                      <Package className="w-3.5 h-3.5 flex-shrink-0" />
                       <span>{schedule.plannedQuantity?.toLocaleString()} Ton</span>
                     </div>
                   </div>
                   <div
-                    className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                    className={`px-2 py-1 rounded-lg text-xs font-medium flex-shrink-0 ${
                       schedule.status === 'SCHEDULED' ? 'bg-blue-500/20 text-blue-400' : schedule.status === 'LOADING' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-500/20 text-slate-400'
                     }`}
                   >
@@ -162,7 +163,7 @@ const RealtimeStatus = ({ data, onRefresh }) => {
       )}
 
       {/* Last Updated Timestamp */}
-      <div className="mt-5 pt-3 border-t border-slate-700/30 flex items-center justify-end gap-2 text-xs text-slate-500">
+      <div className="mt-4 sm:mt-5 pt-3 border-t border-slate-700/30 flex items-center justify-end gap-2 text-xs text-slate-500">
         <Clock className="w-3.5 h-3.5" />
         <span>
           Last updated:{' '}

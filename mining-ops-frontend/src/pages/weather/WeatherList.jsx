@@ -377,30 +377,32 @@ const WeatherList = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100 flex items-center space-x-3">
-            <Cloud className="text-sky-500" size={36} />
-            <span>Weather Monitoring System</span>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-100 flex items-center gap-2 sm:gap-3">
+            <Cloud className="text-sky-500 w-6 h-6 sm:w-8 sm:h-8 lg:w-9 lg:h-9" />
+            <span className="hidden sm:inline">Weather Monitoring System</span>
+            <span className="sm:hidden">Weather</span>
           </h1>
-          <p className="text-sm text-slate-400 mt-1">Real-time weather tracking and operational safety assessment</p>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">Real-time weather tracking and operational safety assessment</p>
         </div>
-        <div className="flex space-x-3">
-          <button onClick={fetchWeathers} className="bg-slate-800/50 hover:bg-slate-700/50 px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm text-slate-300 font-medium transition-colors flex items-center space-x-2">
+        <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+          <button onClick={fetchWeathers} className="flex-1 sm:flex-none bg-slate-800/50 hover:bg-slate-700/50 px-3 sm:px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm text-slate-300 font-medium transition-colors flex items-center justify-center gap-2">
             <RefreshCw size={18} />
-            <span>Refresh</span>
+            <span className="hidden sm:inline">Refresh</span>
           </button>
           {canEdit && (
-            <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
+            <button onClick={handleCreate} className="flex-1 sm:flex-none btn-primary flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5">
               <Plus size={20} />
-              <span>Add Weather Log</span>
+              <span className="hidden sm:inline">Add Weather Log</span>
+              <span className="sm:hidden">Add</span>
             </button>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-5">
           <div className="flex items-center justify-between">
             <div>
@@ -458,38 +460,18 @@ const WeatherList = () => {
         </div>
       </div>
 
-      <div className="card">
+      <div className="card p-3 sm:p-5">
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 flex items-center space-x-3">
-              <div className="relative" style={{ minWidth: '380px', maxWidth: '500px', flex: '1' }}>
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+            <div className="flex-1 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+              <div className="relative w-full sm:w-auto sm:min-w-[280px] lg:min-w-[380px] lg:max-w-[500px] lg:flex-1">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" size={20} />
                 <input
                   type="text"
                   placeholder="Search by mining site, condition, or wind direction..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    height: '44px',
-                    paddingLeft: '44px',
-                    paddingRight: '44px',
-                    fontSize: '14px',
-                    color: '#cbd5e1',
-                    backgroundColor: '#0f172a',
-                    border: '1px solid rgba(51, 65, 85, 0.5)',
-                    borderRadius: '8px',
-                    outline: 'none',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#0ea5e9';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.15)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(51, 65, 85, 0.5)';
-                    e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.2)';
-                  }}
+                  className="w-full h-11 pl-11 pr-11 text-sm text-slate-300 bg-slate-900/80 border border-slate-700 rounded-lg focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 outline-none transition-colors placeholder:text-slate-500"
                 />
                 {searchQuery && (
                   <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-300">
@@ -498,7 +480,7 @@ const WeatherList = () => {
                 )}
               </div>
 
-              <select value={conditionFilter} onChange={(e) => setConditionFilter(e.target.value)} className="input-field min-w-[180px]">
+              <select value={conditionFilter} onChange={(e) => setConditionFilter(e.target.value)} className="w-full sm:w-auto input-field sm:min-w-[180px]">
                 <option value="">All Conditions</option>
                 {conditionOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -507,7 +489,7 @@ const WeatherList = () => {
                 ))}
               </select>
 
-              <select value={riskLevelFilter} onChange={(e) => setRiskLevelFilter(e.target.value)} className="input-field min-w-[150px]">
+              <select value={riskLevelFilter} onChange={(e) => setRiskLevelFilter(e.target.value)} className="w-full sm:w-auto input-field sm:min-w-[150px]">
                 <option value="">All Risk Levels</option>
                 {riskLevelOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -516,27 +498,29 @@ const WeatherList = () => {
                 ))}
               </select>
 
-              <button
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className={`px-4 py-2 rounded-lg border font-medium transition-colors flex items-center space-x-2 ${
-                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-sky-900/30 border-sky-500/30 text-sky-400' : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-700/50'
-                }`}
-              >
-                <Filter size={18} />
-                <span>Filters</span>
-                {activeFiltersCount > 0 && <span className="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">{activeFiltersCount}</span>}
-                <ChevronDown className={`transform transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} size={16} />
-              </button>
-
-              {activeFiltersCount > 0 && (
-                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-blue-300/30 bg-blue-900/20 text-blue-300 hover:bg-blue-800/30 font-medium transition-colors flex items-center space-x-2">
-                  <X size={18} />
-                  <span>Clear</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg border font-medium transition-colors flex items-center justify-center gap-2 ${
+                    showAdvancedFilters || activeFiltersCount > 0 ? 'bg-sky-900/30 border-sky-500/30 text-sky-400' : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-700/50'
+                  }`}
+                >
+                  <Filter size={18} />
+                  <span>Filters</span>
+                  {activeFiltersCount > 0 && <span className="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">{activeFiltersCount}</span>}
+                  <ChevronDown className={`transform transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} size={16} />
                 </button>
-              )}
+
+                {activeFiltersCount > 0 && (
+                  <button onClick={handleClearFilters} className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-blue-300/30 bg-blue-900/20 text-blue-300 hover:bg-blue-800/30 font-medium transition-colors flex items-center justify-center gap-2">
+                    <X size={18} />
+                    <span>Clear</span>
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="flex items-center space-x-2 text-sm text-slate-400">
+            <div className="flex items-center justify-center lg:justify-end gap-2 text-xs sm:text-sm text-slate-400">
               <span>
                 Showing {weathers.length} of {allWeathers.length} logs
               </span>
@@ -544,12 +528,12 @@ const WeatherList = () => {
           </div>
 
           {showAdvancedFilters && (
-            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
-              <h3 className="font-semibold text-slate-200 mb-3 flex items-center space-x-2">
+            <div className="bg-slate-800/50 p-3 sm:p-4 rounded-lg border border-slate-700/50">
+              <h3 className="font-semibold text-slate-200 mb-3 flex items-center gap-2">
                 <Filter size={18} />
                 <span>Advanced Filters</span>
               </h3>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Mining Site</label>
                   <select value={filters.miningSiteId} onChange={(e) => setFilters({ ...filters, miningSiteId: e.target.value })} className="input-field">

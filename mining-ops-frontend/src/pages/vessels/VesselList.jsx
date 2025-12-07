@@ -323,38 +323,42 @@ const VesselList = () => {
   const activeFiltersCount = [searchQuery, statusFilter, filters.vesselType, filters.owner, filters.isOwned, filters.minCapacity, filters.maxCapacity].filter(Boolean).length;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100 flex items-center space-x-3">
-            <Ship className="text-sky-400" size={36} />
-            <span>Vessels Management</span>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-100 flex items-center space-x-2 sm:space-x-3">
+            <Ship className="text-sky-400" size={28} />
+            <span className="sm:hidden">Vessels</span>
+            <span className="hidden sm:inline">Vessels Management</span>
           </h1>
-          <p className="text-sm text-slate-400 mt-1">Manage and monitor maritime fleet operations</p>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 hidden sm:block">Manage and monitor maritime fleet operations</p>
         </div>
-        <div className="flex space-x-3">
-          <button onClick={fetchVessels} className="bg-slate-800/50 hover:bg-slate-700/50 px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm text-slate-300 font-medium transition-colors flex items-center space-x-2">
+        <div className="flex space-x-2 sm:space-x-3 w-full sm:w-auto">
+          <button onClick={fetchVessels} className="bg-slate-800/50 hover:bg-slate-700/50 px-3 sm:px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm text-slate-300 font-medium transition-colors flex items-center space-x-2 flex-1 sm:flex-none justify-center">
             <RefreshCw size={18} />
-            <span>Refresh</span>
+            <span className="hidden sm:inline">Refresh</span>
           </button>
           {canEdit && (
-            <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-5 py-2.5">
-              <Plus size={20} />
-              <span>Add Vessel</span>
+            <button onClick={handleCreate} className="btn-primary flex items-center space-x-2 px-3 sm:px-5 py-2 sm:py-2.5 flex-1 sm:flex-none justify-center">
+              <Plus size={18} />
+              <span className="hidden xs:inline">Add Vessel</span>
+              <span className="xs:hidden">Add</span>
             </button>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        <div className="rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-900/20 to-blue-950/20 backdrop-blur-sm p-5">
+      {/* Stats Cards - Responsive */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-900/20 to-blue-950/20 backdrop-blur-sm p-3 sm:p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-300 mb-1">Total Vessels</p>
-              <p className="text-3xl font-bold text-blue-400">{allVessels.length}</p>
+              <p className="text-xs sm:text-sm text-slate-300 mb-1">Total Vessels</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-400">{allVessels.length}</p>
             </div>
-            <div className="p-3 bg-blue-500/20 rounded-xl">
-              <Ship className="text-blue-400" size={28} />
+            <div className="p-2 sm:p-3 bg-blue-500/20 rounded-xl">
+              <Ship className="text-blue-400" size={24} />
             </div>
           </div>
         </div>
@@ -393,38 +397,18 @@ const VesselList = () => {
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-5">
+      <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 p-3 sm:p-5">
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 flex items-center space-x-3">
-              <div className="relative" style={{ minWidth: '320px', maxWidth: '450px', flex: '1' }}>
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+            <div className="flex-1 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+              <div className="relative w-full sm:w-auto sm:min-w-[220px] lg:min-w-[320px] lg:max-w-[450px] lg:flex-1">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" size={20} />
                 <input
                   type="text"
                   placeholder="Search by code, name, owner, or location..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    height: '44px',
-                    paddingLeft: '44px',
-                    paddingRight: '44px',
-                    fontSize: '14px',
-                    color: '#f1f5f9',
-                    backgroundColor: '#0f172a',
-                    border: '1px solid #334155',
-                    borderRadius: '8px',
-                    outline: 'none',
-                    boxShadow: 'none',
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#0ea5e9';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.15)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#334155';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  className="w-full h-11 pl-11 pr-11 text-sm text-slate-200 bg-slate-900/80 border border-slate-700 rounded-lg focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 outline-none transition-colors placeholder:text-slate-500"
                 />
                 {searchQuery && (
                   <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-200">
@@ -433,7 +417,7 @@ const VesselList = () => {
                 )}
               </div>
 
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input-field min-w-[180px] bg-slate-900/50 border-slate-700 text-slate-200">
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full sm:w-auto input-field sm:min-w-[180px] bg-slate-900/50 border-slate-700 text-slate-200">
                 <option value="">All Status</option>
                 {statusOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -442,27 +426,29 @@ const VesselList = () => {
                 ))}
               </select>
 
-              <button
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className={`px-4 py-2 rounded-lg border font-medium transition-colors flex items-center space-x-2 ${
-                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-sky-500/20 border-sky-500/30 text-sky-300' : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-700/50'
-                }`}
-              >
-                <Filter size={18} />
-                <span>Filters</span>
-                {activeFiltersCount > 0 && <span className="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">{activeFiltersCount}</span>}
-                <ChevronDown className={`transform transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} size={16} />
-              </button>
-
-              {activeFiltersCount > 0 && (
-                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-slate-700/50 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 font-medium transition-colors flex items-center space-x-2">
-                  <X size={18} />
-                  <span>Clear</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg border font-medium transition-colors flex items-center justify-center gap-2 ${
+                    showAdvancedFilters || activeFiltersCount > 0 ? 'bg-sky-500/20 border-sky-500/30 text-sky-300' : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-700/50'
+                  }`}
+                >
+                  <Filter size={18} />
+                  <span>Filters</span>
+                  {activeFiltersCount > 0 && <span className="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">{activeFiltersCount}</span>}
+                  <ChevronDown className={`transform transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} size={16} />
                 </button>
-              )}
+
+                {activeFiltersCount > 0 && (
+                  <button onClick={handleClearFilters} className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-slate-700/50 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 font-medium transition-colors flex items-center justify-center gap-2">
+                    <X size={18} />
+                    <span>Clear</span>
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="flex items-center space-x-2 text-sm text-slate-400">
+            <div className="flex items-center justify-center lg:justify-end gap-2 text-xs sm:text-sm text-slate-400">
               <span>
                 Showing {vessels.length} of {allVessels.length} vessels
               </span>
@@ -470,12 +456,12 @@ const VesselList = () => {
           </div>
 
           {showAdvancedFilters && (
-            <div className="bg-slate-800/30 p-4 rounded-lg border border-slate-700/50">
-              <h3 className="font-semibold text-slate-200 mb-3 flex items-center space-x-2">
+            <div className="bg-slate-800/30 p-3 sm:p-4 rounded-lg border border-slate-700/50">
+              <h3 className="font-semibold text-slate-200 mb-3 flex items-center gap-2">
                 <Filter size={18} />
                 <span>Advanced Filters</span>
               </h3>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Vessel Type</label>
                   <select value={filters.vesselType} onChange={(e) => setFilters({ ...filters, vesselType: e.target.value })} className="input-field bg-slate-900/50 border-slate-700 text-slate-200">

@@ -390,93 +390,94 @@ const TruckList = () => {
   const activeFiltersCount = [searchQuery, statusFilter, filters.brand, filters.minCapacity, filters.maxCapacity, filters.minYear, filters.maxYear].filter(Boolean).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
       {/* Header Section */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-sky-500/20 border border-sky-500/30">
-              <TruckIcon className="text-sky-400" size={28} />
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-100 flex items-center gap-2 sm:gap-3">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-sky-500/20 border border-sky-500/30">
+              <TruckIcon className="text-sky-400" size={24} />
             </div>
             <span>Trucks Management</span>
           </h1>
-          <p className="text-sm text-slate-400 mt-1 ml-14">Manage and monitor fleet operations in real-time</p>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 ml-10 sm:ml-14">Manage and monitor fleet operations in real-time</p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={fetchTrucks} className="px-4 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-300 font-medium hover:bg-slate-700/60 transition-colors flex items-center gap-2">
+        <div className="flex gap-2 sm:gap-3">
+          <button onClick={fetchTrucks} className="flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-300 font-medium hover:bg-slate-700/60 transition-colors flex items-center justify-center gap-2">
             <RefreshCw size={18} />
-            <span>Refresh</span>
+            <span className="hidden sm:inline">Refresh</span>
           </button>
           {canEdit && (
             <button
               onClick={handleCreate}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 text-white font-semibold shadow-lg shadow-sky-500/25 transition-all duration-300 flex items-center gap-2"
+              className="flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 text-white font-semibold shadow-lg shadow-sky-500/25 transition-all duration-300 flex items-center justify-center gap-2"
             >
               <Plus size={20} />
-              <span>Add Truck</span>
+              <span className="hidden sm:inline">Add Truck</span>
+              <span className="sm:hidden">Add</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="rounded-xl border border-blue-500/30 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-5 shadow-xl backdrop-blur-sm">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="rounded-xl border border-blue-500/30 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-3 sm:p-5 shadow-xl backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-300 mb-1 font-medium">Total Trucks</p>
-              <p className="text-3xl font-bold text-blue-400">{allTrucks.length}</p>
+              <p className="text-xs sm:text-sm text-slate-300 mb-1 font-medium">Total Trucks</p>
+              <p className="text-2xl sm:text-3xl font-bold text-blue-400">{allTrucks.length}</p>
             </div>
-            <div className="p-3 rounded-xl bg-blue-500/20 border border-blue-500/30">
-              <TruckIcon className="text-blue-400" size={28} />
+            <div className="p-2 sm:p-3 rounded-xl bg-blue-500/20 border border-blue-500/30">
+              <TruckIcon className="text-blue-400" size={24} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-5 shadow-xl backdrop-blur-sm">
+        <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-3 sm:p-5 shadow-xl backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-300 mb-1 font-medium">Operating</p>
-              <p className="text-3xl font-bold text-cyan-400">{allTrucks.filter((t) => ['HAULING', 'LOADING', 'DUMPING'].includes(t.status)).length}</p>
+              <p className="text-xs sm:text-sm text-slate-300 mb-1 font-medium">Operating</p>
+              <p className="text-2xl sm:text-3xl font-bold text-cyan-400">{allTrucks.filter((t) => ['HAULING', 'LOADING', 'DUMPING'].includes(t.status)).length}</p>
             </div>
-            <div className="p-3 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
-              <Activity className="text-cyan-400" size={28} />
+            <div className="p-2 sm:p-3 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+              <Activity className="text-cyan-400" size={24} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-sky-500/30 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-5 shadow-xl backdrop-blur-sm">
+        <div className="rounded-xl border border-sky-500/30 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-3 sm:p-5 shadow-xl backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-300 mb-1 font-medium">Idle</p>
-              <p className="text-3xl font-bold text-sky-400">{allTrucks.filter((t) => t.status === 'IDLE').length}</p>
+              <p className="text-xs sm:text-sm text-slate-300 mb-1 font-medium">Idle</p>
+              <p className="text-2xl sm:text-3xl font-bold text-sky-400">{allTrucks.filter((t) => t.status === 'IDLE').length}</p>
             </div>
-            <div className="p-3 rounded-xl bg-sky-500/20 border border-sky-500/30">
-              <Clock className="text-sky-400" size={28} />
+            <div className="p-2 sm:p-3 rounded-xl bg-sky-500/20 border border-sky-500/30">
+              <Clock className="text-sky-400" size={24} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-blue-400/30 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-5 shadow-xl backdrop-blur-sm">
+        <div className="rounded-xl border border-blue-400/30 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-3 sm:p-5 shadow-xl backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-300 mb-1 font-medium">Maintenance</p>
-              <p className="text-3xl font-bold text-blue-300">{allTrucks.filter((t) => t.status === 'MAINTENANCE').length}</p>
+              <p className="text-xs sm:text-sm text-slate-300 mb-1 font-medium">Maintenance</p>
+              <p className="text-2xl sm:text-3xl font-bold text-blue-300">{allTrucks.filter((t) => t.status === 'MAINTENANCE').length}</p>
             </div>
-            <div className="p-3 rounded-xl bg-blue-400/20 border border-blue-400/30">
-              <Settings className="text-blue-300" size={28} />
+            <div className="p-2 sm:p-3 rounded-xl bg-blue-400/20 border border-blue-400/30">
+              <Settings className="text-blue-300" size={24} />
             </div>
           </div>
         </div>
       </div>
 
       {/* Search & Filters Card */}
-      <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 shadow-xl">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 flex items-center gap-3">
-              <div className="relative" style={{ minWidth: '320px', maxWidth: '450px', flex: '1' }}>
+      <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-3 sm:p-5 shadow-xl">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+              <div className="relative w-full sm:min-w-[280px] lg:min-w-[320px] lg:max-w-[450px] lg:flex-1">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" size={20} />
                 <input
                   type="text"
-                  placeholder="Search by code, name, brand, or model..."
+                  placeholder="Search by code, name, brand..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-11 pl-11 pr-11 text-sm text-slate-100 bg-slate-800/80 border border-slate-700 rounded-xl outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 transition-all placeholder-slate-500"
@@ -491,7 +492,7 @@ const TruckList = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all min-w-[180px]"
+                className="w-full sm:w-auto h-11 px-4 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all sm:min-w-[150px] lg:min-w-[180px]"
               >
                 <option value="">All Status</option>
                 {statusOptions.map((opt) => (
@@ -529,18 +530,18 @@ const TruckList = () => {
           </div>
 
           {showAdvancedFilters && (
-            <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
-              <h3 className="font-semibold text-slate-200 mb-3 flex items-center gap-2">
-                <Filter size={18} className="text-sky-400" />
+            <div className="p-3 sm:p-4 rounded-xl bg-slate-800/40 border border-slate-700/40">
+              <h3 className="font-semibold text-slate-200 mb-3 flex items-center gap-2 text-sm sm:text-base">
+                <Filter size={16} className="text-sky-400" />
                 <span>Advanced Filters</span>
               </h3>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Brand</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Brand</label>
                   <select
                     value={filters.brand}
                     onChange={(e) => setFilters({ ...filters, brand: e.target.value })}
-                    className="w-full h-10 px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all"
+                    className="w-full h-10 px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all text-sm"
                   >
                     <option value="">All Brands</option>
                     {uniqueBrands.map((brand) => (
@@ -551,34 +552,34 @@ const TruckList = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Min Capacity (ton)</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Min Capacity (ton)</label>
                   <input
                     type="number"
                     value={filters.minCapacity}
                     onChange={(e) => setFilters({ ...filters, minCapacity: e.target.value })}
                     placeholder="0"
-                    className="w-full h-10 px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                    className="w-full h-10 px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Max Capacity (ton)</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Max Capacity (ton)</label>
                   <input
                     type="number"
                     value={filters.maxCapacity}
                     onChange={(e) => setFilters({ ...filters, maxCapacity: e.target.value })}
                     placeholder="100"
-                    className="w-full h-10 px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                    className="w-full h-10 px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Year Range</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Year Range</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
                       value={filters.minYear}
                       onChange={(e) => setFilters({ ...filters, minYear: e.target.value })}
                       placeholder="From"
-                      className="w-full h-10 px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                      className="w-full h-10 px-2 sm:px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500 text-sm"
                     />
                     <span className="text-slate-500">-</span>
                     <input
@@ -586,7 +587,7 @@ const TruckList = () => {
                       value={filters.maxYear}
                       onChange={(e) => setFilters({ ...filters, maxYear: e.target.value })}
                       placeholder="To"
-                      className="w-full h-10 px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500"
+                      className="w-full h-10 px-2 sm:px-3 rounded-xl bg-slate-800/80 text-slate-100 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 focus:outline-none transition-all placeholder-slate-500 text-sm"
                     />
                   </div>
                 </div>
@@ -596,50 +597,50 @@ const TruckList = () => {
         </div>
       </div>
 
-      {/* Data Table */}
+      {/* Data Table - Responsive with horizontal scroll */}
       <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 shadow-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-slate-800/50 border-b border-slate-700/50">
               <tr>
-                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('code')}>
+                <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('code')}>
                   <div className="flex items-center justify-between">
                     <span>Code</span>
-                    {sortField === 'code' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
+                    {sortField === 'code' && (sortOrder === 'asc' ? <SortAsc size={14} className="text-sky-400" /> : <SortDesc size={14} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('name')}>
+                <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors hidden sm:table-cell" onClick={() => handleSort('name')}>
                   <div className="flex items-center justify-between">
                     <span>Name</span>
-                    {sortField === 'name' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
+                    {sortField === 'name' && (sortOrder === 'asc' ? <SortAsc size={14} className="text-sky-400" /> : <SortDesc size={14} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('brand')}>
+                <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors hidden md:table-cell" onClick={() => handleSort('brand')}>
                   <div className="flex items-center justify-between">
                     <span>Brand</span>
-                    {sortField === 'brand' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
+                    {sortField === 'brand' && (sortOrder === 'asc' ? <SortAsc size={14} className="text-sky-400" /> : <SortDesc size={14} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Model</th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('capacity')}>
+                <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Model</th>
+                <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('capacity')}>
                   <div className="flex items-center justify-between">
-                    <span>Capacity</span>
-                    {sortField === 'capacity' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
+                    <span>Cap</span>
+                    {sortField === 'capacity' && (sortOrder === 'asc' ? <SortAsc size={14} className="text-sky-400" /> : <SortDesc size={14} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('yearManufacture')}>
+                <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors hidden lg:table-cell" onClick={() => handleSort('yearManufacture')}>
                   <div className="flex items-center justify-between">
                     <span>Year</span>
-                    {sortField === 'yearManufacture' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
+                    {sortField === 'yearManufacture' && (sortOrder === 'asc' ? <SortAsc size={14} className="text-sky-400" /> : <SortDesc size={14} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('status')}>
+                <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors" onClick={() => handleSort('status')}>
                   <div className="flex items-center justify-between">
                     <span>Status</span>
-                    {sortField === 'status' && (sortOrder === 'asc' ? <SortAsc size={16} className="text-sky-400" /> : <SortDesc size={16} className="text-sky-400" />)}
+                    {sortField === 'status' && (sortOrder === 'asc' ? <SortAsc size={14} className="text-sky-400" /> : <SortDesc size={14} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Actions</th>
+                <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">

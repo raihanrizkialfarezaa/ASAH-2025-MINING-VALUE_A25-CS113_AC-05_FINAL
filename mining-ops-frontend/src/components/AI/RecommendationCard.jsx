@@ -76,13 +76,13 @@ const InsightExpandable = ({ insight }) => {
   const isLong = insight && insight.length > maxLength;
 
   return (
-    <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-4">
+    <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg sm:rounded-xl p-3 sm:p-4">
       <div className="flex items-start">
-        <div className="p-1.5 bg-cyan-500/20 rounded-lg mr-3 mt-0.5">
-          <Lightbulb className="w-4 h-4 text-cyan-400" strokeWidth={1.5} />
+        <div className="p-1 sm:p-1.5 bg-cyan-500/20 rounded-lg mr-2 sm:mr-3 mt-0.5 flex-shrink-0">
+          <Lightbulb className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" strokeWidth={1.5} />
         </div>
-        <div className="flex-1">
-          <p className={`text-sm text-slate-300 leading-relaxed ${!expanded && isLong ? 'line-clamp-3' : ''}`}>{insight}</p>
+        <div className="flex-1 min-w-0">
+          <p className={`text-xs sm:text-sm text-slate-300 leading-relaxed ${!expanded && isLong ? 'line-clamp-3' : ''}`}>{insight}</p>
           {isLong && (
             <button onClick={() => setExpanded(!expanded)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium mt-2 flex items-center gap-1 transition-colors">
               {expanded ? (
@@ -313,34 +313,34 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect, select
   return (
     <>
       <div
-        className={`rounded-2xl border bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl overflow-hidden transition-all duration-300 shadow-xl ${
+        className={`rounded-xl sm:rounded-2xl border bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl overflow-hidden transition-all duration-300 shadow-xl ${
           isSelected ? 'ring-2 ring-blue-500 border-blue-500/50 transform scale-[1.02] shadow-blue-500/20' : 'border-slate-700/50 hover:border-slate-600/50 hover:shadow-2xl'
         }`}
       >
         {/* Header with Rank */}
-        <div className={`bg-gradient-to-r ${getBadgeColor(rank)} text-white p-5`}>
+        <div className={`bg-gradient-to-r ${getBadgeColor(rank)} text-white p-3 sm:p-5`}>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {getRankIcon(rank)}
-              <h3 className="text-xl font-bold">Strategy #{rank}</h3>
+              <h3 className="text-lg sm:text-xl font-bold">Strategy #{rank}</h3>
             </div>
-            <span className="text-sm bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full font-medium">Rank {rank}</span>
+            <span className="text-xs sm:text-sm bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-medium">Rank {rank}</span>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-5">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
           {/* Mining Site Info */}
           {selectedParams?.miningSiteId && (
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-              <div className="flex items-center text-sm gap-2">
-                <MapPin className="w-4 h-4 text-blue-400" strokeWidth={1.5} />
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg sm:rounded-xl p-3 sm:p-4">
+              <div className="flex items-center text-xs sm:text-sm gap-2">
+                <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400 flex-shrink-0" strokeWidth={1.5} />
                 <span className="text-blue-300 font-medium">Mining Site:</span>
-                <span className="text-blue-200">{selectedParams.miningSiteName || selectedParams.miningSiteId}</span>
+                <span className="text-blue-200 truncate">{selectedParams.miningSiteName || selectedParams.miningSiteId}</span>
               </div>
               {selectedParams?.weatherCondition && (
-                <div className="flex items-center text-sm mt-2 gap-2">
-                  <CloudSun className="w-4 h-4 text-blue-400" strokeWidth={1.5} />
+                <div className="flex items-center text-xs sm:text-sm mt-1.5 sm:mt-2 gap-2">
+                  <CloudSun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400 flex-shrink-0" strokeWidth={1.5} />
                   <span className="text-blue-300 font-medium">Weather:</span>
                   <span className="text-blue-200">{selectedParams.weatherCondition}</span>
                 </div>

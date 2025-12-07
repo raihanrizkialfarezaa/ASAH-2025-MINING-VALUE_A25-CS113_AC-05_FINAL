@@ -463,21 +463,23 @@ const OperatorList = () => {
   const activeFiltersCount = [searchQuery, statusFilter, shiftFilter, licenseTypeFilter, filters.minRating, filters.maxRating, filters.minHours, filters.maxHours].filter(Boolean).length;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
-              <Users className="text-blue-400" size={28} />
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-100 flex items-center gap-2 sm:gap-3">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
+              <Users className="text-blue-400" size={24} />
             </div>
-            <span>Operators Management</span>
+            <span className="sm:hidden">Operators</span>
+            <span className="hidden sm:inline">Operators Management</span>
           </h1>
-          <p className="text-sm text-slate-300 mt-1 ml-14">Manage and monitor operator workforce in real-time</p>
+          <p className="text-xs sm:text-sm text-slate-300 mt-1 ml-10 sm:ml-14 hidden sm:block">Manage and monitor operator workforce in real-time</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
           {canEdit && (
-            <button onClick={handleCreate} className="bg-sky-600 hover:bg-sky-500 text-white flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors">
-              <Plus size={20} />
+            <button onClick={handleCreate} className="bg-sky-600 hover:bg-sky-500 text-white flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-medium transition-colors flex-1 sm:flex-none justify-center">
+              <Plus size={18} />
               <span>Add Operator</span>
             </button>
           )}
@@ -488,26 +490,27 @@ const OperatorList = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        <div className="rounded-xl border border-blue-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
+      {/* Stats Cards - Responsive */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="rounded-xl border border-blue-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-3 sm:p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-300 mb-1">Total Operators</p>
-              <p className="text-3xl font-bold text-blue-400">{allOperators.length}</p>
+              <p className="text-xs sm:text-sm text-slate-300 mb-1">Total Operators</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-400">{allOperators.length}</p>
             </div>
-            <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
-              <Users className="text-blue-400" size={28} />
+            <div className="p-2 sm:p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+              <Users className="text-blue-400" size={24} />
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-5">
+        <div className="rounded-xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-sm p-3 sm:p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-300 mb-1">Active</p>
-              <p className="text-3xl font-bold text-cyan-400">{allOperators.filter((o) => o.status === 'ACTIVE').length}</p>
+              <p className="text-xs sm:text-sm text-slate-300 mb-1">Active</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-cyan-400">{allOperators.filter((o) => o.status === 'ACTIVE').length}</p>
             </div>
-            <div className="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
-              <UserCheck className="text-cyan-400" size={28} />
+            <div className="p-2 sm:p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+              <UserCheck className="text-cyan-400" size={24} />
             </div>
           </div>
         </div>
@@ -535,11 +538,11 @@ const OperatorList = () => {
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5">
+      <div className="rounded-xl border border-slate-800/50 bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-3 sm:p-5">
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 flex items-center gap-3">
-              <div className="relative" style={{ minWidth: '320px', maxWidth: '450px', flex: '1' }}>
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+            <div className="flex-1 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+              <div className="relative w-full sm:w-auto sm:min-w-[220px] lg:min-w-[320px] lg:max-w-[450px] lg:flex-1">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" size={20} />
                 <input
                   type="text"
@@ -558,7 +561,7 @@ const OperatorList = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 min-w-[160px] focus:border-sky-500 outline-none transition-colors"
+                className="w-full sm:w-auto bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 sm:min-w-[160px] focus:border-sky-500 outline-none transition-colors"
               >
                 <option value="">All Status</option>
                 {statusOptions.map((opt) => (
@@ -571,7 +574,7 @@ const OperatorList = () => {
               <select
                 value={shiftFilter}
                 onChange={(e) => setShiftFilter(e.target.value)}
-                className="bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 min-w-[140px] focus:border-sky-500 outline-none transition-colors"
+                className="w-full sm:w-auto bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 sm:min-w-[140px] focus:border-sky-500 outline-none transition-colors"
               >
                 <option value="">All Shifts</option>
                 {shiftOptions.map((opt) => (
@@ -581,27 +584,29 @@ const OperatorList = () => {
                 ))}
               </select>
 
-              <button
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className={`px-4 py-2 rounded-lg border font-medium transition-colors flex items-center gap-2 ${
-                  showAdvancedFilters || activeFiltersCount > 0 ? 'bg-blue-500/15 border-blue-500/30 text-blue-400' : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-700'
-                }`}
-              >
-                <Filter size={18} />
-                <span>Filters</span>
-                {activeFiltersCount > 0 && <span className="bg-blue-500 text-slate-900 text-xs px-2 py-0.5 rounded-full font-semibold">{activeFiltersCount}</span>}
-                <ChevronDown className={`transform transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} size={16} />
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg border font-medium transition-colors flex items-center justify-center gap-2 ${
+                    showAdvancedFilters || activeFiltersCount > 0 ? 'bg-blue-500/15 border-blue-500/30 text-blue-400' : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  <Filter size={18} />
+                  <span>Filters</span>
+                  {activeFiltersCount > 0 && <span className="bg-blue-500 text-slate-900 text-xs px-2 py-0.5 rounded-full font-semibold">{activeFiltersCount}</span>}
+                  <ChevronDown className={`transform transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} size={16} />
+                </button>
 
-              {activeFiltersCount > 0 && (
-                <button onClick={handleClearFilters} className="px-4 py-2 rounded-lg border border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-slate-700 font-medium transition-colors flex items-center gap-2">
+                {activeFiltersCount > 0 && (
+                  <button onClick={handleClearFilters} className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-slate-700 font-medium transition-colors flex items-center justify-center gap-2">
                   <X size={18} />
                   <span>Clear</span>
                 </button>
               )}
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 text-sm text-slate-400">
+            <div className="flex items-center justify-center lg:justify-end gap-2 text-xs sm:text-sm text-slate-400">
               <span>
                 Showing {operators.length} of {allOperators.length} operators
               </span>
@@ -609,12 +614,12 @@ const OperatorList = () => {
           </div>
 
           {showAdvancedFilters && (
-            <div className="bg-slate-800/40 p-4 rounded-lg border border-slate-700/50">
+            <div className="bg-slate-800/40 p-3 sm:p-4 rounded-lg border border-slate-700/50">
               <h3 className="font-semibold text-slate-200 mb-3 flex items-center gap-2">
                 <Filter size={18} className="text-slate-400" />
                 <span>Advanced Filters</span>
               </h3>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-2">License Type</label>
                   <select
