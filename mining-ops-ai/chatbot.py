@@ -836,6 +836,18 @@ INTENT_KEYWORDS = {
 def get_fast_answer(question):
     question_lower = question.lower().strip()
     
+    complex_indicators = [
+        'dan', 'serta', 'juga', 'tampilkan', 'breakdown revenue', 'breakdown cost',
+        'perbandingan', 'bandingkan', 'analisis', 'simulasi', 'profit', 'estimasi',
+        'hitung', 'berdasarkan parameter', 'beserta', 'termasuk', ':'
+    ]
+    
+    word_count = len(question_lower.split())
+    has_complex_indicator = any(ind in question_lower for ind in complex_indicators)
+    
+    if word_count > 20 or has_complex_indicator:
+        return None, None
+    
     for pattern, query_key, answer_type in QUERY_PATTERNS:
         if re.search(pattern, question_lower):
             query = PREDEFINED_QUERIES.get(query_key)
@@ -1432,6 +1444,72 @@ def handle_simulation_question(user_question):
 def execute_and_summarize_stream(user_question):
     yield json.dumps({"type": "step", "status": "thinking", "message": "Menganalisis pertanyaan..."}) + "\n"
     
+    question_type = detect_question_type(user_question)
+    
+    if question_type == 'simulation':
+        yield json.dumps({"type": "step", "status": "simulation_mode", "message": "Mendeteksi pertanyaan simulasi..."}) + "\n"
+        
+        params = parse_simulation_parameters(user_question)
+        
+        if 'num_trucks' not in params and 'target_tons' not in params:
+            yield json.dumps({"type": "step", "status": "parsing", "message": "Mengekstrak parameter dari pertanyaan..."}) + "\n"
+            
+            extract_prompt = f"""Extract simulation parameters from this question:
+"{user_question}"
+
+Return JSON only:
+{{"num_trucks": <number or null>, "target_tons": <number or null>, "distance_km": <number or null>, "site": "<string or null>"}}
+
+JSON:"""
+            
+            try:
+                extract_response = ollama.chat(model=MODEL_NAME, messages=[
+                    {'role': 'system', 'content': 'Extract parameters and return only valid JSON.'},
+                    {'role': 'user', 'content': extract_prompt}
+                ])
+                extracted = extract_response['message']['content'].strip()
+                json_match = re.search(r'\{[^}]+\}', extracted)
+                if json_match:
+                    parsed = json.loads(json_match.group())
+                    if parsed.get('num_trucks'):
+                        params['num_trucks'] = int(parsed['num_trucks'])
+                    if parsed.get('target_tons'):
+                        params['target_tons'] = float(parsed['target_tons'])
+                    if parsed.get('distance_km'):
+                        params['distance_km'] = float(parsed['distance_km'])
+            except:
+                pass
+        
+        if 'num_trucks' not in params:
+            params['num_trucks'] = 5
+        if 'target_tons' not in params:
+            params['target_tons'] = 500
+        
+        yield json.dumps({
+            "type": "step", 
+            "status": "calculating", 
+            "message": f"Menghitung simulasi: {params.get('num_trucks')} truk, {params.get('target_tons')} ton target..."
+        }) + "\n"
+        
+        sim_result = calculate_production_simulation(
+            num_trucks=params['num_trucks'],
+            target_tons=params['target_tons'],
+            distance_km=params.get('distance_km'),
+            truck_capacity=params.get('truck_capacity')
+        )
+        
+        yield json.dumps({
+            "type": "simulation_result",
+            "params": params,
+            "result": sim_result
+        }) + "\n"
+        
+        response = generate_simulation_response(params, sim_result)
+        
+        yield json.dumps({"type": "answer", "content": response}) + "\n"
+        yield json.dumps({"type": "step", "status": "completed", "message": "Simulasi selesai"}) + "\n"
+        return
+    
     fast_query, query_type = get_fast_answer(user_question)
     if fast_query:
         yield json.dumps({"type": "step", "status": "fast_path", "message": "Menggunakan fast-path untuk query sederhana"}) + "\n"
@@ -1454,85 +1532,6 @@ def execute_and_summarize_stream(user_question):
         except Exception as e:
             yield json.dumps({"type": "step", "status": "fallback", "message": f"Fast-path gagal: {str(e)}, mencoba metode standar..."}) + "\n"
     
-    question_type = detect_question_type(user_question)
-    
-    # ============================================================
-    # SIMULATION MODE - for what-if questions
-    # ============================================================
-    if question_type == 'simulation':
-        yield json.dumps({"type": "step", "status": "simulation_mode", "message": "Mendeteksi pertanyaan simulasi..."}) + "\n"
-        
-        # Parse parameters
-        params = parse_simulation_parameters(user_question)
-        
-        if 'num_trucks' not in params and 'target_tons' not in params:
-            # Can't determine simulation parameters, fall back to AI interpretation
-            yield json.dumps({"type": "step", "status": "parsing", "message": "Mengekstrak parameter dari pertanyaan..."}) + "\n"
-            
-            # Use LLM to extract parameters
-            extract_prompt = f"""Extract simulation parameters from this question:
-"{user_question}"
-
-Return JSON only:
-{{"num_trucks": <number or null>, "target_tons": <number or null>, "distance_km": <number or null>, "site": "<string or null>"}}
-
-JSON:"""
-            
-            try:
-                extract_response = ollama.chat(model=MODEL_NAME, messages=[
-                    {'role': 'system', 'content': 'Extract parameters and return only valid JSON.'},
-                    {'role': 'user', 'content': extract_prompt}
-                ])
-                extracted = extract_response['message']['content'].strip()
-                # Try to parse JSON
-                json_match = re.search(r'\{[^}]+\}', extracted)
-                if json_match:
-                    parsed = json.loads(json_match.group())
-                    if parsed.get('num_trucks'):
-                        params['num_trucks'] = int(parsed['num_trucks'])
-                    if parsed.get('target_tons'):
-                        params['target_tons'] = float(parsed['target_tons'])
-                    if parsed.get('distance_km'):
-                        params['distance_km'] = float(parsed['distance_km'])
-            except:
-                pass
-        
-        # Set defaults if still missing
-        if 'num_trucks' not in params:
-            params['num_trucks'] = 5
-        if 'target_tons' not in params:
-            params['target_tons'] = 500
-        
-        yield json.dumps({
-            "type": "step", 
-            "status": "calculating", 
-            "message": f"Menghitung simulasi: {params.get('num_trucks')} truk, {params.get('target_tons')} ton target..."
-        }) + "\n"
-        
-        # Run simulation
-        sim_result = calculate_production_simulation(
-            num_trucks=params['num_trucks'],
-            target_tons=params['target_tons'],
-            distance_km=params.get('distance_km'),
-            truck_capacity=params.get('truck_capacity')
-        )
-        
-        yield json.dumps({
-            "type": "simulation_result",
-            "params": params,
-            "result": sim_result
-        }) + "\n"
-        
-        # Generate response
-        response = generate_simulation_response(params, sim_result)
-        
-        yield json.dumps({"type": "answer", "content": response}) + "\n"
-        yield json.dumps({"type": "step", "status": "completed", "message": "Simulasi selesai"}) + "\n"
-        return
-    
-    # ============================================================
-    # DATABASE QUERY MODE - for data lookup questions
-    # ============================================================
     yield json.dumps({"type": "step", "status": "thinking", "message": "Menyusun query ke database"}) + "\n"
     sql_query = generate_sql_query(user_question)
     
