@@ -198,12 +198,17 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-        <h3 className="text-sm font-semibold text-blue-800 mb-2"> Site Selection (Auto-fills Weather)</h3>
+      <div className="bg-sky-500/10 border border-sky-500/20 rounded-xl p-4 mb-4">
+        <h3 className="text-sm font-semibold text-sky-300 mb-2"> Site Selection (Auto-fills Weather)</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Mining Site (Optional)</label>
-            <select name="miningSiteId" value={formData.miningSiteId} onChange={handleMiningSiteChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <label className="block text-sm font-medium text-slate-300 mb-2">Mining Site (Optional)</label>
+            <select
+              name="miningSiteId"
+              value={formData.miningSiteId}
+              onChange={handleMiningSiteChange}
+              className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+            >
               <option value="">All Sites - Manual Weather Selection</option>
               {miningSites.map((site) => (
                 <option key={site.id} value={site.id}>
@@ -211,62 +216,74 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
                 </option>
               ))}
             </select>
-            <p className="text-xs text-gray-500 mt-1">{formData.miningSiteId ? 'Weather auto-filled from latest site data' : 'Select site to auto-fill weather'}</p>
+            <p className="text-xs text-slate-500 mt-1">{formData.miningSiteId ? 'Weather auto-filled from latest site data' : 'Select site to auto-fill weather'}</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Weather Condition</label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Weather Condition</label>
             <select
               name="weatherCondition"
               value={formData.weatherCondition}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${formData.miningSiteId ? 'border-blue-300 bg-blue-50' : 'border-gray-300'}`}
+              className={`w-full px-3 py-2 bg-slate-800/50 border rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent ${formData.miningSiteId ? 'border-sky-500/30' : 'border-slate-700/50'}`}
             >
               <option value="Cerah">Cerah</option>
               <option value="Hujan Ringan">Hujan Ringan</option>
               <option value="Hujan Lebat">Hujan Lebat</option>
             </select>
-            {formData.miningSiteId && <p className="text-xs text-blue-600 mt-1">✓ Auto-filled from mining site weather data</p>}
+            {formData.miningSiteId && <p className="text-xs text-sky-400 mt-1">✓ Auto-filled from mining site weather data</p>}
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Shift</label>
-          <select name="shift" value={formData.shift} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <label className="block text-sm font-medium text-slate-300 mb-2">Shift</label>
+          <select
+            name="shift"
+            value={formData.shift}
+            onChange={handleChange}
+            className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+          >
             <option value="SHIFT_1">Shift 1 (Pagi)</option>
             <option value="SHIFT_2">Shift 2 (Siang)</option>
             <option value="SHIFT_3">Shift 3 (Malam)</option>
           </select>
-          <p className="text-xs text-gray-500 mt-1">ML will match with hauling data from this shift</p>
+          <p className="text-xs text-slate-500 mt-1">ML will match with hauling data from this shift</p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Road Condition</label>
+          <label className="block text-sm font-medium text-slate-300 mb-2">Road Condition</label>
           <select
             name="roadCondition"
             value={formData.roadCondition}
             onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${formData.targetRoadId ? 'border-green-300 bg-green-50' : 'border-gray-300'}`}
+            className={`w-full px-3 py-2 bg-slate-800/50 border rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent ${
+              formData.targetRoadId ? 'border-emerald-500/30' : 'border-slate-700/50'
+            }`}
           >
             <option value="GOOD">Good</option>
             <option value="FAIR">Fair</option>
             <option value="POOR">Poor</option>
             <option value="LICIN">Licin</option>
           </select>
-          {formData.targetRoadId && <p className="text-xs text-green-600 mt-1">✓ Auto-filled from selected road segment</p>}
+          {formData.targetRoadId && <p className="text-xs text-emerald-400 mt-1">✓ Auto-filled from selected road segment</p>}
         </div>
       </div>
 
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-green-800 mb-2">🛤️ Road & Equipment Selection (Auto-fills Road Condition)</h3>
+      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+        <h3 className="text-sm font-semibold text-emerald-300 mb-2">🛤️ Road & Equipment Selection (Auto-fills Road Condition)</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               Preferred Road Segment
-              {formData.miningSiteId && <span className="text-green-600"> (Filtered by Site)</span>}
+              {formData.miningSiteId && <span className="text-emerald-400"> (Filtered by Site)</span>}
             </label>
-            <select name="targetRoadId" value={formData.targetRoadId} onChange={handleRoadChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select
+              name="targetRoadId"
+              value={formData.targetRoadId}
+              onChange={handleRoadChange}
+              className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+            >
               <option value="">Auto - AI will explore all roads</option>
               {filteredRoadSegments.map((road) => (
                 <option key={road.id} value={road.id}>
@@ -274,15 +291,20 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
                 </option>
               ))}
             </select>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               {filteredRoadSegments.length} road segments available
               {formData.targetRoadId && ' | Road condition auto-filled'}
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Excavator</label>
-            <select name="targetExcavatorId" value={formData.targetExcavatorId} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <label className="block text-sm font-medium text-slate-300 mb-2">Preferred Excavator</label>
+            <select
+              name="targetExcavatorId"
+              value={formData.targetExcavatorId}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+            >
               <option value="">Auto - AI will explore all excavators</option>
               {excavators.map((exc) => (
                 <option key={exc.id} value={exc.id}>
@@ -290,14 +312,19 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
                 </option>
               ))}
             </select>
-            <p className="text-xs text-gray-500 mt-1">{excavators.length} excavators available</p>
+            <p className="text-xs text-slate-500 mt-1">{excavators.length} excavators available</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-amber-800 mb-2">🚢 Target Sailing Schedule</h3>
-        <select name="targetScheduleId" value={formData.targetScheduleId} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+        <h3 className="text-sm font-semibold text-amber-300 mb-2">🚢 Target Sailing Schedule</h3>
+        <select
+          name="targetScheduleId"
+          value={formData.targetScheduleId}
+          onChange={handleChange}
+          className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+        >
           <option value="">No specific schedule - AI will use random vessel</option>
           {schedules.map((schedule) => (
             <option key={schedule.id} value={schedule.id}>
@@ -306,25 +333,25 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
           ))}
         </select>
         {selectedScheduleInfo && (
-          <div className="mt-2 p-2 bg-amber-100 rounded text-sm">
-            <p className="font-semibold text-amber-900">Selected: {selectedScheduleInfo.vesselName}</p>
-            <p className="text-amber-800">
+          <div className="mt-2 p-2 bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm">
+            <p className="font-semibold text-amber-300">Selected: {selectedScheduleInfo.vesselName}</p>
+            <p className="text-amber-400">
               Target: {selectedScheduleInfo.plannedQuantity?.toFixed(0)} Ton | ETS: {new Date(selectedScheduleInfo.etsLoading).toLocaleDateString('id-ID')} | Status: {selectedScheduleInfo.status}
             </p>
           </div>
         )}
-        <p className="text-xs text-amber-700 mt-1">{formData.targetScheduleId ? '✓ Recommendation strategy will use this specific vessel schedule' : 'Leave blank for AI to select randomly from available schedules'}</p>
+        <p className="text-xs text-amber-400 mt-1">{formData.targetScheduleId ? '✓ Recommendation strategy will use this specific vessel schedule' : 'Leave blank for AI to select randomly from available schedules'}</p>
       </div>
 
-      <div className="border-t pt-4">
-        <h3 className="text-lg font-semibold mb-4">Decision Variables</h3>
-        <p className="text-sm text-gray-600 mb-4">AI will test multiple scenarios between min/max ranges to find optimal configurations</p>
+      <div className="border-t border-slate-700/50 pt-4">
+        <h3 className="text-lg font-semibold text-slate-100 mb-4">Decision Variables</h3>
+        <p className="text-sm text-slate-400 mb-4">AI will test multiple scenarios between min/max ranges to find optimal configurations</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700">Truck Allocation Range</label>
+            <label className="block text-sm font-medium text-slate-300">Truck Allocation Range</label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Min Trucks</label>
+                <label className="block text-xs text-slate-500 mb-1">Min Trucks</label>
                 <input
                   type="number"
                   name="minTrucks"
@@ -332,11 +359,11 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
                   onChange={handleNumberChange}
                   min="1"
                   max="100"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Max Trucks</label>
+                <label className="block text-xs text-slate-500 mb-1">Max Trucks</label>
                 <input
                   type="number"
                   name="maxTrucks"
@@ -344,20 +371,20 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
                   onChange={handleNumberChange}
                   min="1"
                   max="100"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                 />
               </div>
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               AI will explore {formData.minTrucks} to {formData.maxTrucks} trucks
             </p>
           </div>
 
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700">Excavator Allocation Range</label>
+            <label className="block text-sm font-medium text-slate-300">Excavator Allocation Range</label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Min Excavators</label>
+                <label className="block text-xs text-slate-500 mb-1">Min Excavators</label>
                 <input
                   type="number"
                   name="minExcavators"
@@ -365,11 +392,11 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
                   onChange={handleNumberChange}
                   min="1"
                   max="20"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Max Excavators</label>
+                <label className="block text-xs text-slate-500 mb-1">Max Excavators</label>
                 <input
                   type="number"
                   name="maxExcavators"
@@ -377,61 +404,98 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
                   onChange={handleNumberChange}
                   min="1"
                   max="20"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                 />
               </div>
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               AI will explore {formData.minExcavators} to {formData.maxExcavators} excavators
             </p>
           </div>
         </div>
       </div>
 
-      <div className="border-t pt-4">
-        <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+      <div className="border-t border-slate-700/50 pt-4">
+        <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className="text-sky-400 hover:text-sky-300 text-sm font-medium transition-colors">
           {showAdvanced ? '▼' : '▶'} Advanced Options (Financial Parameters)
         </button>
 
         {showAdvanced && (
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md">
-            <p className="col-span-2 text-sm text-gray-600 mb-2">Financial Parameters (IDR)</p>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl">
+            <p className="col-span-2 text-sm text-slate-400 mb-2">Financial Parameters (IDR)</p>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Target Produksi Batubara (Ton)</label>
-              <input type="number" name="totalProductionTarget" value={formData.totalProductionTarget} onChange={handleNumberChange} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Opsional (0 = Auto)" />
+              <label className="block text-xs font-medium text-slate-400 mb-1">Target Produksi Batubara (Ton)</label>
+              <input
+                type="number"
+                name="totalProductionTarget"
+                value={formData.totalProductionTarget}
+                onChange={handleNumberChange}
+                className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700/50 text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                placeholder="Opsional (0 = Auto)"
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Coal Price (per Ton)</label>
-              <input type="number" name="coalPrice" value={formData.coalPrice} onChange={handleNumberChange} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+              <label className="block text-xs font-medium text-slate-400 mb-1">Coal Price (per Ton)</label>
+              <input
+                type="number"
+                name="coalPrice"
+                value={formData.coalPrice}
+                onChange={handleNumberChange}
+                className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700/50 text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Fuel Price (per Liter)</label>
-              <input type="number" name="fuelPrice" value={formData.fuelPrice} onChange={handleNumberChange} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+              <label className="block text-xs font-medium text-slate-400 mb-1">Fuel Price (per Liter)</label>
+              <input
+                type="number"
+                name="fuelPrice"
+                value={formData.fuelPrice}
+                onChange={handleNumberChange}
+                className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700/50 text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Queue Cost (per Hour)</label>
-              <input type="number" name="queueCost" value={formData.queueCost} onChange={handleNumberChange} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+              <label className="block text-xs font-medium text-slate-400 mb-1">Queue Cost (per Hour)</label>
+              <input
+                type="number"
+                name="queueCost"
+                value={formData.queueCost}
+                onChange={handleNumberChange}
+                className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700/50 text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Demurrage Cost (per Hour)</label>
-              <input type="number" name="demurrageCost" value={formData.demurrageCost} onChange={handleNumberChange} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+              <label className="block text-xs font-medium text-slate-400 mb-1">Demurrage Cost (per Hour)</label>
+              <input
+                type="number"
+                name="demurrageCost"
+                value={formData.demurrageCost}
+                onChange={handleNumberChange}
+                className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700/50 text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Incident Risk Cost (Avg)</label>
-              <input type="number" name="incidentCost" value={formData.incidentCost} onChange={handleNumberChange} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+              <label className="block text-xs font-medium text-slate-400 mb-1">Incident Risk Cost (Avg)</label>
+              <input
+                type="number"
+                name="incidentCost"
+                value={formData.incidentCost}
+                onChange={handleNumberChange}
+                className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700/50 text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
             </div>
           </div>
         )}
       </div>
 
       <div className="flex justify-end">
-        <button type="submit" disabled={loading} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed">
+        <button type="submit" disabled={loading} className="px-6 py-3 bg-sky-600 hover:bg-sky-500 text-white font-medium rounded-lg disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors">
           {loading ? 'Simulating...' : 'Get Recommendations'}
         </button>
       </div>
