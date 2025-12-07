@@ -353,7 +353,10 @@ const UserList = () => {
           <p className="text-xs sm:text-sm text-slate-400 mt-1 hidden sm:block">Manage user accounts, roles, and access permissions</p>
         </div>
         <div className="flex space-x-2 sm:space-x-3 w-full sm:w-auto">
-          <button onClick={fetchUsers} className="bg-slate-800/50 hover:bg-slate-700/50 px-3 sm:px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm text-slate-300 font-medium transition-colors flex items-center space-x-2 flex-1 sm:flex-none justify-center">
+          <button
+            onClick={fetchUsers}
+            className="bg-slate-800/50 hover:bg-slate-700/50 px-3 sm:px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm text-slate-300 font-medium transition-colors flex items-center space-x-2 flex-1 sm:flex-none justify-center"
+          >
             <RefreshCw size={18} />
             <span className="hidden sm:inline">Refresh</span>
           </button>

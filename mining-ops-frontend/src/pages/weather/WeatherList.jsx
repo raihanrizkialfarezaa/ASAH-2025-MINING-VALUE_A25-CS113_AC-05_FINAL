@@ -388,7 +388,10 @@ const WeatherList = () => {
           <p className="text-xs sm:text-sm text-slate-400 mt-1">Real-time weather tracking and operational safety assessment</p>
         </div>
         <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
-          <button onClick={fetchWeathers} className="flex-1 sm:flex-none bg-slate-800/50 hover:bg-slate-700/50 px-3 sm:px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm text-slate-300 font-medium transition-colors flex items-center justify-center gap-2">
+          <button
+            onClick={fetchWeathers}
+            className="flex-1 sm:flex-none bg-slate-800/50 hover:bg-slate-700/50 px-3 sm:px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm text-slate-300 font-medium transition-colors flex items-center justify-center gap-2"
+          >
             <RefreshCw size={18} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
@@ -512,7 +515,10 @@ const WeatherList = () => {
                 </button>
 
                 {activeFiltersCount > 0 && (
-                  <button onClick={handleClearFilters} className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-blue-300/30 bg-blue-900/20 text-blue-300 hover:bg-blue-800/30 font-medium transition-colors flex items-center justify-center gap-2">
+                  <button
+                    onClick={handleClearFilters}
+                    className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-blue-300/30 bg-blue-900/20 text-blue-300 hover:bg-blue-800/30 font-medium transition-colors flex items-center justify-center gap-2"
+                  >
                     <X size={18} />
                     <span>Clear</span>
                   </button>

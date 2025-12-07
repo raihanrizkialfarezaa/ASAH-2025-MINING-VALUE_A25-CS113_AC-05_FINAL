@@ -231,7 +231,10 @@ const AIRecommendations = () => {
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-slate-100">Top 3 Strategic Options</h2>
             </div>
-            <button onClick={loadRealtimeData} className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl text-sm text-blue-400 font-medium transition-all hover:scale-105">
+            <button
+              onClick={loadRealtimeData}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl text-sm text-blue-400 font-medium transition-all hover:scale-105"
+            >
               <RefreshCw className="w-4 h-4" />
               Refresh Data
             </button>
@@ -261,8 +264,15 @@ const AIRecommendations = () => {
                       <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-blue-400 uppercase tracking-wider">Metric</th>
                       {recommendations.map((_, index) => (
                         <th key={index} className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                          <span className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg ${index === 0 ? 'bg-blue-500/20 text-blue-400' : index === 1 ? 'bg-sky-500/20 text-sky-400' : 'bg-cyan-500/20 text-cyan-400'}`}>
-                            <span className="hidden sm:inline">#{index + 1}</span><span className="sm:hidden">#</span><span className="hidden sm:inline">Strategy</span><span className="sm:hidden">{index + 1}</span>
+                          <span
+                            className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg ${
+                              index === 0 ? 'bg-blue-500/20 text-blue-400' : index === 1 ? 'bg-sky-500/20 text-sky-400' : 'bg-cyan-500/20 text-cyan-400'
+                            }`}
+                          >
+                            <span className="hidden sm:inline">#{index + 1}</span>
+                            <span className="sm:hidden">#</span>
+                            <span className="hidden sm:inline">Strategy</span>
+                            <span className="sm:hidden">{index + 1}</span>
                           </span>
                         </th>
                       ))}
@@ -273,7 +283,8 @@ const AIRecommendations = () => {
                       <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-slate-200">
                         <div className="flex items-center gap-2">
                           <Truck className="w-4 h-4 text-sky-400 flex-shrink-0" strokeWidth={1.5} />
-                          <span className="hidden sm:inline">Trucks</span><span className="sm:hidden">Trk</span>
+                          <span className="hidden sm:inline">Trucks</span>
+                          <span className="sm:hidden">Trk</span>
                         </div>
                       </td>
                       {recommendations.map((rec, index) => (
@@ -286,7 +297,8 @@ const AIRecommendations = () => {
                       <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-slate-200">
                         <div className="flex items-center gap-2">
                           <Shovel className="w-4 h-4 text-cyan-400 flex-shrink-0" strokeWidth={1.5} />
-                          <span className="hidden sm:inline">Excavators</span><span className="sm:hidden">Exc</span>
+                          <span className="hidden sm:inline">Excavators</span>
+                          <span className="sm:hidden">Exc</span>
                         </div>
                       </td>
                       {recommendations.map((rec, index) => (
@@ -299,7 +311,8 @@ const AIRecommendations = () => {
                       <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-slate-200">
                         <div className="flex items-center gap-2">
                           <TrendingUp className="w-4 h-4 text-blue-400 flex-shrink-0" strokeWidth={1.5} />
-                          <span className="hidden sm:inline">Net Profit</span><span className="sm:hidden">Profit</span>
+                          <span className="hidden sm:inline">Net Profit</span>
+                          <span className="sm:hidden">Profit</span>
                         </div>
                       </td>
                       {recommendations.map((rec, index) => (
@@ -312,7 +325,8 @@ const AIRecommendations = () => {
                       <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-slate-200">
                         <div className="flex items-center gap-2">
                           <Package className="w-4 h-4 text-sky-400 flex-shrink-0" strokeWidth={1.5} />
-                          <span className="hidden sm:inline">Total Production</span><span className="sm:hidden">Prod</span>
+                          <span className="hidden sm:inline">Total Production</span>
+                          <span className="sm:hidden">Prod</span>
                         </div>
                       </td>
                       {recommendations.map((rec, index) => (
@@ -325,7 +339,8 @@ const AIRecommendations = () => {
                       <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-slate-200">
                         <div className="flex items-center gap-2">
                           <Fuel className="w-4 h-4 text-cyan-400 flex-shrink-0" strokeWidth={1.5} />
-                          <span className="hidden sm:inline">Fuel Consumption</span><span className="sm:hidden">Fuel</span>
+                          <span className="hidden sm:inline">Fuel Consumption</span>
+                          <span className="sm:hidden">Fuel</span>
                         </div>
                       </td>
                       {recommendations.map((rec, index) => (

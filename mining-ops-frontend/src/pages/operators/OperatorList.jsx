@@ -598,11 +598,14 @@ const OperatorList = () => {
                 </button>
 
                 {activeFiltersCount > 0 && (
-                  <button onClick={handleClearFilters} className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-slate-700 font-medium transition-colors flex items-center justify-center gap-2">
-                  <X size={18} />
-                  <span>Clear</span>
-                </button>
-              )}
+                  <button
+                    onClick={handleClearFilters}
+                    className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-slate-700 font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <X size={18} />
+                    <span>Clear</span>
+                  </button>
+                )}
               </div>
             </div>
 

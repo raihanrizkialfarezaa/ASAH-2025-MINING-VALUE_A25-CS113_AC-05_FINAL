@@ -476,7 +476,10 @@ const ExcavatorList = () => {
           <p className="text-xs sm:text-sm text-slate-300 mt-1 ml-10 sm:ml-14 hidden sm:block">Manage and monitor excavator operations in real-time</p>
         </div>
         <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
-          <button onClick={fetchExcavators} className="bg-slate-800/80 hover:bg-slate-700 px-3 sm:px-4 py-2 rounded-lg border border-slate-700 text-slate-300 font-medium transition-colors flex items-center gap-2 flex-1 sm:flex-none justify-center">
+          <button
+            onClick={fetchExcavators}
+            className="bg-slate-800/80 hover:bg-slate-700 px-3 sm:px-4 py-2 rounded-lg border border-slate-700 text-slate-300 font-medium transition-colors flex items-center gap-2 flex-1 sm:flex-none justify-center"
+          >
             <RefreshCw size={18} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
@@ -644,7 +647,10 @@ const ExcavatorList = () => {
                 </button>
 
                 {activeFiltersCount > 0 && (
-                  <button onClick={handleClearFilters} className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-slate-700 font-medium transition-colors flex items-center justify-center gap-2">
+                  <button
+                    onClick={handleClearFilters}
+                    className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-slate-700 font-medium transition-colors flex items-center justify-center gap-2"
+                  >
                     <X size={18} />
                     <span>Clear</span>
                   </button>

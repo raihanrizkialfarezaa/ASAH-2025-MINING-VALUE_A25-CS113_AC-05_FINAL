@@ -457,7 +457,11 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
                 )}
               </div>
               {schedule.status && schedule.id && (
-                <span className={`px-2 py-0.5 text-xs rounded-full flex-shrink-0 ${schedule.status === 'SCHEDULED' ? 'bg-blue-500/20 text-blue-400' : schedule.status === 'LOADING' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-500/20 text-slate-400'}`}>
+                <span
+                  className={`px-2 py-0.5 text-xs rounded-full flex-shrink-0 ${
+                    schedule.status === 'SCHEDULED' ? 'bg-blue-500/20 text-blue-400' : schedule.status === 'LOADING' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-500/20 text-slate-400'
+                  }`}
+                >
                   {schedule.status}
                 </span>
               )}

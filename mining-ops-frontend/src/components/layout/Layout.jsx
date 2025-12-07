@@ -27,7 +27,7 @@ const Layout = ({ children }) => {
         setSidebarOpen(true);
       }
     };
-    
+
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -224,10 +224,7 @@ const Layout = ({ children }) => {
       </aside>
 
       {/* Main Content Area */}
-      <main 
-        className={`flex-1 h-full overflow-y-auto transition-all duration-300 pt-14 lg:pt-0 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`} 
-        style={{ background: '#0a0f1a' }}
-      >
+      <main className={`flex-1 h-full overflow-y-auto transition-all duration-300 pt-14 lg:pt-0 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`} style={{ background: '#0a0f1a' }}>
         <div className="min-h-full p-3 sm:p-4 lg:p-6">{children}</div>
       </main>
 

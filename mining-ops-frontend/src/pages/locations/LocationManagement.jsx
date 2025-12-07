@@ -468,12 +468,18 @@ const LocationManagement = () => {
           <p className="text-xs sm:text-sm text-slate-400 mt-1">Manage mining sites, loading points, dumping points, and road segments</p>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
-          <button onClick={fetchData} className="flex-1 sm:flex-none bg-slate-800/80 hover:bg-slate-700 px-3 sm:px-4 py-2 rounded-lg border border-slate-700 text-slate-300 font-medium transition-colors flex items-center justify-center gap-2">
+          <button
+            onClick={fetchData}
+            className="flex-1 sm:flex-none bg-slate-800/80 hover:bg-slate-700 px-3 sm:px-4 py-2 rounded-lg border border-slate-700 text-slate-300 font-medium transition-colors flex items-center justify-center gap-2"
+          >
             <RefreshCw size={18} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
           <div className="bg-slate-800/80 rounded-lg p-1 flex border border-slate-700">
-            <button onClick={() => setViewMode('list')} className={`px-2 sm:px-3 py-2 rounded flex items-center gap-1 sm:gap-1.5 transition-colors ${viewMode === 'list' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-400 hover:bg-slate-700'}`}>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-2 sm:px-3 py-2 rounded flex items-center gap-1 sm:gap-1.5 transition-colors ${viewMode === 'list' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-400 hover:bg-slate-700'}`}
+            >
               <List size={18} />
               <span className="text-sm font-medium hidden sm:inline">List</span>
             </button>
@@ -598,7 +604,11 @@ const LocationManagement = () => {
                     )}
                   </div>
 
-                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full sm:w-auto bg-slate-800/80 border border-slate-700 text-slate-300 rounded-lg px-3 py-2.5 sm:min-w-[180px] focus:border-sky-500 outline-none">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full sm:w-auto bg-slate-800/80 border border-slate-700 text-slate-300 rounded-lg px-3 py-2.5 sm:min-w-[180px] focus:border-sky-500 outline-none"
+                  >
                     <option value="">All Status</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>

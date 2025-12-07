@@ -403,7 +403,10 @@ const TruckList = () => {
           <p className="text-xs sm:text-sm text-slate-400 mt-1 ml-10 sm:ml-14">Manage and monitor fleet operations in real-time</p>
         </div>
         <div className="flex gap-2 sm:gap-3">
-          <button onClick={fetchTrucks} className="flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-300 font-medium hover:bg-slate-700/60 transition-colors flex items-center justify-center gap-2">
+          <button
+            onClick={fetchTrucks}
+            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-300 font-medium hover:bg-slate-700/60 transition-colors flex items-center justify-center gap-2"
+          >
             <RefreshCw size={18} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
@@ -628,7 +631,10 @@ const TruckList = () => {
                     {sortField === 'capacity' && (sortOrder === 'asc' ? <SortAsc size={14} className="text-sky-400" /> : <SortDesc size={14} className="text-sky-400" />)}
                   </div>
                 </th>
-                <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors hidden lg:table-cell" onClick={() => handleSort('yearManufacture')}>
+                <th
+                  className="px-3 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-700/30 transition-colors hidden lg:table-cell"
+                  onClick={() => handleSort('yearManufacture')}
+                >
                   <div className="flex items-center justify-between">
                     <span>Year</span>
                     {sortField === 'yearManufacture' && (sortOrder === 'asc' ? <SortAsc size={14} className="text-sky-400" /> : <SortDesc size={14} className="text-sky-400" />)}

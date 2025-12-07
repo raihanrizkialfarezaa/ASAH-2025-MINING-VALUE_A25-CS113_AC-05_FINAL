@@ -1419,7 +1419,7 @@ const ProductionList = () => {
           <div className="flex flex-col gap-3 sm:gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h2 className="text-base sm:text-lg font-semibold text-slate-100">Production History</h2>
-              
+
               {/* Mobile: Stack filters vertically */}
               <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3">
                 {/* Search Input */}
@@ -1436,7 +1436,7 @@ const ProductionList = () => {
                     className="pl-9 pr-3 py-2 text-sm border border-slate-700/50 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 w-full sm:w-40 lg:w-48 text-slate-200 placeholder-slate-500 bg-slate-900"
                   />
                 </div>
-                
+
                 {/* Filters Row */}
                 <div className="flex flex-wrap gap-2">
                   <select
@@ -1470,7 +1470,7 @@ const ProductionList = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Date Filters - Responsive */}
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-3">
               <div className="flex items-center gap-2 flex-1 sm:flex-none">
@@ -1536,7 +1536,7 @@ const ProductionList = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Table - Responsive with horizontal scroll */}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[800px]">
