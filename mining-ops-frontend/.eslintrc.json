@@ -1,0 +1,19 @@
+{
+  "extends": ["react-app", "react-app/jest"],
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module"
+  },
+  "overrides": [
+    {
+      "files": ["public/service-worker.js"],
+      "env": {
+        "serviceworker": true
+      },
+      "rules": {
+        "no-restricted-globals": "off",
+        "no-implied-eval": "off"
+      }
+    }
+  ]
+}

@@ -8,11 +8,6 @@ async function updateSchedulesToDecember2025() {
     const schedules = await prisma.sailingSchedule.findMany();
     console.log(`Found ${schedules.length} schedules to update.`);
 
-    const startDate = new Date('2025-12-01T00:00:00.000Z');
-    const endDate = new Date('2025-12-31T23:59:59.000Z');
-    const today = new Date(); // Should be Dec 2, 2025 based on context, but system time might differ.
-    // We will assume the user wants them distributed in Dec 2025.
-
     let updatedCount = 0;
 
     for (const schedule of schedules) {
