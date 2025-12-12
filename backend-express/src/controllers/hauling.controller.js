@@ -105,7 +105,8 @@ export const haulingController = {
    * Calculate achievement for production based on hauling activities
    */
   calculateAchievement: catchAsync(async (req, res) => {
-    const { truckIds, excavatorIds, startDate, endDate, haulingActivityIds } = req.body;
+    const { truckIds, excavatorIds, startDate, endDate, haulingActivityIds, targetProduction } =
+      req.body;
 
     const truckIdArray = truckIds || [];
     const excavatorIdArray = excavatorIds || [];
@@ -116,7 +117,8 @@ export const haulingController = {
       excavatorIdArray,
       startDate,
       endDate,
-      haulingIdsArray
+      haulingIdsArray,
+      targetProduction
     );
 
     res.json(ApiResponse.success(achievement));

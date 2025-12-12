@@ -22,19 +22,12 @@ const updateProductionAchievementByHaulingId = async (haulingActivityId) => {
         where: { id: { in: haulingIds } },
       });
 
-      const completedAndAchieved = activities.filter(
-        (a) =>
-          a.status === HAULING_STATUS.COMPLETED &&
-          a.loadWeight !== null &&
-          a.loadWeight >= a.targetWeight
-      );
-
       const totalLoadWeight = activities.reduce(
         (sum, a) => sum + (parseFloat(a.loadWeight) || 0),
         0
       );
-      const achievement =
-        activities.length > 0 ? (completedAndAchieved.length / activities.length) * 100 : 0;
+      const targetProduction = parseFloat(record.targetProduction) || 0;
+      const achievement = targetProduction > 0 ? (totalLoadWeight / targetProduction) * 100 : 0;
 
       await prisma.productionRecord.update({
         where: { id: record.id },
@@ -784,7 +777,8 @@ export const haulingService = {
     excavatorIds = [],
     startDate,
     endDate,
-    haulingActivityIds = []
+    haulingActivityIds = [],
+    targetProduction
   ) {
     let activities = [];
 
@@ -827,18 +821,27 @@ export const haulingService = {
         ? parseFloat(((totalLoadWeight / totalTargetWeight) * 100).toFixed(2))
         : 0;
 
-    // Simple achievement formula: (completedCount / totalCount) * 100
-    const achievement = parseFloat(
+    const targetProdNum =
+      targetProduction !== undefined && targetProduction !== null
+        ? parseFloat(targetProduction)
+        : NaN;
+    const achievementBase = !Number.isNaN(targetProdNum) && targetProdNum > 0 ? targetProdNum : 0;
+    const achievement =
+      achievementBase > 0 ? parseFloat(((totalLoadWeight / achievementBase) * 100).toFixed(2)) : 0;
+
+    const completionRate = parseFloat(
       ((completedAndAchieved.length / activities.length) * 100).toFixed(2)
     );
 
     return {
-      achievement: Math.min(achievement, 100),
+      achievement: Math.min(achievement, 9999),
       completedCount: completedAndAchieved.length,
       totalCount: activities.length,
       totalLoadWeight: parseFloat(totalLoadWeight.toFixed(2)),
       totalTargetWeight: parseFloat(totalTargetWeight.toFixed(2)),
       loadWeightProgress,
+      targetProduction: achievementBase,
+      completionRate: Math.min(completionRate, 100),
     };
   },
 

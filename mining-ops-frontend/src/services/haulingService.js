@@ -81,13 +81,14 @@ export const haulingService = {
     return response.data;
   },
 
-  calculateAchievement: async (truckIds = [], excavatorIds = [], startDate, endDate, haulingActivityIds = []) => {
+  calculateAchievement: async (truckIds = [], excavatorIds = [], startDate, endDate, haulingActivityIds = [], targetProduction) => {
     const response = await apiClient.post('/hauling/calculate-achievement', {
       truckIds,
       excavatorIds,
       startDate,
       endDate,
       haulingActivityIds,
+      targetProduction,
     });
     return response.data;
   },

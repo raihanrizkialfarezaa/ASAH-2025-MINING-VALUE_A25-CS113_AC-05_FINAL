@@ -252,7 +252,9 @@ const ProductionList = () => {
                   setManualHaulingList(existingHaulings);
                   setIsManualMode(true);
 
-                  const achievementRes = await haulingService.calculateAchievement([], [], null, null, haulingActivityIds);
+                  const strategyTargetProduction = parseFloat(raw.total_tonase) || parseFloat(recommendation.total_tonase) || parseFloat(haulingAggregated?.total_tonase) || 0;
+
+                  const achievementRes = await haulingService.calculateAchievement([], [], null, null, haulingActivityIds, strategyTargetProduction);
                   if (achievementRes.data) {
                     setHaulingAchievement(achievementRes.data);
                   }
@@ -811,7 +813,7 @@ const ProductionList = () => {
           const allocation = selectedProduction.equipmentAllocation;
           const haulingActivityIds = allocation.hauling_activity_ids || [];
           if (haulingActivityIds.length > 0) {
-            const achievementRes = await haulingService.calculateAchievement(allocation.truck_ids || [], allocation.excavator_ids || [], null, null, haulingActivityIds);
+            const achievementRes = await haulingService.calculateAchievement(allocation.truck_ids || [], allocation.excavator_ids || [], null, null, haulingActivityIds, selectedProduction?.targetProduction);
             if (achievementRes.data) {
               setHaulingAchievement(achievementRes.data);
               // Auto-update actualProduction from completed haulings
@@ -983,7 +985,7 @@ const ProductionList = () => {
             const endDate = new Date(recordDate);
             endDate.setHours(23, 59, 59, 999);
 
-            const achievementRes = await haulingService.calculateAchievement(truckIds, excavatorIds, startDate.toISOString(), endDate.toISOString(), haulingActivityIds);
+            const achievementRes = await haulingService.calculateAchievement(truckIds, excavatorIds, startDate.toISOString(), endDate.toISOString(), haulingActivityIds, production.targetProduction);
             if (achievementRes.data) {
               setHaulingAchievement(achievementRes.data);
               // Auto-update actualProduction from total load weight
@@ -1050,7 +1052,14 @@ const ProductionList = () => {
           const endDate = new Date(recordDate);
           endDate.setHours(23, 59, 59, 999);
 
-          const achievementRes = await haulingService.calculateAchievement(allocation.truck_ids || [], allocation.excavator_ids || [], startDate.toISOString(), endDate.toISOString(), haulingActivityIds);
+          const achievementRes = await haulingService.calculateAchievement(
+            allocation.truck_ids || [],
+            allocation.excavator_ids || [],
+            startDate.toISOString(),
+            endDate.toISOString(),
+            haulingActivityIds,
+            selectedProduction?.targetProduction
+          );
           if (achievementRes.data) {
             setHaulingAchievement(achievementRes.data);
             // Auto-update actualProduction from total load weight
@@ -1089,7 +1098,7 @@ const ProductionList = () => {
         try {
           const [activitiesRes, achievementRes] = await Promise.all([
             haulingService.getByIds(haulingActivityIds),
-            haulingService.calculateAchievement(allocation.truck_ids || [], allocation.excavator_ids || [], null, null, haulingActivityIds),
+            haulingService.calculateAchievement(allocation.truck_ids || [], allocation.excavator_ids || [], null, null, haulingActivityIds, production.targetProduction),
           ]);
 
           if (activitiesRes.data) {
@@ -2146,6 +2155,32 @@ const ProductionList = () => {
                                 </option>
                               ))}
                             </select>
+                            {(() => {
+                              const targetVal = Number(hauling.targetWeight) || 0;
+                              const loadVal = Number(hauling.loadWeight) || 0;
+                              const completion = targetVal > 0 ? (loadVal / targetVal) * 100 : 0;
+                              const completionText = completion.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                              const colorClass = completion >= 100 ? 'text-cyan-300' : completion >= 80 ? 'text-sky-300' : 'text-blue-300';
+                              const barClass = completion >= 100 ? 'bg-cyan-400' : completion >= 80 ? 'bg-sky-400' : 'bg-blue-400';
+                              const barWidth = Math.max(0, Math.min(100, Number.isFinite(completion) ? completion : 0));
+                              return (
+                                <div className="mt-2.5 rounded-lg border border-slate-700/50 bg-gradient-to-r from-sky-900/25 to-cyan-900/15 p-2.5">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-slate-400 font-medium">Completion rate</span>
+                                    <span className={`text-sm font-bold ${colorClass}`}>{completionText}%</span>
+                                  </div>
+                                  <div className="mt-2 h-2.5 rounded-full bg-slate-900/70 border border-slate-700/50 overflow-hidden">
+                                    <div className={`h-full ${barClass}`} style={{ width: `${barWidth}%` }} />
+                                  </div>
+                                  <div className="mt-1.5 flex items-center justify-between">
+                                    <span className="text-[11px] text-slate-500">Load / Target</span>
+                                    <span className="text-[11px] text-slate-300 font-medium">
+                                      {loadVal.toLocaleString('id-ID', { maximumFractionDigits: 2 })} / {targetVal.toLocaleString('id-ID', { maximumFractionDigits: 2 })} t
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>
