@@ -3,6 +3,7 @@
 ## Masalah yang Terjadi
 
 Ketika mengakses aplikasi dari device lain melalui Cloudflare Tunnel, muncul error:
+
 ```
 localhost:3000/health - Failed to load resource: net::ERR_CONNECTION_REFUSED
 localhost:8000/health - Failed to load resource: net::ERR_CONNECTION_REFUSED
@@ -19,6 +20,7 @@ WebSocket connection to 'wss://mining-supply-chain-a25-cs113.viviashop.com:3001/
 ### 1. Konfigurasi Environment Variables
 
 Sudah diperbaiki di `.env`:
+
 ```env
 REACT_APP_API_URL=https://backend-express.viviashop.com/api/v1
 REACT_APP_AI_SERVICE_URL=https://fastapi-service.viviashop.com
@@ -50,11 +52,11 @@ npm install -g serve
 
 Pastikan mapping Cloudflare tunnel sudah benar:
 
-| Public Hostname | Service |
-|----------------|---------|
+| Public Hostname                               | Service                                       |
+| --------------------------------------------- | --------------------------------------------- |
 | `mining-supply-chain-a25-cs113.viviashop.com` | `http://localhost:3001` (Frontend Production) |
-| `backend-express.viviashop.com` | `http://localhost:3000` (Backend Express) |
-| `fastapi-service.viviashop.com` | `http://localhost:8000` (FastAPI AI) |
+| `backend-express.viviashop.com`               | `http://localhost:3000` (Backend Express)     |
+| `fastapi-service.viviashop.com`               | `http://localhost:8000` (FastAPI AI)          |
 
 ### 5. Hapus Port dari WebSocket URL
 
@@ -106,7 +108,8 @@ npm run build
 npx serve -s build -l 3001
 ```
 
-Akses: 
+Akses:
+
 - `https://mining-supply-chain-a25-cs113.viviashop.com` (dari mana saja)
 - `https://backend-express.viviashop.com` (API endpoint)
 - `https://fastapi-service.viviashop.com` (AI service)
@@ -125,6 +128,7 @@ Akses:
 ### Cek Network Tab
 
 Di Developer Tools → Network:
+
 - Request ke `/api/v1/auth/login` harus ke `https://backend-express.viviashop.com`
 - Request ke AI service harus ke `https://fastapi-service.viviashop.com`
 - TIDAK boleh ada request ke `localhost:3000` atau `localhost:8000`
@@ -134,14 +138,17 @@ Di Developer Tools → Network:
 ## 📝 Catatan Penting
 
 1. **Development vs Production**
+
    - Development mode (`npm start`) = untuk development lokal saja
    - Production mode (`npm run build`) = untuk diakses dari internet
 
 2. **Environment Variables**
+
    - `.env` sudah dikonfigurasi untuk production (Cloudflare domains)
    - Jika ingin development, gunakan `.env.local` dengan localhost URLs
 
 3. **CORS Configuration**
+
    - Backend harus allow origins dari domain Cloudflare
    - Cek `backend-express/.env` → `CORS_ORIGIN` harus include `https://mining-supply-chain-a25-cs113.viviashop.com`
 
@@ -156,18 +163,21 @@ Di Developer Tools → Network:
 ### Masih ada error localhost?
 
 1. **Hard refresh browser:**
+
    - Chrome: Ctrl + Shift + R
    - Firefox: Ctrl + Shift + R
    - Safari: Cmd + Shift + R
 
 2. **Clear cache:**
+
    - Buka DevTools → Application → Clear storage → Clear site data
 
 3. **Pastikan menggunakan production build:**
+
    ```powershell
    # Cek folder build ada
    ls build/
-   
+
    # Rebuild jika perlu
    npm run build
    ```
@@ -181,6 +191,7 @@ Di Developer Tools → Network:
 ### CORS error?
 
 Update `backend-express/.env`:
+
 ```env
 CORS_ORIGIN=https://mining-supply-chain-a25-cs113.viviashop.com,https://backend-express.viviashop.com
 ```
@@ -190,15 +201,18 @@ CORS_ORIGIN=https://mining-supply-chain-a25-cs113.viviashop.com,https://backend-
 ## ✨ Summary
 
 **Sebelum:**
+
 - ❌ Frontend dev mode mencoba konek ke localhost
 - ❌ Error di device lain
 
 **Sesudah:**
+
 - ✅ Frontend production build dengan domain Cloudflare
 - ✅ Semua request melalui Cloudflare tunnel
 - ✅ Bisa diakses dari device mana saja
 
 **Langkah Cepat:**
+
 ```powershell
 cd mining-ops-frontend
 npm run build
