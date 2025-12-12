@@ -176,7 +176,9 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -188,6 +190,8 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
+      // Generate a new session ID when chat opens
+      setSessionId(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
       setMessages([
         {
           role: 'assistant',
@@ -197,6 +201,24 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
       ]);
     }
   }, [isOpen, messages.length]);
+
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = '0px';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [input, isFullscreen, isOpen]);
+
+  // Build conversation history for API call
+  const buildConversationHistory = () => {
+    return messages
+      .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
+      .slice(-10) // Keep last 10 messages for context
+      .map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+  };
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
@@ -218,8 +240,15 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
 
     try {
       const safeContext = Array.isArray(context) ? context : [];
-      const response = await aiService.askChatbot(input, safeContext);
+      const conversationHistory = [...buildConversationHistory(), { role: 'user', content: input }];
+
+      const response = await aiService.askChatbot(input, safeContext, sessionId, conversationHistory);
       console.log('Chatbot response:', response);
+
+      // Update session ID if returned from backend
+      if (response.data?.session_id || response.session_id) {
+        setSessionId(response.data?.session_id || response.session_id);
+      }
 
       const answer = response.data?.jawaban_ai || response.data?.answer || response.jawaban_ai || 'I apologize, but I could not generate a response.';
       const steps = response.data?.steps || [];
@@ -247,11 +276,12 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+  const handleComposerKeyDown = (e) => {
+    if (e.key !== 'Enter') return;
+    if (e.shiftKey) return;
+    if (e.nativeEvent && e.nativeEvent.isComposing) return;
+    e.preventDefault();
+    handleSend();
   };
 
   const suggestedQuestions = [
@@ -278,6 +308,8 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
   };
 
   const clearChat = () => {
+    // Generate new session ID when clearing chat
+    setSessionId(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
     setMessages([
       {
         role: 'assistant',
@@ -311,23 +343,23 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
       {isOpen && (
         <div className={chatWindowClass}>
           <div className="bg-gradient-to-r from-sky-600 via-sky-500 to-cyan-600 text-white p-3 sm:p-4 flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center backdrop-blur-sm">
                 <Bot className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
-                <h3 className="font-bold text-base sm:text-lg">Mining AI</h3>
+                <h3 className="font-bold text-base sm:text-lg truncate">Mining AI</h3>
                 <p className="text-xs text-sky-100 flex items-center gap-1.5">
                   <span className={`w-2 h-2 rounded-full ${aiServiceStatus === 'online' ? 'bg-emerald-400 shadow-emerald-400/50 shadow-sm' : 'bg-rose-400'}`}></span>
                   {aiServiceStatus === 'online' ? 'Online' : 'Offline'}
                 </p>
               </div>
             </div>
-            <div className="flex space-x-0.5 sm:space-x-1">
-              <button onClick={clearChat} className="text-white/80 hover:text-white hover:bg-white/10 p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all" title="Clear chat">
+            <div className="flex space-x-0.5 sm:space-x-1 flex-shrink-0">
+              <button onClick={clearChat} className="text-white/90 hover:text-white bg-white/10 hover:bg-white/15 p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all" title="Clear chat">
                 <Trash2 className="w-4 h-4" />
               </button>
-              <button onClick={toggleFullscreen} className="text-white/80 hover:text-white hover:bg-white/10 p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all" title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
+              <button onClick={toggleFullscreen} className="text-white/90 hover:text-white bg-white/10 hover:bg-white/15 p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all" title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
                 {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
               </button>
               <button
@@ -335,7 +367,7 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
                   setIsOpen(false);
                   setIsFullscreen(false);
                 }}
-                className="text-white/80 hover:text-white hover:bg-white/10 p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all"
+                className="text-white/90 hover:text-white bg-white/10 hover:bg-white/15 p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all"
                 title="Close"
               >
                 <X className="w-5 h-5" />
@@ -368,6 +400,36 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
               </div>
             ))}
 
+            {messages.length <= 1 && (
+              <div className="mt-1">
+                <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400" />
+                  <p className="text-[10px] sm:text-xs text-slate-400 font-medium">Suggested questions:</p>
+                </div>
+                <div className={`grid gap-2 ${isFullscreen ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+                  {suggestedQuestions.map((item, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestedQuestion(item.question)}
+                      className="text-left bg-slate-800/50 hover:bg-sky-900/30 border border-sky-700/20 hover:border-sky-500/40 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all group"
+                    >
+                      <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
+                        <div
+                          className={`w-4 h-4 sm:w-5 sm:h-5 rounded-md sm:rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-bold ${
+                            index === 0 ? 'bg-sky-500/20 text-sky-400' : index === 1 ? 'bg-cyan-500/20 text-cyan-400' : index === 2 ? 'bg-blue-500/20 text-blue-400' : 'bg-teal-500/20 text-teal-400'
+                          }`}
+                        >
+                          {index + 1}
+                        </div>
+                        <span className="text-[10px] sm:text-xs font-semibold text-slate-300 group-hover:text-sky-300 transition-colors">{item.title}</span>
+                      </div>
+                      <p className={`text-slate-500 group-hover:text-slate-400 transition-colors line-clamp-2 ${isFullscreen ? 'text-xs sm:text-sm' : 'text-[10px] sm:text-xs'}`}>{item.question}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {loading && (
               <div className="flex justify-start">
                 <div className={`${isFullscreen ? 'max-w-[70%] sm:max-w-[60%]' : 'max-w-[90%] sm:max-w-[85%]'} p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-800/50 border border-slate-700/50 rounded-bl-sm`}>
@@ -380,49 +442,26 @@ const ChatbotWidget = ({ context, aiServiceStatus }) => {
             <div ref={messagesEndRef} />
           </div>
 
-          {messages.length <= 1 && (
-            <div className={`p-3 sm:p-4 border-t border-sky-700/20 bg-slate-900/80 ${isFullscreen ? 'sm:p-6' : ''}`}>
-              <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400" />
-                <p className="text-[10px] sm:text-xs text-slate-400 font-medium">Suggested questions:</p>
-              </div>
-              <div className={`grid gap-2 ${isFullscreen ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
-                {suggestedQuestions.map((item, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSuggestedQuestion(item.question)}
-                    className="text-left bg-slate-800/50 hover:bg-sky-900/30 border border-sky-700/20 hover:border-sky-500/40 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all group"
-                  >
-                    <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
-                      <div
-                        className={`w-4 h-4 sm:w-5 sm:h-5 rounded-md sm:rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-bold ${
-                          index === 0 ? 'bg-sky-500/20 text-sky-400' : index === 1 ? 'bg-cyan-500/20 text-cyan-400' : index === 2 ? 'bg-blue-500/20 text-blue-400' : 'bg-teal-500/20 text-teal-400'
-                        }`}
-                      >
-                        {index + 1}
-                      </div>
-                      <span className="text-[10px] sm:text-xs font-semibold text-slate-300 group-hover:text-sky-300 transition-colors">{item.title}</span>
-                    </div>
-                    <p className={`text-slate-500 group-hover:text-slate-400 transition-colors line-clamp-2 ${isFullscreen ? 'text-xs sm:text-sm' : 'text-[10px] sm:text-xs'}`}>{item.question}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           <div className={`p-3 sm:p-4 border-t border-sky-700/20 bg-slate-900 ${isFullscreen ? 'sm:p-6' : ''}`}>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Ask a question..."
-                disabled={loading || aiServiceStatus === 'offline'}
-                className={`flex-1 bg-slate-800/50 border border-sky-700/30 text-slate-200 placeholder-slate-500 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent disabled:bg-slate-800/30 disabled:text-slate-600 transition-all ${
-                  isFullscreen ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'
-                }`}
-              />
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleComposerKeyDown}
+                  placeholder="Ask a question (Markdown supported)..."
+                  disabled={loading || aiServiceStatus === 'offline'}
+                  rows={1}
+                  className={`w-full bg-slate-800/50 border border-sky-700/30 text-slate-200 placeholder-slate-500 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent disabled:bg-slate-800/30 disabled:text-slate-600 transition-all resize-none overflow-y-auto ${
+                    isFullscreen ? 'text-sm sm:text-base max-h-56' : 'text-xs sm:text-sm max-h-40'
+                  }`}
+                />
+                <div className="mt-2 flex items-center justify-between text-[10px] sm:text-xs text-slate-500">
+                  <span>Enter untuk kirim • Shift+Enter baris baru</span>
+                  <span>{input.length.toLocaleString()} chars</span>
+                </div>
+              </div>
               <button
                 onClick={handleSend}
                 disabled={loading || !input.trim() || aiServiceStatus === 'offline'}

@@ -276,11 +276,11 @@ class AIController {
 
   /**
    * POST /api/ai/chatbot
-   * Ask chatbot a question
+   * Ask chatbot a question with conversation context support
    */
   async chatbot(req, res) {
     try {
-      const { question, context } = req.body;
+      const { question, context, session_id, conversation_history } = req.body;
 
       if (!question || question.trim() === '') {
         return res.status(400).json({
@@ -298,7 +298,19 @@ class AIController {
         safeContext = context;
       }
 
-      const response = await aiService.askChatbot(question, safeContext, userId);
+      // Safely handle conversation history
+      let safeConversationHistory = [];
+      if (Array.isArray(conversation_history)) {
+        safeConversationHistory = conversation_history;
+      }
+
+      const response = await aiService.askChatbot(
+        question,
+        safeContext,
+        userId,
+        session_id,
+        safeConversationHistory
+      );
 
       res.json({
         success: true,

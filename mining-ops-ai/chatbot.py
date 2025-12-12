@@ -16,6 +16,24 @@ MODEL_NAME = get_model("sql_generation")
 QUERY_CACHE = {}
 CACHE_TTL = 60
 
+CONVERSATION_CONTEXT = {}
+CONTEXT_TTL = 600
+
+TABLES_WITH_IS_ACTIVE = {
+    "trucks",
+    "excavators",
+    "users",
+    "mining_sites",
+    "loading_points",
+    "dumping_points",
+    "road_segments",
+    "vessels",
+    "delay_reasons",
+    "support_equipment",
+    "jetty_berths",
+    "system_configs",
+}
+
 def get_cached_result(cache_key):
     if cache_key in QUERY_CACHE:
         cached_data, timestamp = QUERY_CACHE[cache_key]
@@ -30,6 +48,864 @@ def set_cached_result(cache_key, data):
 
 def get_cache_key(query):
     return hashlib.md5(query.encode()).hexdigest()
+
+def get_conversation_context(session_id):
+    if session_id and session_id in CONVERSATION_CONTEXT:
+        ctx, timestamp = CONVERSATION_CONTEXT[session_id]
+        if time.time() - timestamp < CONTEXT_TTL:
+            return ctx
+        else:
+            del CONVERSATION_CONTEXT[session_id]
+    return None
+
+def set_conversation_context(session_id, context):
+    if session_id:
+        CONVERSATION_CONTEXT[session_id] = (context, time.time())
+
+def extract_entities_from_text(text):
+    entities = {
+        'production_ids': [],
+        'truck_ids': [],
+        'excavator_ids': [],
+        'vessel_ids': [],
+        'schedule_ids': [],
+        'site_ids': [],
+        'operator_ids': [],
+        'numeric_values': [],
+        'dates': [],
+        'shifts': [],
+        'keywords': []
+    }
+    
+    id_patterns = [
+        (r'\b(cm[a-z0-9]{5,})\b', 'production_ids'),
+        (r'(?:production\s+)?(?:id\s+)?["\']?(cm[a-z0-9]{5,})["\']?', 'production_ids'),
+        (r'\b(trk[-_]?[a-z0-9]+)\b', 'truck_ids'),
+        (r'\b(exc[-_]?[a-z0-9]+)\b', 'excavator_ids'),
+        (r'\b(ves[-_]?[a-z0-9]+)\b', 'vessel_ids'),
+        (r'\b(sch[-_]?[a-z0-9]+)\b', 'schedule_ids'),
+        (r'production\s+(?:id\s+)?([a-z0-9]{8,})', 'production_ids'),
+        (r'truk\s+(?:id\s+)?([A-Z0-9-]+)', 'truck_ids'),
+        (r'excavator\s+(?:id\s+)?([A-Z0-9-]+)', 'excavator_ids'),
+    ]
+    
+    for pattern, entity_type in id_patterns:
+        matches = re.findall(pattern, text.lower())
+        for match in matches:
+            if match not in entities[entity_type]:
+                entities[entity_type].append(match)
+    
+    numeric_matches = re.findall(r'\b(\d+(?:[.,]\d+)?)\s*(?:ton|kg|liter|jam|menit|km|meter|%|persen)?\b', text.lower())
+    entities['numeric_values'] = [float(n.replace(',', '.')) for n in numeric_matches if n]
+    
+    date_patterns = [
+        r'\b(\d{4}-\d{2}-\d{2})\b',
+        r'\b(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})\b',
+    ]
+    for pattern in date_patterns:
+        matches = re.findall(pattern, text)
+        entities['dates'].extend(matches)
+    
+    shift_matches = re.findall(r'\b(shift[-_\s]?[123]|SHIFT_[123])\b', text, re.IGNORECASE)
+    entities['shifts'] = [s.upper().replace(' ', '_').replace('-', '_') for s in shift_matches]
+    
+    keywords_to_track = [
+        'target', 'aktual', 'actual', 'produksi', 'production', 'sisa', 'remaining',
+        'kurang', 'lebih', 'total', 'achievement', 'pencapaian', 'selisih', 'difference',
+        'profit', 'biaya', 'cost', 'revenue', 'pendapatan'
+    ]
+    for kw in keywords_to_track:
+        if kw in text.lower():
+            entities['keywords'].append(kw)
+    
+    return entities
+
+def merge_contexts(old_ctx, new_entities, new_question, new_answer=None):
+    if old_ctx is None:
+        old_ctx = {
+            'entities': {
+                'production_ids': [],
+                'truck_ids': [],
+                'excavator_ids': [],
+                'vessel_ids': [],
+                'schedule_ids': [],
+                'site_ids': [],
+                'operator_ids': [],
+                'numeric_values': [],
+                'dates': [],
+                'shifts': [],
+                'keywords': []
+            },
+            'conversation_history': [],
+            'last_query_result': None,
+            'last_sql': None
+        }
+    
+    for key, values in new_entities.items():
+        if key in old_ctx['entities'] and values:
+            for v in values:
+                if v not in old_ctx['entities'][key]:
+                    old_ctx['entities'][key].append(v)
+            old_ctx['entities'][key] = old_ctx['entities'][key][-10:]
+    
+    old_ctx['conversation_history'].append({
+        'question': new_question,
+        'answer': new_answer,
+        'timestamp': time.time()
+    })
+    old_ctx['conversation_history'] = old_ctx['conversation_history'][-5:]
+    
+    return old_ctx
+
+def build_context_prompt(context):
+    if not context:
+        return ""
+    
+    parts = []
+    
+    entities = context.get('entities', {})
+    if entities.get('production_ids'):
+        parts.append(f"Production IDs mentioned: {', '.join(entities['production_ids'])}")
+    if entities.get('truck_ids'):
+        parts.append(f"Truck IDs mentioned: {', '.join(entities['truck_ids'])}")
+    if entities.get('excavator_ids'):
+        parts.append(f"Excavator IDs mentioned: {', '.join(entities['excavator_ids'])}")
+    if entities.get('numeric_values'):
+        parts.append(f"Numeric values mentioned: {', '.join(map(str, entities['numeric_values']))}")
+    if entities.get('keywords'):
+        parts.append(f"Keywords: {', '.join(entities['keywords'])}")
+    
+    history = context.get('conversation_history', [])
+    if history:
+        parts.append("\nRecent conversation:")
+        for h in history[-3:]:
+            q = h.get('question', '')[:200]
+            a = h.get('answer', '')[:200] if h.get('answer') else ''
+            parts.append(f"  User: {q}")
+            if a:
+                parts.append(f"  Assistant: {a}")
+    
+    if context.get('last_sql'):
+        parts.append(f"\nLast SQL query executed: {context['last_sql'][:300]}")
+    
+    return "\n".join(parts)
+
+def is_follow_up_question(question):
+    follow_up_indicators = [
+        'maksud saya', 'maksudnya', 'yang saya tanya', 'yang dimaksud',
+        'sisa', 'remaining', 'selisih', 'kurang berapa', 'berapa lagi',
+        'itu', 'tersebut', 'yang tadi', 'sebelumnya', 'tadi',
+        'dari itu', 'dari data itu', 'dari yang tadi',
+        'jelaskan', 'jelaskan lagi', 'lebih detail', 'rincian',
+        'kenapa', 'mengapa', 'alasannya', 'penyebabnya',
+        'bagaimana dengan', 'gimana dengan', 'kalau', 'jika',
+        'lalu', 'terus', 'kemudian', 'selanjutnya'
+    ]
+    
+    question_lower = question.lower().strip()
+    
+    for indicator in follow_up_indicators:
+        if indicator in question_lower:
+            return True
+    
+    if len(question_lower.split()) < 8:
+        no_explicit_entity = True
+        entity_indicators = ['id', 'truk', 'truck', 'excavator', 'kapal', 'vessel', 'produksi', 'production']
+        for ei in entity_indicators:
+            if ei in question_lower:
+                no_explicit_entity = False
+                break
+        if no_explicit_entity:
+            return True
+    
+    return False
+
+def detect_remaining_production_question(question, context=None):
+    question_lower = question.lower()
+    remaining_indicators = [
+        'berapa ton lagi', 'sisa ton', 'sisa produksi', 'kurang berapa',
+        'berapa lagi', 'remaining', 'kekurangan', 'belum terpenuhi',
+        'harus dipenuhi', 'perlu dipenuhi', 'butuh berapa', 'masih kurang',
+        'sisa jumlah', 'sisa target', 'selisih target', 'bisa terpenuhi',
+        'target terpenuhi', 'capai target', 'mencapai target', 'belum tercapai',
+        'sisa yang', 'ton lagi', 'berapa sisa', 'kekurangan ton'
+    ]
+    
+    is_remaining_question = any(ind in question_lower for ind in remaining_indicators)
+    
+    if 'maksud saya' in question_lower or 'yang saya maksud' in question_lower:
+        if any(word in question_lower for word in ['sisa', 'ton', 'jumlah', 'dipenuhi', 'harus']):
+            is_remaining_question = True
+    
+    production_id = None
+    
+    id_patterns = [
+        r'\b(cm[a-z0-9]{5,})\b',
+        r'(?:production\s+)?(?:id\s+)?["\']?(cm[a-z0-9]{5,})["\']?',
+        r'(?:id\s+)(cm[a-z0-9]{5,})',
+    ]
+    
+    for pattern in id_patterns:
+        id_match = re.search(pattern, question_lower)
+        if id_match:
+            production_id = id_match.group(1)
+            break
+    
+    if not production_id and context:
+        prod_ids = context.get('entities', {}).get('production_ids', [])
+        if prod_ids:
+            production_id = prod_ids[-1]
+    
+    return is_remaining_question, production_id
+
+def resolve_production_record_id_from_context(context):
+    if not context:
+        return None
+    candidates = []
+    ents = context.get('entities', {}) if isinstance(context, dict) else {}
+    for k in ['production_ids', 'site_ids', 'equipment_ids', 'truck_ids', 'excavator_ids']:
+        vals = ents.get(k)
+        if isinstance(vals, list):
+            candidates.extend([v for v in vals if isinstance(v, str)])
+    hist = context.get('conversation_history') if isinstance(context, dict) else None
+    if isinstance(hist, list):
+        for h in hist[-10:]:
+            if isinstance(h, dict):
+                q = (h.get('question') or '').lower()
+                m = re.search(r"\b(cm[a-z0-9]{5,})\b", q)
+                if m:
+                    candidates.append(m.group(1))
+    seen = set()
+    ordered = []
+    for c in reversed(candidates):
+        if c and c not in seen:
+            seen.add(c)
+            ordered.append(c)
+    for cand in ordered:
+        try:
+            df = fetch_dataframe("SELECT id FROM production_records WHERE id LIKE :pattern LIMIT 1", params={"pattern": f"{cand}%"})
+            if not df.empty:
+                return str(df.iloc[0].get('id') or cand)
+        except Exception:
+            continue
+    return None
+
+def generate_remaining_production_query(production_id):
+    if not production_id:
+        return None
+    return f"""SELECT id, "recordDate", shift, "targetProduction", "actualProduction", 
+("targetProduction" - "actualProduction") as sisa_ton,
+ROUND((("actualProduction" / NULLIF("targetProduction", 0)) * 100)::numeric, 2) as achievement_pct
+FROM production_records WHERE id LIKE :pattern LIMIT 1"""
+
+def format_remaining_production_answer(df, production_id):
+    if df.empty:
+        return f"Maaf, tidak ditemukan production record dengan ID yang mengandung '{production_id}'. Silakan periksa kembali ID yang dimaksud."
+    
+    row = df.iloc[0]
+    record_id = row.get('id', 'N/A')
+    record_date = str(row.get('recordDate', ''))[:10]
+    shift = row.get('shift', 'N/A')
+    target = row.get('targetProduction', 0) or 0
+    actual = row.get('actualProduction', 0) or 0
+    sisa = row.get('sisa_ton', 0) or 0
+    achievement = row.get('achievement_pct', 0) or 0
+    
+    response = f"""## 📊 Analisis Sisa Produksi
+
+**Production Record ID:** `{record_id}`
+**Tanggal:** {record_date}
+**Shift:** {shift}
+
+### Detail Produksi:
+| Parameter | Nilai |
+|-----------|-------|
+| Target Produksi | **{target:,.2f} ton** |
+| Produksi Aktual | **{actual:,.2f} ton** |
+| **Sisa yang Harus Dipenuhi** | **{sisa:,.2f} ton** |
+| Achievement | {achievement:.1f}% |
+
+### Kesimpulan:
+"""
+    
+    if sisa <= 0:
+        response += f"✅ **Target produksi sudah terpenuhi!** Bahkan melebihi target sebanyak **{abs(sisa):,.2f} ton**."
+    elif achievement >= 90:
+        response += f"📈 Produksi hampir mencapai target. Hanya perlu **{sisa:,.2f} ton** lagi untuk memenuhi target ({100-achievement:.1f}% tersisa)."
+    elif achievement >= 50:
+        response += f"⚠️ Produksi sudah mencapai {achievement:.1f}% dari target. Masih dibutuhkan **{sisa:,.2f} ton** lagi untuk memenuhi target."
+    else:
+        response += f"🔴 Produksi masih jauh dari target ({achievement:.1f}%). Dibutuhkan **{sisa:,.2f} ton** lagi untuk memenuhi target produksi."
+    
+    return response
+
+def detect_production_record_count_by_site(question, context=None):
+    q = (question or "").strip()
+    ql = q.lower()
+    if not any(k in ql for k in ["production record", "production_records", "production", "produksi", "rekap produksi"]):
+        return False, None
+    if not any(k in ql for k in ["berapa", "jumlah", "total", "ada berapa", "hitung", "count", "rekap", "summary", "overall", "cek"]):
+        return False, None
+    if "site" not in ql and "lokasi" not in ql and "pit" not in ql and "rom" not in ql:
+        return False, None
+
+    site_name = None
+    m = re.search(r"\bsite\s+([^?\n\r]+)", q, re.IGNORECASE)
+    if m:
+        site_name = m.group(1).strip()
+    if not site_name:
+        m = re.search(r"\blokasi\s+([^?\n\r]+)", q, re.IGNORECASE)
+        if m:
+            site_name = m.group(1).strip()
+
+    best_name = None
+    try:
+        df_best = fetch_dataframe(
+            "SELECT name FROM mining_sites WHERE :q ILIKE '%' || name || '%' ORDER BY LENGTH(name) DESC LIMIT 1",
+            params={"q": q},
+        )
+        if not df_best.empty:
+            best_name = str(df_best.iloc[0].get("name") or "").strip()
+            if best_name:
+                site_name = best_name
+    except Exception:
+        pass
+
+    if site_name:
+        site_name = re.sub(r"[\s\t]+", " ", site_name)
+        stop_m = re.search(r"\b(mohon|tolong|hitung|berapa|jumlah|total|production|record|produksi|dong|ya|sekarang)\b", site_name, re.IGNORECASE)
+        if stop_m:
+            site_name = site_name[: stop_m.start()].strip()
+        site_name = re.sub(r"^(yang\s+ada\s+|yang\s+|ada\s+)", "", site_name, flags=re.IGNORECASE).strip()
+        site_name = site_name.strip(" .,!?:;\"'`[](){}")
+        if len(site_name) < 2:
+            site_name = None
+
+    if not site_name and context:
+        names = context.get("entities", {}).get("site_names")
+        if names:
+            site_name = names[-1]
+
+    return True, site_name
+
+def generate_production_record_count_by_site_query():
+    return (
+        "SELECT ms.name as site_name, COUNT(pr.id) as total_records, "
+        "MIN(pr.\"recordDate\") as first_record_date, MAX(pr.\"recordDate\") as last_record_date "
+        "FROM mining_sites ms "
+        "LEFT JOIN production_records pr ON pr.\"miningSiteId\" = ms.id "
+        "WHERE ms.name ILIKE :pattern "
+        "GROUP BY ms.name "
+        "ORDER BY total_records DESC "
+        "LIMIT 5"
+    )
+
+def format_production_record_count_by_site_answer(df, site_name):
+    if df.empty:
+        return f"Maaf, saya tidak menemukan mining site yang cocok dengan '{site_name}'."
+    if len(df) == 1:
+        row = df.iloc[0]
+        site = row.get("site_name")
+        total = int(row.get("total_records") or 0)
+        first_date = str(row.get("first_record_date") or "")[:10]
+        last_date = str(row.get("last_record_date") or "")[:10]
+        if first_date and last_date:
+            return f"Jumlah production record untuk site **{site}** adalah **{total:,}** record (periode {first_date} s/d {last_date})."
+        return f"Jumlah production record untuk site **{site}** adalah **{total:,}** record."
+    lines = [f"Saya menemukan beberapa site yang mirip dengan '{site_name}':", "", "| Site | Total Records | Periode |", "|------|--------------:|---------|"]
+    for _, row in df.iterrows():
+        site = row.get("site_name")
+        total = int(row.get("total_records") or 0)
+        first_date = str(row.get("first_record_date") or "")[:10]
+        last_date = str(row.get("last_record_date") or "")[:10]
+        period = f"{first_date} s/d {last_date}" if first_date and last_date else "-"
+        lines.append(f"| {site} | {total:,} | {period} |")
+    lines.append("")
+    lines.append("Sebutkan nama site yang paling sesuai jika ingin hasil yang spesifik.")
+    return "\n".join(lines)
+
+def detect_operator_summary_by_production_record(question, context=None):
+    q = (question or "").strip()
+    ql = q.lower()
+    if "production" not in ql and "produksi" not in ql:
+        return False, None
+    if "record" not in ql:
+        return False, None
+    if "operator" not in ql:
+        return False, None
+    if "id" not in ql and not re.search(r"\bcm[a-z0-9]{5,}\b", ql):
+        return False, None
+
+    pr_id = None
+    m = re.search(r"\b(cm[a-z0-9]{5,})\b", ql)
+    if m:
+        pr_id = m.group(1)
+    if not pr_id and context:
+        prod_ids = context.get('entities', {}).get('production_ids', [])
+        if prod_ids:
+            pr_id = prod_ids[-1]
+    return True, pr_id
+
+def generate_operator_summary_by_production_record_query():
+    return (
+        "WITH pr AS ("
+        " SELECT id, \"recordDate\", shift, \"miningSiteId\" "
+        " FROM production_records "
+        " WHERE id LIKE :pr_pattern "
+        " ORDER BY id "
+        " LIMIT 1"
+        ") "
+        "SELECT pr.id as production_record_id, ms.name as site_name, pr.\"recordDate\" as record_date, pr.shift as shift, "
+        "u.\"fullName\" as operator_name, u.username as operator_username, o.\"employeeNumber\" as employee_number, "
+        "COUNT(ha.id) as total_activities "
+        "FROM pr "
+        "JOIN mining_sites ms ON ms.id = pr.\"miningSiteId\" "
+        "LEFT JOIN hauling_activities ha ON ha.shift = pr.shift AND (ha.\"loadingStartTime\"::date = pr.\"recordDate\") "
+        "LEFT JOIN loading_points lp ON lp.id = ha.\"loadingPointId\" AND lp.\"miningSiteId\" = pr.\"miningSiteId\" "
+        "LEFT JOIN operators o ON o.id = ha.\"operatorId\" "
+        "LEFT JOIN users u ON u.id = o.\"userId\" "
+        "WHERE ha.id IS NULL OR lp.id IS NOT NULL "
+        "GROUP BY pr.id, ms.name, pr.\"recordDate\", pr.shift, u.\"fullName\", u.username, o.\"employeeNumber\" "
+        "ORDER BY total_activities DESC NULLS LAST, operator_name ASC NULLS LAST"
+    )
+
+def format_operator_summary_by_production_record_answer(df, production_id):
+    if df.empty:
+        return f"Maaf, tidak ditemukan production record dengan ID yang mengandung '{production_id}'."
+    base = df.iloc[0]
+    record_id = base.get("production_record_id")
+    site_name = base.get("site_name")
+    record_date = str(base.get("record_date") or "")[:10]
+    shift = base.get("shift")
+
+    has_any_activity = False
+    rows = []
+    for _, r in df.iterrows():
+        operator_name = r.get("operator_name")
+        total = int(r.get("total_activities") or 0)
+        if operator_name and total > 0:
+            has_any_activity = True
+            rows.append((operator_name, r.get("operator_username"), r.get("employee_number"), total))
+
+    header = f"Operator yang mengerjakan production record **{record_id}** (site **{site_name}**, {record_date}, {shift}):"
+    if not has_any_activity:
+        return header + "\n\nTidak ditemukan hauling activity yang terhubung pada periode/shift/site tersebut."
+
+    lines = [header, "", "| Operator | Username | Employee No | Total |", "|----------|----------|-------------|------:|"]
+    for operator_name, operator_username, employee_number, total in rows:
+        lines.append(f"| {operator_name} | {operator_username or '-'} | {employee_number or '-'} | {total:,} |")
+    lines.append("")
+    lines.append(f"Total operator: **{len(rows)}**")
+    return "\n".join(lines)
+
+def detect_truck_usage_by_unit(question, context=None):
+    q = (question or "").strip()
+    ql = q.lower()
+    if "truck" not in ql and "truk" not in ql:
+        return False, None
+    if not any(k in ql for k in ["kapasitas", "capacity", "jumlah", "berapa", "total"]):
+        return False, None
+    if "id" not in ql and not re.search(r"\bcm[a-z0-9]{5,}\b", ql):
+        return False, None
+    if "unit" not in ql and "site" not in ql and "lokasi" not in ql and "pit" not in ql and "rom" not in ql:
+        return False, None
+
+    unit_id = None
+    m = re.search(r"\b(cm[a-z0-9]{5,})\b", ql)
+    if m:
+        unit_id = m.group(1)
+    if not unit_id and context:
+        ids = context.get('entities', {}).get('site_ids')
+        if ids:
+            unit_id = ids[-1]
+    return True, unit_id
+
+def generate_truck_usage_by_unit_query():
+    return (
+        "WITH unit AS ("
+        " SELECT 'mining_site'::text as unit_type, ms.id as unit_id, ms.name as unit_name, ms.id as mining_site_id "
+        " FROM mining_sites ms WHERE ms.id LIKE :unit_pattern "
+        " UNION ALL "
+        " SELECT 'loading_point'::text, lp.id, lp.name, lp.\"miningSiteId\" "
+        " FROM loading_points lp WHERE lp.id LIKE :unit_pattern "
+        " UNION ALL "
+        " SELECT 'dumping_point'::text, dp.id, dp.name, dp.\"miningSiteId\" "
+        " FROM dumping_points dp WHERE dp.id LIKE :unit_pattern "
+        " UNION ALL "
+        " SELECT 'road_segment'::text, rs.id, rs.name, rs.\"miningSiteId\" "
+        " FROM road_segments rs WHERE rs.id LIKE :unit_pattern "
+        " LIMIT 1"
+        "), "
+        "trucks_used AS ("
+        " SELECT DISTINCT t.id, t.capacity "
+        " FROM unit "
+        " JOIN hauling_activities ha ON ("
+        "   (unit.unit_type = 'loading_point' AND ha.\"loadingPointId\" = unit.unit_id) OR "
+        "   (unit.unit_type = 'dumping_point' AND ha.\"dumpingPointId\" = unit.unit_id) OR "
+        "   (unit.unit_type = 'road_segment' AND ha.\"roadSegmentId\" = unit.unit_id) OR "
+        "   (unit.unit_type = 'mining_site')"
+        " ) "
+        " JOIN loading_points lp ON lp.id = ha.\"loadingPointId\" "
+        " JOIN trucks t ON t.id = ha.\"truckId\" "
+        " WHERE unit.unit_type <> 'mining_site' OR lp.\"miningSiteId\" = unit.mining_site_id"
+        "), "
+        "time_range AS ("
+        " SELECT MIN(ha.\"loadingStartTime\") as first_time, MAX(ha.\"loadingStartTime\") as last_time "
+        " FROM unit "
+        " JOIN hauling_activities ha ON ("
+        "   (unit.unit_type = 'loading_point' AND ha.\"loadingPointId\" = unit.unit_id) OR "
+        "   (unit.unit_type = 'dumping_point' AND ha.\"dumpingPointId\" = unit.unit_id) OR "
+        "   (unit.unit_type = 'road_segment' AND ha.\"roadSegmentId\" = unit.unit_id) OR "
+        "   (unit.unit_type = 'mining_site')"
+        " ) "
+        " JOIN loading_points lp ON lp.id = ha.\"loadingPointId\" "
+        " WHERE unit.unit_type <> 'mining_site' OR lp.\"miningSiteId\" = unit.mining_site_id"
+        ") "
+        "SELECT unit.unit_type, unit.unit_id, unit.unit_name, "
+        "(SELECT COUNT(*) FROM trucks_used) as total_trucks, "
+        "(SELECT COALESCE(SUM(capacity), 0) FROM trucks_used) as total_capacity, "
+        "time_range.first_time, time_range.last_time "
+        "FROM unit, time_range"
+    )
+
+def format_truck_usage_by_unit_answer(df, unit_id):
+    if df.empty:
+        return f"Maaf, saya tidak menemukan unit/site dengan ID yang mengandung '{unit_id}'."
+    row = df.iloc[0]
+    unit_type = row.get("unit_type")
+    unit_real_id = row.get("unit_id")
+    unit_name = row.get("unit_name")
+    total_trucks = int(row.get("total_trucks") or 0)
+    total_capacity = float(row.get("total_capacity") or 0)
+    first_time = str(row.get("first_time") or "")[:19]
+    last_time = str(row.get("last_time") or "")[:19]
+    unit_label = "unit"
+    if unit_type == "mining_site":
+        unit_label = "site"
+    elif unit_type == "loading_point":
+        unit_label = "loading point"
+    elif unit_type == "dumping_point":
+        unit_label = "dumping point"
+    elif unit_type == "road_segment":
+        unit_label = "road segment"
+    if first_time and last_time:
+        period = f"(periode {first_time} s/d {last_time})"
+    else:
+        period = ""
+    return (
+        f"Jumlah truck yang dipakai pada {unit_label} **{unit_name}** ({unit_real_id}) adalah **{total_trucks:,}** unit "
+        f"dengan total kapasitas **{total_capacity:,.2f} ton** {period}."
+    )
+
+def detect_hauling_summary_question(question, context=None):
+    q = (question or "").strip()
+    ql = q.lower()
+    if "hauling" not in ql and "trip" not in ql and "perjalanan" not in ql and "angkut" not in ql:
+        return False, None
+    summary_words = ["ringkasan", "summary", "rekap", "tampilkan", "lihat", "berapa", "total", "statistik", "laporan"]
+    if not any(w in ql for w in summary_words):
+        return False, None
+    period = "today"
+    if "minggu" in ql or "week" in ql:
+        period = "week"
+    elif "bulan" in ql or "month" in ql:
+        period = "month"
+    elif "kemarin" in ql or "yesterday" in ql:
+        period = "yesterday"
+    elif "hari ini" in ql or "today" in ql or "sekarang" in ql:
+        period = "today"
+    return True, period
+
+def generate_hauling_summary_query(period):
+    date_filter = ""
+    if period == "today":
+        date_filter = "\"loadingStartTime\"::date = CURRENT_DATE"
+    elif period == "yesterday":
+        date_filter = "\"loadingStartTime\"::date = CURRENT_DATE - INTERVAL '1 day'"
+    elif period == "week":
+        date_filter = "\"loadingStartTime\" >= CURRENT_DATE - INTERVAL '7 days'"
+    elif period == "month":
+        date_filter = "\"loadingStartTime\" >= CURRENT_DATE - INTERVAL '30 days'"
+    else:
+        date_filter = "\"loadingStartTime\"::date = CURRENT_DATE"
+    return (
+        f"WITH ha AS (SELECT * FROM hauling_activities WHERE {date_filter}), "
+        "summary AS ("
+        " SELECT COUNT(*) as total_trips, "
+        " COALESCE(SUM(\"loadWeight\"), 0) as total_tonnage, "
+        " COALESCE(AVG(distance), 0) as avg_distance, "
+        " COUNT(*) FILTER (WHERE \"isDelayed\" = true) as delayed_trips "
+        " FROM ha"
+        "), "
+        "delay_cats AS ("
+        " SELECT dr.category as delay_category, COUNT(*) as cat_count "
+        " FROM ha "
+        " JOIN delay_reasons dr ON dr.id = ha.\"delayReasonId\" "
+        " WHERE ha.\"isDelayed\" = true "
+        " GROUP BY dr.category "
+        " ORDER BY cat_count DESC"
+        ") "
+        "SELECT s.total_trips, s.total_tonnage, s.avg_distance, s.delayed_trips, "
+        "CASE WHEN s.total_trips > 0 THEN ROUND((s.delayed_trips::numeric / s.total_trips) * 100, 2) ELSE 0 END as delay_pct, "
+        "(SELECT COALESCE(json_agg(row_to_json(dc)), '[]'::json) FROM delay_cats dc) as delay_categories "
+        "FROM summary s"
+    )
+
+def format_hauling_summary_answer(df, period):
+    period_label = {
+        "today": "hari ini",
+        "yesterday": "kemarin",
+        "week": "7 hari terakhir",
+        "month": "30 hari terakhir",
+    }.get(period, "hari ini")
+    if df.empty:
+        return f"Tidak ada data hauling untuk periode {period_label}."
+    row = df.iloc[0]
+    total_trips = int(row.get("total_trips") or 0)
+    total_tonnage = float(row.get("total_tonnage") or 0)
+    avg_distance = float(row.get("avg_distance") or 0)
+    delayed_trips = int(row.get("delayed_trips") or 0)
+    delay_pct = float(row.get("delay_pct") or 0)
+    delay_cats_raw = row.get("delay_categories")
+    delay_cats = []
+    if delay_cats_raw:
+        if isinstance(delay_cats_raw, str):
+            try:
+                delay_cats = json.loads(delay_cats_raw)
+            except Exception:
+                delay_cats = []
+        elif isinstance(delay_cats_raw, list):
+            delay_cats = delay_cats_raw
+    lines = [
+        f"## 📊 Ringkasan Aktivitas Hauling ({period_label.capitalize()})",
+        "",
+        "| Metrik | Nilai |",
+        "|--------|------:|",
+        f"| Total Trip (Perjalanan) | **{total_trips:,}** kali |",
+        f"| Total Tonase | **{total_tonnage:,.2f}** ton |",
+        f"| Rata-rata Jarak Tempuh | **{avg_distance:,.2f}** km |",
+        f"| Trip Mengalami Delay | **{delayed_trips:,}** ({delay_pct:.2f}%) |",
+        "",
+    ]
+    if delay_cats:
+        lines.append("### Kategori Penyebab Delay:")
+        lines.append("| Kategori | Jumlah |")
+        lines.append("|----------|-------:|")
+        for dc in delay_cats:
+            cat = dc.get("delay_category") or "UNKNOWN"
+            cnt = int(dc.get("cat_count") or 0)
+            lines.append(f"| {cat} | {cnt:,} |")
+        lines.append("")
+    else:
+        if delayed_trips > 0:
+            lines.append("*Kategori delay tidak tercatat.*")
+            lines.append("")
+    return "\n".join(lines)
+
+def detect_production_summary_question(question, context=None):
+    q = (question or "").strip()
+    ql = q.lower()
+    has_production = "produksi" in ql or "production" in ql or "batubara" in ql
+    has_target = "target" in ql or "perbandingan" in ql or "comparison" in ql
+    has_efficiency = "efisiensi" in ql or "efficiency" in ql or "utilisasi" in ql or "utilization" in ql or "cycle time" in ql or "loading" in ql
+    if has_production and (has_target or has_efficiency):
+        return True, "today"
+    return False, None
+
+def generate_production_summary_query():
+    return (
+        "WITH prod AS ("
+        " SELECT COALESCE(SUM(\"actualProduction\"), 0) as total_actual, "
+        " COALESCE(SUM(\"targetProduction\"), 0) as total_target, "
+        " COALESCE(AVG(\"avgCycleTime\"), 0) as avg_cycle_time, "
+        " COALESCE(AVG(\"utilizationRate\"), 0) as avg_utilization "
+        " FROM production_records WHERE \"recordDate\" = CURRENT_DATE"
+        "), "
+        "hauling AS ("
+        " SELECT COALESCE(AVG(\"totalCycleTime\"), 0) as ha_avg_cycle, "
+        " COALESCE(AVG(\"loadEfficiency\"), 0) as ha_load_eff, "
+        " COUNT(*) as trip_count "
+        " FROM hauling_activities WHERE \"loadingStartTime\"::date = CURRENT_DATE"
+        "), "
+        "trucks AS ("
+        " SELECT COUNT(*) FILTER (WHERE status = 'HAULING' OR status = 'LOADING' OR status = 'DUMPING') as active_trucks, "
+        " COUNT(*) as total_trucks "
+        " FROM trucks WHERE \"isActive\" = true"
+        ") "
+        "SELECT prod.total_actual, prod.total_target, "
+        "CASE WHEN prod.total_target > 0 THEN ROUND(((prod.total_actual::numeric / prod.total_target::numeric) * 100), 2) ELSE 0 END as achievement_pct, "
+        "COALESCE(NULLIF(prod.avg_cycle_time, 0), hauling.ha_avg_cycle) as avg_cycle_time, "
+        "COALESCE(NULLIF(prod.avg_utilization, 0), CASE WHEN trucks.total_trucks > 0 THEN ROUND((trucks.active_trucks::numeric / trucks.total_trucks) * 100, 2) ELSE 0 END) as truck_utilization, "
+        "COALESCE(hauling.ha_load_eff * 100, 0) as loading_efficiency, "
+        "hauling.trip_count "
+        "FROM prod, hauling, trucks"
+    )
+
+def format_production_summary_answer(df):
+    if df.empty:
+        return "Tidak ada data produksi untuk hari ini."
+    row = df.iloc[0]
+    total_actual = float(row.get("total_actual") or 0)
+    total_target = float(row.get("total_target") or 0)
+    achievement_pct = float(row.get("achievement_pct") or 0)
+    avg_cycle_time = float(row.get("avg_cycle_time") or 0)
+    truck_util = float(row.get("truck_utilization") or 0)
+    loading_eff = float(row.get("loading_efficiency") or 0)
+    trip_count = int(row.get("trip_count") or 0)
+    status_icon = "✅" if achievement_pct >= 100 else ("⚠️" if achievement_pct >= 80 else "🔴")
+    lines = [
+        "## 📊 Ringkasan Produksi Batubara Hari Ini",
+        "",
+        "### Produksi vs Target",
+        "| Metrik | Nilai |",
+        "|--------|------:|",
+        f"| Total Produksi Aktual | **{total_actual:,.2f}** ton |",
+        f"| Target Produksi | **{total_target:,.2f}** ton |",
+        f"| Achievement | {status_icon} **{achievement_pct:.2f}%** |",
+        "",
+        "### Metrik Operasional",
+        "| Metrik | Nilai |",
+        "|--------|------:|",
+        f"| Rata-rata Cycle Time | **{avg_cycle_time:,.1f}** menit |",
+        f"| Utilisasi Truk | **{truck_util:.2f}%** |",
+        f"| Efisiensi Loading | **{loading_eff:.2f}%** |",
+        f"| Total Trip Hari Ini | **{trip_count:,}** trip |",
+        "",
+    ]
+    if achievement_pct >= 100:
+        lines.append("✅ **Target produksi tercapai!**")
+    elif achievement_pct >= 80:
+        gap = total_target - total_actual
+        lines.append(f"⚠️ Produksi mendekati target. Masih kurang **{gap:,.2f} ton** untuk memenuhi target.")
+    else:
+        gap = total_target - total_actual
+        lines.append(f"🔴 Produksi masih di bawah target. Dibutuhkan **{gap:,.2f} ton** lagi.")
+    return "\n".join(lines)
+
+def detect_fleet_status_question(question, context=None):
+    q = (question or "").strip()
+    ql = q.lower()
+    has_fleet = "armada" in ql or "fleet" in ql or ("truk" in ql and "excavator" in ql) or ("truck" in ql and "excavator" in ql)
+    has_status = "status" in ql or "aktif" in ql or "active" in ql or "idle" in ql or "maintenance" in ql or "perawatan" in ql
+    has_count = "jumlah" in ql or "berapa" in ql or "total" in ql or "count" in ql
+    if has_fleet or (has_status and has_count and ("truk" in ql or "truck" in ql or "excavator" in ql)):
+        return True
+    return False
+
+def generate_fleet_status_query():
+    return (
+        "WITH truck_status AS ("
+        " SELECT status::text, COUNT(*) as cnt FROM trucks WHERE \"isActive\" = true GROUP BY status"
+        "), "
+        "exc_status AS ("
+        " SELECT status::text, COUNT(*) as cnt FROM excavators WHERE \"isActive\" = true GROUP BY status"
+        "), "
+        "truck_summary AS ("
+        " SELECT "
+        " COALESCE(SUM(cnt) FILTER (WHERE status IN ('HAULING', 'LOADING', 'DUMPING', 'IN_QUEUE', 'REFUELING')), 0) as truck_active, "
+        " COALESCE(SUM(cnt) FILTER (WHERE status IN ('IDLE', 'STANDBY')), 0) as truck_idle, "
+        " COALESCE(SUM(cnt) FILTER (WHERE status IN ('MAINTENANCE', 'BREAKDOWN', 'OUT_OF_SERVICE')), 0) as truck_maintenance, "
+        " COALESCE(SUM(cnt), 0) as truck_total "
+        " FROM truck_status"
+        "), "
+        "exc_summary AS ("
+        " SELECT "
+        " COALESCE(SUM(cnt) FILTER (WHERE status = 'ACTIVE'), 0) as exc_active, "
+        " COALESCE(SUM(cnt) FILTER (WHERE status IN ('IDLE', 'STANDBY')), 0) as exc_idle, "
+        " COALESCE(SUM(cnt) FILTER (WHERE status IN ('MAINTENANCE', 'BREAKDOWN', 'OUT_OF_SERVICE')), 0) as exc_maintenance, "
+        " COALESCE(SUM(cnt), 0) as exc_total "
+        " FROM exc_status"
+        "), "
+        "top_trucks AS ("
+        " SELECT id, code, name, \"totalHours\", \"lastMaintenance\" "
+        " FROM trucks WHERE \"isActive\" = true ORDER BY \"totalHours\" DESC NULLS LAST LIMIT 5"
+        "), "
+        "top_excavators AS ("
+        " SELECT id, code, name, \"totalHours\", \"lastMaintenance\" "
+        " FROM excavators WHERE \"isActive\" = true ORDER BY \"totalHours\" DESC NULLS LAST LIMIT 5"
+        ") "
+        "SELECT ts.truck_active, ts.truck_idle, ts.truck_maintenance, ts.truck_total, "
+        "es.exc_active, es.exc_idle, es.exc_maintenance, es.exc_total, "
+        "(SELECT json_agg(row_to_json(tt)) FROM top_trucks tt) as top_trucks_json, "
+        "(SELECT json_agg(row_to_json(te)) FROM top_excavators te) as top_excavators_json "
+        "FROM truck_summary ts, exc_summary es"
+    )
+
+def format_fleet_status_answer(df):
+    if df.empty:
+        return "Tidak dapat memuat data status armada."
+    row = df.iloc[0]
+    truck_active = int(row.get("truck_active") or 0)
+    truck_idle = int(row.get("truck_idle") or 0)
+    truck_maint = int(row.get("truck_maintenance") or 0)
+    truck_total = int(row.get("truck_total") or 0)
+    exc_active = int(row.get("exc_active") or 0)
+    exc_idle = int(row.get("exc_idle") or 0)
+    exc_maint = int(row.get("exc_maintenance") or 0)
+    exc_total = int(row.get("exc_total") or 0)
+    top_trucks_raw = row.get("top_trucks_json")
+    top_exc_raw = row.get("top_excavators_json")
+    top_trucks = []
+    top_exc = []
+    if top_trucks_raw:
+        if isinstance(top_trucks_raw, str):
+            try:
+                top_trucks = json.loads(top_trucks_raw)
+            except Exception:
+                pass
+        elif isinstance(top_trucks_raw, list):
+            top_trucks = top_trucks_raw
+    if top_exc_raw:
+        if isinstance(top_exc_raw, str):
+            try:
+                top_exc = json.loads(top_exc_raw)
+            except Exception:
+                pass
+        elif isinstance(top_exc_raw, list):
+            top_exc = top_exc_raw
+    lines = [
+        "## 🚛 Status Armada & Perawatan",
+        "",
+        "### Status Truk",
+        "| Status | Jumlah |",
+        "|--------|-------:|",
+        f"| 🟢 Aktif (Beroperasi) | **{truck_active:,}** |",
+        f"| 🟡 Idle/Standby | **{truck_idle:,}** |",
+        f"| 🔧 Maintenance/Breakdown | **{truck_maint:,}** |",
+        f"| **Total** | **{truck_total:,}** |",
+        "",
+        "### Status Excavator",
+        "| Status | Jumlah |",
+        "|--------|-------:|",
+        f"| 🟢 Aktif (Beroperasi) | **{exc_active:,}** |",
+        f"| 🟡 Idle/Standby | **{exc_idle:,}** |",
+        f"| 🔧 Maintenance/Breakdown | **{exc_maint:,}** |",
+        f"| **Total** | **{exc_total:,}** |",
+        "",
+    ]
+    if top_trucks:
+        lines.append("### 🔝 Top 5 Truk dengan Jam Operasi Tertinggi (Perlu Perawatan)")
+        lines.append("| Kode | Nama | Total Jam | Last Maintenance |")
+        lines.append("|------|------|----------:|------------------|")
+        for t in top_trucks[:5]:
+            code = t.get("code") or "-"
+            name = t.get("name") or "-"
+            hours = int(t.get("totalHours") or 0)
+            last_m = str(t.get("lastMaintenance") or "-")[:10]
+            lines.append(f"| {code} | {name} | {hours:,} | {last_m} |")
+        lines.append("")
+    if top_exc:
+        lines.append("### 🔝 Top 5 Excavator dengan Jam Operasi Tertinggi (Perlu Perawatan)")
+        lines.append("| Kode | Nama | Total Jam | Last Maintenance |")
+        lines.append("|------|------|----------:|------------------|")
+        for e in top_exc[:5]:
+            code = e.get("code") or "-"
+            name = e.get("name") or "-"
+            hours = int(e.get("totalHours") or 0)
+            last_m = str(e.get("lastMaintenance") or "-")[:10]
+            lines.append(f"| {code} | {name} | {hours:,} | {last_m} |")
+        lines.append("")
+    return "\n".join(lines)
 
 # ============================================================================
 # MINING OPERATIONS KNOWLEDGE BASE
@@ -922,21 +1798,34 @@ def smart_query_builder(question):
             break
     
     table = entity["table"]
+    has_is_active = table in TABLES_WITH_IS_ACTIVE
     
     if intent == "count":
-        return f'SELECT COUNT(*) as total FROM {table} WHERE "isActive" = true'
+        if has_is_active:
+            return f'SELECT COUNT(*) as total FROM {table} WHERE "isActive" = true'
+        return f'SELECT COUNT(*) as total FROM {table}'
     elif intent == "max" and column:
-        return f'SELECT * FROM {table} WHERE "isActive" = true ORDER BY "{column}" DESC LIMIT 1'
+        if has_is_active:
+            return f'SELECT * FROM {table} WHERE "isActive" = true ORDER BY "{column}" DESC LIMIT 1'
+        return f'SELECT * FROM {table} ORDER BY "{column}" DESC LIMIT 1'
     elif intent == "min" and column:
-        return f'SELECT * FROM {table} WHERE "isActive" = true ORDER BY "{column}" ASC LIMIT 1'
+        if has_is_active:
+            return f'SELECT * FROM {table} WHERE "isActive" = true ORDER BY "{column}" ASC LIMIT 1'
+        return f'SELECT * FROM {table} ORDER BY "{column}" ASC LIMIT 1'
     elif intent == "avg" and column:
-        return f'SELECT ROUND(AVG("{column}")::numeric, 2) as avg_{column} FROM {table} WHERE "isActive" = true'
+        if has_is_active:
+            return f'SELECT ROUND(AVG("{column}")::numeric, 2) as avg_{column} FROM {table} WHERE "isActive" = true'
+        return f'SELECT ROUND(AVG("{column}")::numeric, 2) as avg_{column} FROM {table}'
     elif intent == "status":
-        return f'SELECT status, COUNT(*) as count FROM {table} WHERE "isActive" = true GROUP BY status ORDER BY count DESC'
+        if has_is_active:
+            return f'SELECT status, COUNT(*) as count FROM {table} WHERE "isActive" = true GROUP BY status ORDER BY count DESC'
+        return f'SELECT status, COUNT(*) as count FROM {table} GROUP BY status ORDER BY count DESC'
     elif intent == "recent":
         return f'SELECT * FROM {table} ORDER BY "createdAt" DESC LIMIT 10'
     elif intent == "list":
-        return f'SELECT * FROM {table} WHERE "isActive" = true LIMIT 20'
+        if has_is_active:
+            return f'SELECT * FROM {table} WHERE "isActive" = true LIMIT 20'
+        return f'SELECT * FROM {table} LIMIT 20'
     
     return None
 
@@ -1493,15 +2382,25 @@ def is_out_of_scope(question):
         return True
     return False
 
-def generate_sql_query(user_question):
+def generate_sql_query(user_question, context=None):
     if is_out_of_scope(user_question):
         return None
+    
+    enhanced_question = user_question
+    if context:
+        entities = context.get('entities', {})
+        if is_follow_up_question(user_question):
+            if entities.get('production_ids') and 'produksi' not in user_question.lower() and 'production' not in user_question.lower():
+                prod_ids = entities['production_ids']
+                enhanced_question = f"{user_question} (Konteks: production record ID yang dimaksud adalah {', '.join(prod_ids)})"
+            if entities.get('truck_ids') and 'truk' not in user_question.lower():
+                enhanced_question = f"{user_question} (Konteks: truck ID yang dimaksud adalah {', '.join(entities['truck_ids'])})"
         
-    predefined = get_predefined_query(user_question)
+    predefined = get_predefined_query(enhanced_question)
     if predefined:
         return predefined
     
-    detected_tables = detect_tables_from_question(user_question)
+    detected_tables = detect_tables_from_question(enhanced_question)
     relevant_schema = []
     for table in detected_tables[:5]:
         if table in DYNAMIC_TABLE_MAP:
@@ -1509,6 +2408,8 @@ def generate_sql_query(user_question):
             relevant_schema.append(f"Table: {table}\nColumns: {', '.join(info['columns'])}\nNumeric: {', '.join(info['numeric_cols'])}\nStatus values: {', '.join(info['status_enum'])}")
     
     schema_context = "\n\n".join(relevant_schema)
+    
+    context_prompt = build_context_prompt(context) if context else ""
     
     prompt = f"""You are an expert PostgreSQL query generator for a mining operations database.
 
@@ -1518,13 +2419,21 @@ DETECTED RELEVANT TABLES:
 FULL SCHEMA REFERENCE:
 {FULL_DATABASE_SCHEMA}
 
-USER QUESTION: {user_question}
+{f"CONVERSATION CONTEXT:{chr(10)}{context_prompt}" if context_prompt else ""}
+
+USER QUESTION: {enhanced_question}
+
+IMPORTANT CONTEXT RULES:
+- If the question mentions "sisa" (remaining), "kurang" (shortage), or asks "berapa lagi" (how much more), calculate: ("targetProduction" - "actualProduction")
+- If conversation context mentions specific IDs (like production IDs starting with 'cm'), use them in WHERE clause with LIKE 'id%' pattern
+- For follow-up questions about the same record, reference the IDs from context
+- When calculating remaining/shortage: SELECT ("targetProduction" - "actualProduction") as remaining_tons
 
 TASK: Generate a valid PostgreSQL SELECT query to answer the user's question.
 
 ABSOLUTE RULES - FOLLOW EXACTLY:
 1. Output ONLY the raw SQL query - no explanations, no markdown, no code blocks, no comments
-2. CamelCase columns MUST use double quotes: "isActive", "loadWeight", "createdAt", "totalCycleTime", "bucketCapacity", "totalHours", "actualProduction"
+2. CamelCase columns MUST use double quotes: "isActive", "loadWeight", "createdAt", "totalCycleTime", "bucketCapacity", "totalHours", "actualProduction", "targetProduction"
 3. Enum values MUST be UPPERCASE in single quotes: 'IDLE', 'ACTIVE', 'COMPLETED', 'SHIFT_1'
 4. Boolean: lowercase without quotes: true, false
 5. For "largest/terbesar/tertinggi/maksimum": ORDER BY column DESC LIMIT 1
@@ -1538,11 +2447,14 @@ ABSOLUTE RULES - FOLLOW EXACTLY:
 13. If question is about comparison/analysis across multiple entities, use appropriate JOINs
 14. For "rata-rata/average": use AVG() with ROUND() and COALESCE
 15. For "total/sum/jumlah keseluruhan": use SUM() with COALESCE
+16. For partial ID matches (e.g., 'cmj2lperp0'): use id LIKE 'cmj2lperp0%'
+17. For "sisa/remaining/kurang": SELECT id, "targetProduction", "actualProduction", ("targetProduction" - "actualProduction") as sisa_ton
 
 COMMON PATTERNS:
 - Truk kapasitas terbesar: SELECT code, name, capacity FROM trucks WHERE "isActive" = true ORDER BY capacity DESC LIMIT 1
 - Excavator bucket terbesar: SELECT code, name, "bucketCapacity" FROM excavators WHERE "isActive" = true ORDER BY "bucketCapacity" DESC LIMIT 1
 - Total produksi: SELECT COALESCE(SUM("actualProduction"), 0) as total FROM production_records
+- Sisa produksi untuk ID tertentu: SELECT id, "targetProduction", "actualProduction", ("targetProduction" - "actualProduction") as sisa_ton FROM production_records WHERE id LIKE 'xxx%'
 - Hauling dengan delay: SELECT * FROM hauling_activities WHERE "isDelayed" = true LIMIT 50
 - Status distribution: SELECT status, COUNT(*) as count FROM trucks WHERE "isActive" = true GROUP BY status
 - Join hauling with truck: SELECT h.*, t.code as truck_code FROM hauling_activities h JOIN trucks t ON h."truckId" = t.id
@@ -1551,7 +2463,7 @@ SQL Query:"""
     
     try:
         response = ollama.chat(model=MODEL_NAME, messages=[
-            {'role': 'system', 'content': 'You are a PostgreSQL expert. Output ONLY the raw SQL SELECT statement. No explanations, no markdown, no code blocks. Use double quotes for camelCase columns. Use single quotes for enum values.'},
+            {'role': 'system', 'content': 'You are a PostgreSQL expert. Output ONLY the raw SQL SELECT statement. No explanations, no markdown, no code blocks. Use double quotes for camelCase columns. Use single quotes for enum values. For partial ID matching, use LIKE with wildcard %.'},
             {'role': 'user', 'content': prompt}
         ])
         sql = response['message']['content'].strip()
@@ -1698,8 +2610,207 @@ def handle_simulation_question(user_question):
         "response": response
     }
 
-def execute_and_summarize_stream(user_question):
+def execute_and_summarize_stream(user_question, session_id=None, conversation_history=None):
+    context = get_conversation_context(session_id) if session_id else None
+    
+    new_entities = extract_entities_from_text(user_question)
+    context = merge_contexts(context, new_entities, user_question)
+    
+    if conversation_history:
+        for hist_item in conversation_history[-5:]:
+            if isinstance(hist_item, dict):
+                role = hist_item.get('role', '')
+                content = hist_item.get('content', hist_item.get('question', ''))
+                if content and role == 'user':
+                    hist_entities = extract_entities_from_text(content)
+                    context = merge_contexts(context, hist_entities, content, None)
+                elif content and role == 'assistant':
+                    if context and context.get('conversation_history'):
+                        for ch in context['conversation_history']:
+                            if ch.get('answer') is None:
+                                ch['answer'] = content[:500]
+                                break
+    
+    if session_id:
+        set_conversation_context(session_id, context)
+    
     yield json.dumps({"type": "step", "status": "thinking", "message": "Menganalisis pertanyaan..."}) + "\n"
+
+    is_prod_summary_q, period = detect_production_summary_question(user_question, context)
+    if is_prod_summary_q:
+        q = generate_production_summary_query()
+        yield json.dumps({"type": "sql", "query": q}) + "\n"
+        try:
+            df = fetch_dataframe(q)
+            answer = format_production_summary_answer(df)
+            yield json.dumps({"type": "answer", "content": answer}) + "\n"
+            yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+            if context:
+                context['conversation_history'][-1]['answer'] = answer[:500]
+                context['last_sql'] = q
+                if session_id:
+                    set_conversation_context(session_id, context)
+            return
+        except Exception as e:
+            yield json.dumps({"type": "step", "status": "error", "message": f"Error: {str(e)}"}) + "\n"
+            yield json.dumps({"type": "answer", "content": "Maaf, terjadi kesalahan saat mengambil ringkasan produksi dari database."}) + "\n"
+            yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+            return
+
+    is_fleet_status_q = detect_fleet_status_question(user_question, context)
+    if is_fleet_status_q:
+        q = generate_fleet_status_query()
+        yield json.dumps({"type": "sql", "query": q}) + "\n"
+        try:
+            df = fetch_dataframe(q)
+            answer = format_fleet_status_answer(df)
+            yield json.dumps({"type": "answer", "content": answer}) + "\n"
+            yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+            if context:
+                context['conversation_history'][-1]['answer'] = answer[:500]
+                context['last_sql'] = q
+                if session_id:
+                    set_conversation_context(session_id, context)
+            return
+        except Exception as e:
+            yield json.dumps({"type": "step", "status": "error", "message": f"Error: {str(e)}"}) + "\n"
+
+    is_site_count_q, site_name = detect_production_record_count_by_site(user_question, context)
+    if is_site_count_q:
+        if not site_name:
+            yield json.dumps({"type": "answer", "content": "Mohon sebutkan nama site yang ingin dihitung production record-nya."}) + "\n"
+            yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+            return
+        q = generate_production_record_count_by_site_query()
+        yield json.dumps({"type": "sql", "query": q}) + "\n"
+        try:
+            df = fetch_dataframe(q, params={"pattern": f"%{site_name}%"})
+            answer = format_production_record_count_by_site_answer(df, site_name)
+            yield json.dumps({"type": "answer", "content": answer}) + "\n"
+            yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+            if context:
+                context['conversation_history'][-1]['answer'] = answer[:500]
+                context['last_sql'] = q
+                if session_id:
+                    set_conversation_context(session_id, context)
+            return
+        except Exception as e:
+            yield json.dumps({"type": "step", "status": "error", "message": f"Error: {str(e)}"}) + "\n"
+
+    is_ops_q, pr_id = detect_operator_summary_by_production_record(user_question, context)
+    if is_ops_q:
+        if not pr_id:
+            yield json.dumps({"type": "answer", "content": "Mohon sebutkan production record ID yang ingin dianalisis operator-nya."}) + "\n"
+            yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+            return
+        q = generate_operator_summary_by_production_record_query()
+        yield json.dumps({"type": "sql", "query": q}) + "\n"
+        try:
+            df = fetch_dataframe(q, params={"pr_pattern": f"{pr_id}%"})
+            answer = format_operator_summary_by_production_record_answer(df, pr_id)
+            yield json.dumps({"type": "answer", "content": answer}) + "\n"
+            yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+            if context:
+                context['conversation_history'][-1]['answer'] = answer[:500]
+                context['last_sql'] = q
+                if session_id:
+                    set_conversation_context(session_id, context)
+            return
+        except Exception as e:
+            yield json.dumps({"type": "step", "status": "error", "message": f"Error: {str(e)}"}) + "\n"
+
+    is_truck_q, unit_id = detect_truck_usage_by_unit(user_question, context)
+    if is_truck_q:
+        if not unit_id:
+            yield json.dumps({"type": "answer", "content": "Mohon sebutkan unit/site ID yang ingin dihitung penggunaan truck dan total kapasitasnya."}) + "\n"
+            yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+            return
+        q = generate_truck_usage_by_unit_query()
+        yield json.dumps({"type": "sql", "query": q}) + "\n"
+        try:
+            df = fetch_dataframe(q, params={"unit_pattern": f"{unit_id}%"})
+            answer = format_truck_usage_by_unit_answer(df, unit_id)
+            yield json.dumps({"type": "answer", "content": answer}) + "\n"
+            yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+            if context:
+                context['conversation_history'][-1]['answer'] = answer[:500]
+                context['last_sql'] = q
+                if session_id:
+                    set_conversation_context(session_id, context)
+            return
+        except Exception as e:
+            yield json.dumps({"type": "step", "status": "error", "message": f"Error: {str(e)}"}) + "\n"
+
+    is_hauling_summary_q, period = detect_hauling_summary_question(user_question, context)
+    if is_hauling_summary_q:
+        q = generate_hauling_summary_query(period)
+        yield json.dumps({"type": "sql", "query": q}) + "\n"
+        try:
+            df = fetch_dataframe(q)
+            answer = format_hauling_summary_answer(df, period)
+            yield json.dumps({"type": "answer", "content": answer}) + "\n"
+            yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+            if context:
+                context['conversation_history'][-1]['answer'] = answer[:500]
+                context['last_sql'] = q
+                if session_id:
+                    set_conversation_context(session_id, context)
+            return
+        except Exception as e:
+            yield json.dumps({"type": "step", "status": "error", "message": f"Error: {str(e)}"}) + "\n"
+
+    is_remaining_q, prod_id = detect_remaining_production_question(user_question, context)
+    if is_remaining_q:
+        if context:
+            if prod_id:
+                try:
+                    chk = fetch_dataframe("SELECT 1 FROM production_records WHERE id LIKE :pattern LIMIT 1", params={"pattern": f"{prod_id}%"})
+                    if chk.empty:
+                        prod_id = None
+                except Exception:
+                    pass
+            if not prod_id:
+                prod_id = resolve_production_record_id_from_context(context)
+        if prod_id:
+            yield json.dumps({"type": "step", "status": "remaining_production", "message": f"Mendeteksi pertanyaan sisa produksi untuk ID: {prod_id}..."}) + "\n"
+            
+            remaining_query = generate_remaining_production_query(prod_id)
+            yield json.dumps({"type": "sql", "query": remaining_query}) + "\n"
+            
+            try:
+                df = fetch_dataframe(remaining_query, params={"pattern": f"{prod_id}%"})
+                answer = format_remaining_production_answer(df, prod_id)
+                yield json.dumps({"type": "answer", "content": answer}) + "\n"
+                yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+                
+                if context:
+                    context['conversation_history'][-1]['answer'] = answer[:500]
+                    context['last_sql'] = remaining_query
+                    if session_id:
+                        set_conversation_context(session_id, context)
+                return
+            except Exception as e:
+                yield json.dumps({"type": "step", "status": "error", "message": f"Error: {str(e)}, mencoba metode alternatif..."}) + "\n"
+        else:
+            yield json.dumps({"type": "step", "status": "need_context", "message": "Pertanyaan tentang sisa produksi terdeteksi, membutuhkan ID production record..."}) + "\n"
+            
+            clarification_msg = """⚠️ **Butuh ID Production Record**
+
+Saya mendeteksi Anda bertanya tentang sisa produksi yang harus dipenuhi. 
+
+Untuk menjawab pertanyaan ini, saya membutuhkan **Production Record ID** yang spesifik. 
+
+**Contoh cara bertanya:**
+- "Berapa sisa ton untuk production id cmj2lperp000o112mre46nezv?"
+- "Berapa ton lagi agar production id [ID] terpenuhi targetnya?"
+
+**Tips:** ID production record biasanya dimulai dengan "cm" diikuti karakter alfanumerik.
+
+Mohon sebutkan ID production record yang ingin Anda cek."""
+
+            yield json.dumps({"type": "answer", "content": clarification_msg}) + "\n"
+            yield json.dumps({"type": "step", "status": "completed", "message": "Menunggu ID production record"}) + "\n"
+            return
     
     if is_out_of_scope(user_question):
         yield json.dumps({"type": "step", "status": "out_of_scope", "message": "Pertanyaan di luar konteks database"}) + "\n"
@@ -1771,10 +2882,18 @@ JSON:"""
         
         yield json.dumps({"type": "answer", "content": response}) + "\n"
         yield json.dumps({"type": "step", "status": "completed", "message": "Simulasi selesai"}) + "\n"
+        
+        context['conversation_history'][-1]['answer'] = response[:500]
+        if session_id:
+            set_conversation_context(session_id, context)
         return
     
+    is_followup = is_follow_up_question(user_question)
+    if is_followup and context:
+        yield json.dumps({"type": "step", "status": "context_aware", "message": "Mendeteksi pertanyaan lanjutan, menggunakan konteks percakapan..."}) + "\n"
+    
     fast_query, query_type = get_fast_answer(user_question)
-    if fast_query:
+    if fast_query and not is_followup:
         yield json.dumps({"type": "step", "status": "fast_path", "message": "Menggunakan fast-path untuk query sederhana"}) + "\n"
         yield json.dumps({"type": "sql", "query": fast_query}) + "\n"
         
@@ -1791,12 +2910,17 @@ JSON:"""
             answer = format_fast_answer(query_type, df, user_question)
             yield json.dumps({"type": "answer", "content": answer}) + "\n"
             yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+            
+            context['conversation_history'][-1]['answer'] = answer[:500]
+            context['last_sql'] = fast_query
+            if session_id:
+                set_conversation_context(session_id, context)
             return
         except Exception as e:
             yield json.dumps({"type": "step", "status": "fallback", "message": f"Fast-path gagal: {str(e)}, mencoba metode standar..."}) + "\n"
     
     yield json.dumps({"type": "step", "status": "thinking", "message": "Menyusun query ke database"}) + "\n"
-    sql_query = generate_sql_query(user_question)
+    sql_query = generate_sql_query(user_question, context)
     
     if not sql_query:
         if is_out_of_scope(user_question):
@@ -1871,15 +2995,21 @@ Output ONLY the corrected SQL query:"""
         
     yield json.dumps({"type": "step", "status": "data_found", "message": f"Data ditemukan ({len(df)} baris), memuat jawaban.."}) + "\n"
     
+    context['last_query_result'] = df.to_dict('records')[:10]
+    context['last_sql'] = sql_query
+    
     if len(df) > 50:
         df = df.head(50)
         
     data_str = df.to_string(max_rows=50, max_cols=15)
     
-    # Enhanced summary prompt with mining context
+    context_prompt = build_context_prompt(context) if context else ""
+    
     summary_prompt = f"""Anda adalah Asisten AI Operasi Pertambangan yang profesional dan berpengetahuan luas.
 
 PERTANYAAN USER: {user_question}
+
+{f"KONTEKS PERCAKAPAN:{chr(10)}{context_prompt}" if context_prompt else ""}
 
 DATA DARI DATABASE:
 {data_str}
@@ -1899,6 +3029,8 @@ INSTRUKSI:
 6. Format angka dengan satuan yang sesuai (ton, km, liter, dll)
 7. Berikan insight atau rekomendasi jika relevan
 8. Jika ada data performa, bandingkan dengan rata-rata industri
+9. Jika user bertanya tentang "sisa" atau "remaining", hitung selisih target - aktual
+10. Jika ada konteks percakapan sebelumnya, gunakan untuk memberikan jawaban yang kontekstual
 
 JAWABAN:"""
     
@@ -1906,7 +3038,7 @@ JAWABAN:"""
     
     try:
         response = ollama.chat(model=MODEL_NAME, messages=[
-            {'role': 'system', 'content': 'Anda adalah asisten pertambangan profesional. Jawab berdasarkan data yang diberikan saja, dalam Bahasa Indonesia dengan gaya yang informatif dan helpful.'},
+            {'role': 'system', 'content': 'Anda adalah asisten pertambangan profesional. Jawab berdasarkan data yang diberikan saja, dalam Bahasa Indonesia dengan gaya yang informatif dan helpful. Perhatikan konteks percakapan untuk memberikan jawaban yang relevan.'},
             {'role': 'user', 'content': summary_prompt}
         ])
         
@@ -1917,6 +3049,10 @@ JAWABAN:"""
         
         yield json.dumps({"type": "answer", "content": answer}) + "\n"
         yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
+        
+        context['conversation_history'][-1]['answer'] = answer[:500]
+        if session_id:
+            set_conversation_context(session_id, context)
         
     except Exception as e:
         yield json.dumps({"type": "step", "status": "error", "message": f"Error summarizing: {str(e)}"}) + "\n"
@@ -1937,13 +3073,12 @@ JAWABAN:"""
         yield json.dumps({"type": "answer", "content": simple_answer}) + "\n"
         yield json.dumps({"type": "step", "status": "completed", "message": "Selesai"}) + "\n"
 
-def execute_and_summarize(user_question):
-    # Legacy wrapper for non-streaming calls if any
+def execute_and_summarize(user_question, session_id=None, conversation_history=None):
     steps = []
     answer = ""
     sql_query = None
     
-    for chunk in execute_and_summarize_stream(user_question):
+    for chunk in execute_and_summarize_stream(user_question, session_id, conversation_history):
         data = json.loads(chunk)
         if data['type'] == 'step':
             steps.append({"status": data['status'], "message": data['message'], "detail": data.get('detail')})

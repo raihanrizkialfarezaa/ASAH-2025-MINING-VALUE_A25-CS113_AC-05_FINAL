@@ -31,4 +31,6 @@ def execute_query(query, params=None):
         return result
 
 def fetch_dataframe(query, params=None):
+    if params:
+        return pd.read_sql(text(query), get_engine(), params=params)
     return pd.read_sql(query, get_engine(), params=params)

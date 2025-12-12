@@ -635,8 +635,15 @@ class AIService {
   /**
    * Ask chatbot with context
    * Mengirim pertanyaan ke Ollama LLM service
+   * Mendukung conversation history untuk pertanyaan berkelanjutan
    */
-  async askChatbot(question, context = [], userId = null) {
+  async askChatbot(
+    question,
+    context = [],
+    userId = null,
+    sessionId = null,
+    conversationHistory = []
+  ) {
     try {
       logger.info('Sending question to chatbot:', question);
 
@@ -649,11 +656,17 @@ class AIService {
         strategiesContext = [];
       }
 
+      // Generate session ID if not provided
+      const chatSessionId =
+        sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
       const response = await axios.post(
         `${AI_SERVICE_URL}/ask_chatbot`,
         {
           pertanyaan_user: question,
           top_3_strategies_context: strategiesContext,
+          session_id: chatSessionId,
+          conversation_history: conversationHistory,
         },
         {
           timeout: 180000,
@@ -671,10 +684,16 @@ class AIService {
         answer: response.data,
         context,
         responseTime,
+        sessionId: chatSessionId,
       });
 
       logger.info('Chatbot response received');
-      return response.data;
+
+      // Include session_id in response for frontend to track
+      return {
+        ...response.data,
+        session_id: chatSessionId,
+      };
     } catch (error) {
       logger.error('Error asking chatbot:', error.message);
 
@@ -713,15 +732,16 @@ class AIService {
    */
   async saveChatbotInteraction(data) {
     try {
-      const { userId, question, answer, context, responseTime } = data;
+      const { userId, question, answer, context, responseTime, sessionId } = data;
 
-      // Generate session ID (could be enhanced with actual session tracking)
-      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Use provided sessionId or generate a new one
+      const chatSessionId =
+        sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       return await prisma.chatbotInteraction.create({
         data: {
           userId,
-          sessionId,
+          sessionId: chatSessionId,
           userQuestion: question,
           aiResponse: JSON.stringify(answer),
           context: context || null,

@@ -138,11 +138,13 @@ class AIService {
   }
 
   /**
-   * Ask chatbot a question
+   * Ask chatbot a question with conversation context support
    * @param {string} question - User's question
    * @param {Array} context - Context data (strategies, etc.)
+   * @param {string} sessionId - Session ID for conversation tracking
+   * @param {Array} conversationHistory - Previous messages in the conversation
    */
-  async askChatbot(question, context = []) {
+  async askChatbot(question, context = [], sessionId = null, conversationHistory = []) {
     try {
       // Use longer timeout for chatbot (3 minutes) since AI processing can take time
       const response = await api.post(
@@ -150,6 +152,8 @@ class AIService {
         {
           question,
           context,
+          session_id: sessionId,
+          conversation_history: conversationHistory,
         },
         {
           timeout: 180000, // 3 minutes timeout for chatbot

@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import os
 import uuid
+import re
 from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
@@ -85,6 +86,8 @@ class ChatRequest(BaseModel):
     """Payload untuk Endpoint Chatbot"""
     pertanyaan_user: str
     top_3_strategies_context: Optional[List[Dict[str, Any]]] = None
+    session_id: Optional[str] = None
+    conversation_history: Optional[List[Dict[str, Any]]] = None
 
 # Model untuk Menambah Data Baru (Kapal/Jadwal)
 class NewVessel(BaseModel):
@@ -221,21 +224,82 @@ async def tanya_jawab_chatbot(request: ChatRequest):
     """
     ENDPOINT 2: AGEN CHATBOT (Ollama Local)
     Menjawab pertanyaan user berdasarkan konteks 3 strategi terbaik ATAU data database.
+    Mendukung percakapan berkelanjutan dengan conversation history.
     """
     
-    # Cek koneksi Ollama
     if LLM_PROVIDER != "ollama":
         raise HTTPException(status_code=503, detail="Layanan Chatbot (Ollama) tidak terhubung di server.")
 
     try:
         print(f"💬 Menerima pertanyaan chatbot: {request.pertanyaan_user}")
 
-        # KASUS 1: Jika ada konteks strategi (User bertanya tentang hasil simulasi)
-        if request.top_3_strategies_context and len(request.top_3_strategies_context) > 0:
-            # 1. Format data ulang untuk prompt
+        q = (request.pertanyaan_user or "").lower()
+        has_id = bool(re.search(r"\b(cm[a-z0-9]{5,}|trk[-_]?[a-z0-9]+|exc[-_]?[a-z0-9]+|ves[-_]?[a-z0-9]+|sch[-_]?[a-z0-9]+)\b", q))
+        remaining_words = (
+            "berapa ton lagi" in q
+            or "sisa" in q
+            or "kurang berapa" in q
+            or "harus dipenuhi" in q
+            or "butuh berapa" in q
+            or "maksud saya" in q
+            or "yang saya maksud" in q
+        )
+
+        history_has_id = False
+        if request.conversation_history and isinstance(request.conversation_history, list):
+            for item in request.conversation_history[-10:]:
+                if isinstance(item, dict):
+                    txt = (item.get("content") or item.get("question") or "").lower()
+                    if re.search(r"\b(cm[a-z0-9]{5,}|trk[-_]?[a-z0-9]+|exc[-_]?[a-z0-9]+|ves[-_]?[a-z0-9]+|sch[-_]?[a-z0-9]+)\b", txt):
+                        history_has_id = True
+                        break
+
+        force_db_mode = has_id or remaining_words
+
+        count_by_site = (
+            (
+                ("jumlah" in q or "berapa" in q or "total" in q or "count" in q or "rekap" in q or "summary" in q or "overall" in q or "cek" in q)
+                and ("production record" in q or "record produksi" in q or "production_records" in q)
+                and ("site" in q or "lokasi" in q)
+            )
+            or bool(re.search(r"\bberapa\s+jumlah\s+production\s+record\b", q))
+        )
+
+        ops_by_pr = (
+            ("operator" in q)
+            and ("production" in q or "produksi" in q)
+            and ("record" in q)
+            and ("id" in q or bool(re.search(r"\bcm[a-z0-9]{5,}\b", q)))
+        )
+
+        truck_usage = (
+            ("truck" in q or "truk" in q)
+            and ("kapasitas" in q or "capacity" in q or "jumlah" in q or "berapa" in q or "total" in q)
+            and ("unit" in q or "site" in q or "lokasi" in q)
+            and ("id" in q or bool(re.search(r"\bcm[a-z0-9]{5,}\b", q)))
+        )
+
+        hauling_summary = (
+            ("hauling" in q or "trip" in q or "perjalanan" in q or "angkut" in q)
+            and ("ringkasan" in q or "summary" in q or "rekap" in q or "tampilkan" in q or "lihat" in q or "statistik" in q or "laporan" in q or "total" in q or "berapa" in q)
+        )
+
+        production_summary = (
+            ("produksi" in q or "production" in q or "batubara" in q)
+            and ("target" in q or "perbandingan" in q or "efisiensi" in q or "utilisasi" in q or "cycle time" in q or "loading" in q)
+        )
+
+        fleet_status = (
+            (("truk" in q or "truck" in q) and ("excavator" in q))
+            or (("armada" in q or "fleet" in q) and ("status" in q or "aktif" in q or "idle" in q or "maintenance" in q or "perawatan" in q))
+            or (("jumlah" in q or "berapa" in q) and ("aktif" in q or "idle" in q or "maintenance" in q) and ("truk" in q or "excavator" in q or "truck" in q))
+        )
+
+        force_db_mode = force_db_mode or count_by_site or ops_by_pr or truck_usage or hauling_summary or production_summary or fleet_status
+
+        if request.top_3_strategies_context and len(request.top_3_strategies_context) > 0 and not force_db_mode:
             data_konteks_string = json.dumps(request.top_3_strategies_context, indent=2)
             
-            # 2. System Prompt (Persona KTT)
             system_prompt = f"""
             !!! PERINTAH UTAMA: RESPONS ANDA HARUS SELALU DALAM BAHASA INDONESIA. !!!
             
@@ -254,7 +318,6 @@ async def tanya_jawab_chatbot(request: ChatRequest):
             5. Gunakan Bahasa Indonesia yang profesional, tegas, dan teknis.
             """
             
-            # 3. Kirim ke Ollama
             messages_for_ollama = [
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': request.pertanyaan_user}
@@ -268,10 +331,17 @@ async def tanya_jawab_chatbot(request: ChatRequest):
             jawaban_ai = response['message']['content']
             return {"jawaban_ai": jawaban_ai}
             
-        # KASUS 2: Jika TIDAK ada konteks strategi (User bertanya umum / data database)
         else:
             print("   ℹ️ Mode: Query Database (Text-to-SQL)")
-            result = execute_and_summarize(request.pertanyaan_user)
+            
+            session_id = request.session_id
+            conversation_history = request.conversation_history
+            
+            result = execute_and_summarize(
+                request.pertanyaan_user, 
+                session_id=session_id,
+                conversation_history=conversation_history
+            )
             
             if isinstance(result, dict):
                 return {
@@ -283,7 +353,6 @@ async def tanya_jawab_chatbot(request: ChatRequest):
                 return {"jawaban_ai": result}
 
     except Exception as e:
-        # Handle jika Ollama mati mendadak
         if "Connection refused" in str(e):
              raise HTTPException(status_code=503, detail="Gagal menghubungi Ollama. Pastikan server Ollama berjalan.")
         print(f"❌ Error di /ask_chatbot: {str(e)}")
