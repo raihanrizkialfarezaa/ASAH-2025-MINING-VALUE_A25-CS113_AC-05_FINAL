@@ -705,15 +705,21 @@ class AIService {
         }
 
         if (!effectiveLoadingPointId) {
-          throw new Error(`No active loading point found for mining site. Please select a valid mining site with loading points.`);
+          throw new Error(
+            `No active loading point found for mining site. Please select a valid mining site with loading points.`
+          );
         }
 
         if (!effectiveDumpingPointId) {
-          throw new Error(`No active dumping point found for mining site. Please select a valid mining site with dumping points.`);
+          throw new Error(
+            `No active dumping point found for mining site. Please select a valid mining site with dumping points.`
+          );
         }
 
         if (!effectiveRoadSegmentId) {
-          logger.warn('No road segment found for mining site, hauling will be created without road segment');
+          logger.warn(
+            'No road segment found for mining site, hauling will be created without road segment'
+          );
         }
 
         const today = new Date();
