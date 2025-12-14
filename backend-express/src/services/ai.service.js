@@ -7,67 +7,76 @@ import { haulingService } from './hauling.service.js';
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '120000'); // 2 minutes
 
-/**
- * Helper: Validate equipment availability (STANDBY only for new hauling)
- */
-async function validateEquipmentAvailability(truckIds, excavatorIds) {
-  const errors = [];
+async function filterAvailableEquipment(truckIds, excavatorIds) {
+  let validTruckIds = [];
+  let validExcavatorIds = [];
+  const warnings = [];
 
-  // Check trucks - only STANDBY status allowed
   if (truckIds && truckIds.length > 0) {
     const trucks = await prisma.truck.findMany({
       where: { id: { in: truckIds } },
       select: { id: true, code: true, status: true, isActive: true },
     });
 
-    const unavailableTrucks = trucks.filter(
+    const availableTrucks = trucks.filter(
+      (t) => t.isActive && (t.status === TRUCK_STATUS.STANDBY || t.status === TRUCK_STATUS.IDLE)
+    );
+    validTruckIds = availableTrucks.map((t) => t.id);
+
+    const skippedTrucks = trucks.filter(
       (t) => !t.isActive || (t.status !== TRUCK_STATUS.STANDBY && t.status !== TRUCK_STATUS.IDLE)
     );
-
-    if (unavailableTrucks.length > 0) {
-      errors.push(
-        `Truck(s) not available: ${unavailableTrucks
-          .map((t) => `${t.code} (status: ${t.status})`)
-          .join(', ')}. Only STANDBY/IDLE trucks can be assigned.`
+    if (skippedTrucks.length > 0) {
+      warnings.push(
+        `Skipped ${skippedTrucks.length} unavailable truck(s): ${skippedTrucks.map((t) => t.code).join(', ')}`
       );
     }
 
-    const notFoundTrucks = truckIds.filter((id) => !trucks.find((t) => t.id === id));
-    if (notFoundTrucks.length > 0) {
-      errors.push(`Truck ID(s) not found: ${notFoundTrucks.join(', ')}`);
+    const notFoundCount = truckIds.length - trucks.length;
+    if (notFoundCount > 0) {
+      warnings.push(`${notFoundCount} truck ID(s) not found in database`);
     }
   }
 
-  // Check excavators - only STANDBY/IDLE/ACTIVE status allowed
   if (excavatorIds && excavatorIds.length > 0) {
     const excavators = await prisma.excavator.findMany({
       where: { id: { in: excavatorIds } },
       select: { id: true, code: true, status: true, isActive: true },
     });
 
-    const unavailableExcavators = excavators.filter(
+    const availableExcavators = excavators.filter(
+      (e) =>
+        e.isActive &&
+        [EXCAVATOR_STATUS.STANDBY, EXCAVATOR_STATUS.IDLE, EXCAVATOR_STATUS.ACTIVE].includes(
+          e.status
+        )
+    );
+    validExcavatorIds = availableExcavators.map((e) => e.id);
+
+    const skippedExcavators = excavators.filter(
       (e) =>
         !e.isActive ||
         ![EXCAVATOR_STATUS.STANDBY, EXCAVATOR_STATUS.IDLE, EXCAVATOR_STATUS.ACTIVE].includes(
           e.status
         )
     );
-
-    if (unavailableExcavators.length > 0) {
-      errors.push(
-        `Excavator(s) not available: ${unavailableExcavators
-          .map((e) => `${e.code} (status: ${e.status})`)
-          .join(', ')}. Only STANDBY/IDLE/ACTIVE excavators can be assigned.`
+    if (skippedExcavators.length > 0) {
+      warnings.push(
+        `Skipped ${skippedExcavators.length} unavailable excavator(s): ${skippedExcavators.map((e) => e.code).join(', ')}`
       );
     }
 
-    const notFoundExcavators = excavatorIds.filter((id) => !excavators.find((e) => e.id === id));
-    if (notFoundExcavators.length > 0) {
-      errors.push(`Excavator ID(s) not found: ${notFoundExcavators.join(', ')}`);
+    const notFoundCount = excavatorIds.length - excavators.length;
+    if (notFoundCount > 0) {
+      warnings.push(`${notFoundCount} excavator ID(s) not found in database`);
     }
   }
 
-  return errors;
+  if (warnings.length > 0) {
+    logger.warn('Equipment filtering warnings:', warnings);
+  }
+
+  return { validTruckIds, validExcavatorIds, warnings };
 }
 
 /**
@@ -431,6 +440,7 @@ class AIService {
       const {
         action,
         existingHaulingId,
+        miningSiteId,
         truckIds,
         excavatorIds,
         operatorIds,
@@ -527,27 +537,41 @@ class AIService {
           throw new Error('At least one excavator ID is required');
         }
 
-        // ===== VALIDASI STATUS EQUIPMENT: Hanya STANDBY/IDLE yang bisa dipilih =====
-        const equipmentErrors = await validateEquipmentAvailability(truckIds, excavatorIds);
-        if (equipmentErrors.length > 0) {
-          throw new Error(`Equipment validation failed: ${equipmentErrors.join('; ')}`);
+        const { validTruckIds, validExcavatorIds, warnings } = await filterAvailableEquipment(
+          truckIds,
+          excavatorIds
+        );
+
+        if (validTruckIds.length === 0) {
+          throw new Error(
+            'No available trucks found. All recommended trucks are either inactive or busy. ' +
+              (warnings.length > 0 ? warnings.join('; ') : '')
+          );
         }
 
-        // ===== ALOKASI OPERATOR BERDASARKAN COMPETENCY =====
+        if (validExcavatorIds.length === 0) {
+          throw new Error(
+            'No available excavators found. All recommended excavators are either inactive or busy. ' +
+              (warnings.length > 0 ? warnings.join('; ') : '')
+          );
+        }
+
+        const effectiveTruckIds = validTruckIds;
+        const effectiveExcavatorIds = validExcavatorIds;
+
         let effectiveOperatorIds = await allocateOperatorsByCompetency(
-          truckIds,
-          excavatorIds,
+          effectiveTruckIds,
+          effectiveExcavatorIds,
           operatorIds || []
         );
 
-        if (effectiveOperatorIds.length < truckIds.length) {
-          // Fallback: use any available operators
+        if (effectiveOperatorIds.length < effectiveTruckIds.length) {
           const additionalOperators = await prisma.operator.findMany({
             where: {
               status: 'ACTIVE',
               NOT: { id: { in: effectiveOperatorIds } },
             },
-            take: truckIds.length - effectiveOperatorIds.length,
+            take: effectiveTruckIds.length - effectiveOperatorIds.length,
             orderBy: { rating: 'desc' },
             select: { id: true },
           });
@@ -563,28 +587,92 @@ class AIService {
 
         let effectiveLoadingPointId = loadingPointId;
         let effectiveDumpingPointId = dumpingPointId;
+        let effectiveRoadSegmentId = roadSegmentId;
+
+        let effectiveMiningSiteId = miningSiteId || null;
+        if (effectiveMiningSiteId) {
+          const site = await prisma.miningSite.findUnique({
+            where: { id: effectiveMiningSiteId },
+            select: { id: true, isActive: true },
+          });
+          if (!site || site.isActive !== true) {
+            effectiveMiningSiteId = null;
+          }
+        }
+
+        if (effectiveMiningSiteId && effectiveRoadSegmentId) {
+          const rs = await prisma.roadSegment.findUnique({
+            where: { id: effectiveRoadSegmentId },
+            select: { id: true, miningSiteId: true, isActive: true },
+          });
+          if (!rs || rs.isActive !== true || rs.miningSiteId !== effectiveMiningSiteId) {
+            effectiveRoadSegmentId = null;
+          }
+        }
+
+        if (effectiveMiningSiteId && effectiveLoadingPointId) {
+          const lp = await prisma.loadingPoint.findUnique({
+            where: { id: effectiveLoadingPointId },
+            select: { id: true, miningSiteId: true, isActive: true },
+          });
+          if (!lp || lp.isActive !== true || lp.miningSiteId !== effectiveMiningSiteId) {
+            effectiveLoadingPointId = null;
+          }
+        }
+
+        if (effectiveMiningSiteId && effectiveDumpingPointId) {
+          const dp = await prisma.dumpingPoint.findUnique({
+            where: { id: effectiveDumpingPointId },
+            select: { id: true, miningSiteId: true, isActive: true },
+          });
+          if (!dp || dp.isActive !== true || dp.miningSiteId !== effectiveMiningSiteId) {
+            effectiveDumpingPointId = null;
+          }
+        }
 
         if (!effectiveLoadingPointId) {
           const defaultLoadingPoint = await prisma.loadingPoint.findFirst({
-            where: { isActive: true },
+            where: {
+              isActive: true,
+              ...(effectiveMiningSiteId ? { miningSiteId: effectiveMiningSiteId } : {}),
+            },
             orderBy: { createdAt: 'asc' },
           });
           if (defaultLoadingPoint) {
             effectiveLoadingPointId = defaultLoadingPoint.id;
           } else {
-            throw new Error('No active loading point found');
+            const fallbackLoadingPoint = await prisma.loadingPoint.findFirst({
+              where: { isActive: true },
+              orderBy: { createdAt: 'asc' },
+            });
+            if (fallbackLoadingPoint) {
+              effectiveLoadingPointId = fallbackLoadingPoint.id;
+            } else {
+              throw new Error('No active loading point found');
+            }
           }
         }
 
         if (!effectiveDumpingPointId) {
           const defaultDumpingPoint = await prisma.dumpingPoint.findFirst({
-            where: { isActive: true },
+            where: {
+              isActive: true,
+              ...(effectiveMiningSiteId ? { miningSiteId: effectiveMiningSiteId } : {}),
+            },
             orderBy: { createdAt: 'asc' },
           });
           if (defaultDumpingPoint) {
             effectiveDumpingPointId = defaultDumpingPoint.id;
           } else {
-            throw new Error('No active dumping point found');
+            const fallbackDumpingPoint = await prisma.dumpingPoint.findFirst({
+              where: { isActive: true },
+              orderBy: { createdAt: 'asc' },
+            });
+            if (fallbackDumpingPoint) {
+              effectiveDumpingPointId = fallbackDumpingPoint.id;
+            } else {
+              throw new Error('No active dumping point found');
+            }
           }
         }
 
@@ -604,9 +692,8 @@ class AIService {
           }
         }
 
-        // Fetch truck and excavator data with fuel consumption for accurate calculation
         const trucksData = await prisma.truck.findMany({
-          where: { id: { in: truckIds } },
+          where: { id: { in: effectiveTruckIds } },
           select: {
             id: true,
             code: true,
@@ -618,7 +705,7 @@ class AIService {
         });
 
         const excavatorsData = await prisma.excavator.findMany({
-          where: { id: { in: excavatorIds } },
+          where: { id: { in: effectiveExcavatorIds } },
           select: {
             id: true,
             code: true,
@@ -628,12 +715,10 @@ class AIService {
           },
         });
 
-        // Create a map for quick lookup
         const truckMap = new Map(trucksData.map((t) => [t.id, t]));
         const excavatorMap = new Map(excavatorsData.map((e) => [e.id, e]));
 
-        // Calculate target weight per hauling (divided evenly from totalProductionTarget)
-        const numHaulingActivities = truckIds.length;
+        const numHaulingActivities = effectiveTruckIds.length;
         const targetWeightPerHauling = totalProductionTarget
           ? parseFloat(totalProductionTarget) / numHaulingActivities
           : parseFloat(targetWeight) || 30;
@@ -669,13 +754,12 @@ class AIService {
         const usedExcavatorOperatorIds = new Set();
         let excavatorOperatorPickIndex = 0;
 
-        // ===== USE TRANSACTION TO CREATE HAULING AND UPDATE EQUIPMENT STATUS =====
         const results = await prisma.$transaction(async (tx) => {
           const activities = [];
 
-          for (let i = 0; i < truckIds.length; i++) {
-            const truckId = truckIds[i];
-            const excavatorId = excavatorIds[i % excavatorIds.length];
+          for (let i = 0; i < effectiveTruckIds.length; i++) {
+            const truckId = effectiveTruckIds[i];
+            const excavatorId = effectiveExcavatorIds[i % effectiveExcavatorIds.length];
             const operatorId = effectiveOperatorIds[i % effectiveOperatorIds.length];
 
             let excavatorOperatorId = null;
@@ -748,8 +832,8 @@ class AIService {
               remarks: `Created by AI Recommendation | Truck Fuel: ${truckFuelConsumptionPerKm} L/km | Excavator Fuel: ${excavatorFuelConsumptionPerHr} L/hr`,
             };
 
-            if (roadSegmentId) {
-              activityData.roadSegmentId = roadSegmentId;
+            if (effectiveRoadSegmentId) {
+              activityData.roadSegmentId = effectiveRoadSegmentId;
             }
 
             // Create hauling activity
@@ -809,11 +893,12 @@ class AIService {
           action: 'create',
           createdCount: createdActivities.length,
           createdActivities,
-          totalCalculatedFuel, // Return total fuel for use in frontend
-          targetWeightPerHauling, // Return divided target weight
+          totalCalculatedFuel,
+          targetWeightPerHauling,
+          skippedEquipmentWarnings: warnings,
           multiEquipment: {
-            truckIds,
-            excavatorIds,
+            truckIds: effectiveTruckIds,
+            excavatorIds: effectiveExcavatorIds,
             operatorIds: effectiveOperatorIds,
           },
         };

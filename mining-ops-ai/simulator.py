@@ -1857,19 +1857,21 @@ def generate_dynamic_hauling_allocation(strategy, data, fixed):
     # Filter available trucks (IDLE or STANDBY)
     available_trucks = []
     if not trucks_df.empty:
-        truck_filter = trucks_df[
-            (trucks_df['status'].isin(['IDLE', 'STANDBY', 'ACTIVE'])) & 
-            (trucks_df['isActive'] == True)
-        ]
+        truck_filter = trucks_df
+        if 'status' in truck_filter.columns:
+            truck_filter = truck_filter[truck_filter['status'].isin(['IDLE', 'STANDBY'])]
+        if 'isActive' in truck_filter.columns:
+            truck_filter = truck_filter[truck_filter['isActive'] == True]
         available_trucks = truck_filter.head(num_trucks).index.tolist()
     
     # Filter available excavators (IDLE, STANDBY, or ACTIVE)
     available_excavators = []
     if not excavators_df.empty:
-        exc_filter = excavators_df[
-            (excavators_df['status'].isin(['IDLE', 'STANDBY', 'ACTIVE'])) & 
-            (excavators_df['isActive'] == True)
-        ]
+        exc_filter = excavators_df
+        if 'status' in exc_filter.columns:
+            exc_filter = exc_filter[exc_filter['status'].isin(['ACTIVE', 'IDLE', 'STANDBY'])]
+        if 'isActive' in exc_filter.columns:
+            exc_filter = exc_filter[exc_filter['isActive'] == True]
         available_excavators = exc_filter.head(num_excavators).index.tolist()
     
     # Filter operators by license type and shift
@@ -1878,10 +1880,13 @@ def generate_dynamic_hauling_allocation(strategy, data, fixed):
     
     if not operators_df.empty:
         # Truck operators: SIM_B1, SIM_B2, SIM_A licenses
-        truck_op_filter = operators_df[
-            (operators_df['status'] == 'ACTIVE') &
-            (operators_df['licenseType'].isin(['SIM_B1', 'SIM_B2', 'SIM_A']))
-        ]
+        truck_op_filter = operators_df
+        if 'status' in truck_op_filter.columns:
+            truck_op_filter = truck_op_filter[truck_op_filter['status'] == 'ACTIVE']
+        if 'licenseType' in truck_op_filter.columns:
+            truck_op_filter = truck_op_filter[truck_op_filter['licenseType'].isin(['SIM_B1', 'SIM_B2', 'SIM_A'])]
+        else:
+            truck_op_filter = truck_op_filter.iloc[0:0]
         # Filter by shift if available
         if 'shift' in truck_op_filter.columns:
             shift_match = truck_op_filter[truck_op_filter['shift'] == user_shift]
@@ -1890,10 +1895,13 @@ def generate_dynamic_hauling_allocation(strategy, data, fixed):
         truck_operators = truck_op_filter.index.tolist()
         
         # Excavator operators: OPERATOR_ALAT_BERAT license
-        exc_op_filter = operators_df[
-            (operators_df['status'] == 'ACTIVE') &
-            (operators_df['licenseType'] == 'OPERATOR_ALAT_BERAT')
-        ]
+        exc_op_filter = operators_df
+        if 'status' in exc_op_filter.columns:
+            exc_op_filter = exc_op_filter[exc_op_filter['status'] == 'ACTIVE']
+        if 'licenseType' in exc_op_filter.columns:
+            exc_op_filter = exc_op_filter[exc_op_filter['licenseType'] == 'OPERATOR_ALAT_BERAT']
+        else:
+            exc_op_filter = exc_op_filter.iloc[0:0]
         if 'shift' in exc_op_filter.columns:
             shift_match = exc_op_filter[exc_op_filter['shift'] == user_shift]
             if not shift_match.empty:
@@ -1905,24 +1913,22 @@ def generate_dynamic_hauling_allocation(strategy, data, fixed):
     
     # Generate hauling allocations
     hauling_allocations = []
-    
-    for i in range(min(num_trucks, len(available_trucks))):
+
+    haulings_count = min(num_trucks, len(available_trucks), len(truck_operators))
+    per_hauling_target = (_to_float(strategy.get('total_tonase', 0), 0.0) / haulings_count) if haulings_count > 0 else 0.0
+
+    for i in range(haulings_count):
         truck_id = available_trucks[i]
-        
-        # Assign excavator using round-robin (if available)
+
+        truck_operator_id = truck_operators[i % len(truck_operators)] if truck_operators else None
+
         excavator_id = None
-        if available_excavators:
-            excavator_id = available_excavators[i % len(available_excavators)]
-        
-        # Assign truck operator using round-robin
-        truck_operator_id = None
-        if truck_operators:
-            truck_operator_id = truck_operators[i % len(truck_operators)]
-        
-        # Assign excavator operator using round-robin (if excavator is assigned)
         excavator_operator_id = None
-        if excavator_id and excavator_operators:
+        if available_excavators and excavator_operators:
+            excavator_id = available_excavators[i % len(available_excavators)]
             excavator_operator_id = excavator_operators[i % len(excavator_operators)]
+        if not excavator_id:
+            excavator_operator_id = None
         
         # Get truck details
         truck_info = {}
@@ -1954,7 +1960,7 @@ def generate_dynamic_hauling_allocation(strategy, data, fixed):
             'truckOperatorId': truck_operator_id,
             'excavatorOperatorId': excavator_operator_id,  # Can be None
             'status': 'LOADING',
-            'targetWeight': (_to_float(strategy.get('total_tonase', 0), 0.0) / num_trucks) if num_trucks > 0 else 30.0,
+            'targetWeight': per_hauling_target if per_hauling_target > 0 else 30.0,
             'distance': _to_float(strategy.get('distance_km', 3), 3.0),
         }
         
@@ -1966,12 +1972,12 @@ def generate_dynamic_hauling_allocation(strategy, data, fixed):
     strategy['hauling_allocations'] = hauling_allocations
     strategy['allocation_summary'] = {
         'total_haulings': len(hauling_allocations),
-        'trucks_assigned': len(available_trucks[:num_trucks]),
-        'excavators_assigned': len(available_excavators[:num_excavators]),
-        'truck_operators_assigned': len(set(h['truckOperatorId'] for h in hauling_allocations if h['truckOperatorId'])),
-        'excavator_operators_assigned': len(set(h['excavatorOperatorId'] for h in hauling_allocations if h['excavatorOperatorId'])),
-        'haulings_with_excavator': sum(1 for h in hauling_allocations if h['excavatorId']),
-        'haulings_without_excavator': sum(1 for h in hauling_allocations if not h['excavatorId']),
+        'trucks_assigned': len(set(h['truckId'] for h in hauling_allocations if h.get('truckId'))),
+        'excavators_assigned': len(set(h['excavatorId'] for h in hauling_allocations if h.get('excavatorId'))),
+        'truck_operators_assigned': len(set(h['truckOperatorId'] for h in hauling_allocations if h.get('truckOperatorId'))),
+        'excavator_operators_assigned': len(set(h['excavatorOperatorId'] for h in hauling_allocations if h.get('excavatorOperatorId'))),
+        'haulings_with_excavator': sum(1 for h in hauling_allocations if h.get('excavatorId')),
+        'haulings_without_excavator': sum(1 for h in hauling_allocations if not h.get('excavatorId')),
     }
     
     strategy['hauling_allocations'] = _json_safe(strategy.get('hauling_allocations', []))

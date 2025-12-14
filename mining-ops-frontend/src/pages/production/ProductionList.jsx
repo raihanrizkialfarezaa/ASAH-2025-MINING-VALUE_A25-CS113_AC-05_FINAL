@@ -112,7 +112,7 @@ const ProductionList = () => {
     const loadResources = async () => {
       try {
         const [siteRes, truckRes, excRes, opRes, lpRes, dpRes, rsRes] = await Promise.all([
-          miningSiteService.getAll(),
+          miningSiteService.getAll({ limit: 1000 }),
           truckService.getAll({ limit: 1000 }),
           excavatorService.getAll({ limit: 1000 }),
           operatorService.getAll({ limit: 1000 }),
@@ -397,7 +397,7 @@ const ProductionList = () => {
               remarks += ` | Vessel: ${recommendation.vessel_info.name}`;
             }
 
-            const validMiningSiteId = effectiveMiningSiteId && miningSites.find((s) => s.id === effectiveMiningSiteId) ? effectiveMiningSiteId : miningSites[0]?.id || '';
+            const validMiningSiteId = effectiveMiningSiteId || miningSites[0]?.id || '';
 
             setFormData({
               recordDate: new Date().toISOString().split('T')[0],
@@ -493,7 +493,7 @@ const ProductionList = () => {
               routeInfo = ` | Route: ${recommendation.skenario.route}`;
             }
 
-            const fallbackMiningSiteId = effectiveMiningSiteId && miningSites.find((s) => s.id === effectiveMiningSiteId) ? effectiveMiningSiteId : miningSites[0]?.id || '';
+            const fallbackMiningSiteId = effectiveMiningSiteId || miningSites[0]?.id || '';
 
             setFormData({
               recordDate: new Date().toISOString().split('T')[0],

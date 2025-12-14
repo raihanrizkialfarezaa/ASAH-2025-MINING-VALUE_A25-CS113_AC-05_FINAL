@@ -199,6 +199,7 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect, select
       const params = {
         action: action,
         existingHaulingId: action === 'update' ? firstHaulingId : null,
+        miningSiteId: recommendation.miningSiteId || selectedParams?.miningSiteId || null,
         recommendation: {
           rank,
           strategy_objective: raw.strategy_objective || 'AI Recommended Configuration',

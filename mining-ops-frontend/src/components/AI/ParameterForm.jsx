@@ -123,7 +123,7 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
         excavatorService.getAll({ isActive: true, limit: 100 }),
         vesselService.getAllSchedules({ limit: 200 }),
         roadSegmentService.getAll({ isActive: true, limit: 500 }),
-        miningSiteService.getAll({ limit: 100 }),
+        miningSiteService.getAll({ limit: 1000 }),
         weatherService.getAll({ limit: 500 }),
       ]);
 

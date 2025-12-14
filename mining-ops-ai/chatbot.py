@@ -1224,7 +1224,7 @@ Total: 29 tables, comprehensive mining operations system
    ROLE ENUM: 'ADMIN', 'SUPERVISOR', 'OPERATOR', 'DISPATCHER', 'MAINTENANCE_STAFF'
 
 5. hauling_activities (747 rows) - Aktivitas hauling batubara
-   COLUMNS: id, "activityNumber", "truckId", "excavatorId", "operatorId", "supervisorId", "loadingPointId", "dumpingPointId", "roadSegmentId", shift, "queueStartTime", "queueEndTime", "loadingStartTime", "loadingEndTime", "departureTime", "arrivalTime", "dumpingStartTime", "dumpingEndTime", "returnTime", "queueDuration", "loadingDuration", "haulingDuration", "dumpingDuration", "returnDuration", "totalCycleTime", "loadWeight", "targetWeight", "loadEfficiency", distance, "fuelConsumed", status, "weatherCondition", "roadCondition", "isDelayed", "delayMinutes", "delayReasonId", "delayReasonDetail", "predictedDelayRisk", "predictedDelayMinutes", remarks, "createdAt", "updatedAt"
+    COLUMNS: id, "activityNumber", "truckId", "excavatorId", "operatorId", "excavatorOperatorId", "supervisorId", "loadingPointId", "dumpingPointId", "roadSegmentId", shift, "queueStartTime", "queueEndTime", "loadingStartTime", "loadingEndTime", "departureTime", "arrivalTime", "dumpingStartTime", "dumpingEndTime", "returnTime", "queueDuration", "loadingDuration", "haulingDuration", "dumpingDuration", "returnDuration", "totalCycleTime", "loadWeight", "targetWeight", "loadEfficiency", distance, "fuelConsumed", status, "weatherCondition", "roadCondition", "isDelayed", "delayMinutes", "delayReasonId", "delayReasonDetail", "predictedDelayRisk", "predictedDelayMinutes", remarks, "createdAt", "updatedAt"
    STATUS ENUM: 'PLANNED', 'IN_QUEUE', 'LOADING', 'HAULING', 'DUMPING', 'RETURNING', 'COMPLETED', 'DELAYED', 'CANCELLED', 'INCIDENT'
    ROAD_CONDITION ENUM: 'EXCELLENT', 'GOOD', 'FAIR', 'POOR', 'CRITICAL'
 
@@ -1322,6 +1322,7 @@ Total: 29 tables, comprehensive mining operations system
 - hauling_activities."truckId" -> trucks.id
 - hauling_activities."excavatorId" -> excavators.id
 - hauling_activities."operatorId" -> operators.id
+- hauling_activities."excavatorOperatorId" -> operators.id
 - hauling_activities."supervisorId" -> users.id
 - hauling_activities."loadingPointId" -> loading_points.id
 - hauling_activities."dumpingPointId" -> dumping_points.id
@@ -2226,7 +2227,7 @@ DYNAMIC_TABLE_MAP = {
         "status_enum": ["ACTIVE", "ON_LEAVE", "SICK", "RESIGNED", "SUSPENDED"]
     },
     "hauling_activities": {
-        "columns": ["id", "activityNumber", "truckId", "excavatorId", "operatorId", "supervisorId", "loadingPointId", "dumpingPointId", "roadSegmentId", "shift", "queueStartTime", "queueEndTime", "loadingStartTime", "loadingEndTime", "departureTime", "arrivalTime", "dumpingStartTime", "dumpingEndTime", "returnTime", "queueDuration", "loadingDuration", "haulingDuration", "dumpingDuration", "returnDuration", "totalCycleTime", "loadWeight", "targetWeight", "loadEfficiency", "distance", "fuelConsumed", "status", "weatherCondition", "roadCondition", "isDelayed", "delayMinutes", "delayReasonId", "delayReasonDetail", "predictedDelayRisk", "predictedDelayMinutes", "remarks", "createdAt", "updatedAt"],
+        "columns": ["id", "activityNumber", "truckId", "excavatorId", "operatorId", "excavatorOperatorId", "supervisorId", "loadingPointId", "dumpingPointId", "roadSegmentId", "shift", "queueStartTime", "queueEndTime", "loadingStartTime", "loadingEndTime", "departureTime", "arrivalTime", "dumpingStartTime", "dumpingEndTime", "returnTime", "queueDuration", "loadingDuration", "haulingDuration", "dumpingDuration", "returnDuration", "totalCycleTime", "loadWeight", "targetWeight", "loadEfficiency", "distance", "fuelConsumed", "status", "weatherCondition", "roadCondition", "isDelayed", "delayMinutes", "delayReasonId", "delayReasonDetail", "predictedDelayRisk", "predictedDelayMinutes", "remarks", "createdAt", "updatedAt"],
         "numeric_cols": ["queueDuration", "loadingDuration", "haulingDuration", "dumpingDuration", "returnDuration", "totalCycleTime", "loadWeight", "targetWeight", "loadEfficiency", "distance", "fuelConsumed", "delayMinutes", "predictedDelayMinutes"],
         "status_enum": ["PLANNED", "IN_QUEUE", "LOADING", "HAULING", "DUMPING", "RETURNING", "COMPLETED", "DELAYED", "CANCELLED", "INCIDENT"]
     },
