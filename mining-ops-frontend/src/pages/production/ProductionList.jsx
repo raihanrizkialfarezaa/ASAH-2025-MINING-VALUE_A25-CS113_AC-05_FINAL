@@ -75,6 +75,11 @@ const ProductionList = () => {
   const [availableHaulingsForProduction, setAvailableHaulingsForProduction] = useState([]);
   const [loadingAvailableHaulings, setLoadingAvailableHaulings] = useState(false);
   const [selectedAvailableHaulingId, setSelectedAvailableHaulingId] = useState('');
+  const [availableHaulingDropdownOpen, setAvailableHaulingDropdownOpen] = useState(false);
+  const availableHaulingDropdownRef = React.useRef(null);
+
+  const [activeHaulingAssignments, setActiveHaulingAssignments] = useState({});
+  const [loadingActiveHaulingAssignments, setLoadingActiveHaulingAssignments] = useState(false);
 
   const [formData, setFormData] = useState({
     recordDate: new Date().toISOString().split('T')[0],
@@ -130,6 +135,65 @@ const ProductionList = () => {
 
     loadResources();
   }, []);
+
+  useEffect(() => {
+    if (!showModal || !isManualMode) return;
+
+    let cancelled = false;
+
+    const fetchActiveAssignments = async () => {
+      setLoadingActiveHaulingAssignments(true);
+      try {
+        const res = await haulingService.getActive();
+        const activities = res?.data || [];
+        const conflictStatuses = new Set(['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE']);
+        const map = {};
+
+        const upsert = (id, activity, role) => {
+          if (!id) return;
+          const existing = map[id];
+          if (!existing) {
+            map[id] = { activity, roles: role };
+            return;
+          }
+          const nextActivity = existing.activity || activity;
+          const roles = new Set(
+            String(existing.roles || '')
+              .split('&')
+              .map((s) => s.trim())
+              .filter(Boolean)
+          );
+          roles.add(role);
+          map[id] = { activity: nextActivity, roles: Array.from(roles).join(' & ') };
+        };
+
+        activities.forEach((a) => {
+          if (!conflictStatuses.has(a?.status)) return;
+          const activity = a?.activityNumber || a?.id;
+          upsert(a?.operatorId, activity, 'Operator');
+          upsert(a?.excavatorOperatorId, activity, 'Excavator Operator');
+        });
+
+        if (!cancelled) {
+          setActiveHaulingAssignments(map);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setActiveHaulingAssignments({});
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingActiveHaulingAssignments(false);
+        }
+      }
+    };
+
+    fetchActiveAssignments();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showModal, isManualMode]);
 
   useEffect(() => {
     const fetchFilteredProductions = async () => {
@@ -579,6 +643,65 @@ const ProductionList = () => {
     return shift;
   }, []);
 
+  const formatHaulingOptionLabel = useCallback((h) => {
+    const activity = h?.activityNumber || h?.id || 'N/A';
+    const truck = h?.truck?.code || 'N/A';
+    const excavator = h?.excavatorId ? h?.excavator?.code || 'N/A' : '-';
+    const operator = h?.operator?.user?.fullName || h?.operator?.employeeNumber || 'N/A';
+    const excavatorOperator = h?.excavatorId ? h?.excavatorOperator?.user?.fullName || h?.excavatorOperator?.employeeNumber || 'N/A' : '-';
+
+    const lw = Number(h?.loadWeight ?? 0);
+    const tw = Number(h?.targetWeight ?? 0);
+    const loadStr = Number.isFinite(lw) ? (Math.round(lw * 10) / 10).toString() : '0';
+    const targetStr = Number.isFinite(tw) ? (Math.round(tw * 10) / 10).toString() : '0';
+
+    const dist = Number(h?.roadSegment?.distance ?? h?.distance ?? 0);
+    const distStr = Number.isFinite(dist) ? (Math.round(dist * 10) / 10).toString() : '0';
+
+    const lp = h?.loadingPoint?.code || h?.loadingPoint?.name || 'LP';
+    const dp = h?.dumpingPoint?.code || h?.dumpingPoint?.name || 'DP';
+    const road = h?.roadSegment?.code || h?.roadSegment?.name || (h?.roadSegmentId ? 'ROAD' : '-');
+
+    const status = h?.status || 'N/A';
+    const shift = h?.shift || '';
+
+    return `${activity} | Truck ${truck} | Exc ${excavator} | Op ${operator} | ExOp ${excavatorOperator} | Load ${loadStr}/${targetStr}t | ${status}${shift ? ` ${shift}` : ''} | ${lp}→${dp} | ${road} | ${distStr}km`;
+  }, []);
+
+  const getHaulingStatusPillClass = useCallback((status) => {
+    const s = (status || '').toUpperCase();
+    if (s === 'COMPLETED') return 'bg-cyan-900/30 text-cyan-400 border border-cyan-500/30';
+    if (s === 'LOADING') return 'bg-sky-900/30 text-sky-400 border border-sky-500/30';
+    if (s === 'HAULING') return 'bg-blue-900/30 text-blue-400 border border-blue-500/30';
+    if (s === 'DUMPING') return 'bg-sky-900/20 text-sky-300 border border-sky-500/20';
+    if (s === 'RETURNING') return 'bg-slate-800/60 text-slate-200 border border-slate-700/50';
+    if (s === 'IN_QUEUE') return 'bg-slate-800/60 text-slate-200 border border-slate-700/50';
+    if (s === 'CANCELLED') return 'bg-slate-800/60 text-slate-400 border border-slate-700/50';
+    return 'bg-slate-800/60 text-slate-200 border border-slate-700/50';
+  }, []);
+
+  useEffect(() => {
+    if (!availableHaulingDropdownOpen) return;
+
+    const onMouseDown = (e) => {
+      const el = availableHaulingDropdownRef.current;
+      if (!el) return;
+      if (el.contains(e.target)) return;
+      setAvailableHaulingDropdownOpen(false);
+    };
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setAvailableHaulingDropdownOpen(false);
+    };
+
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [availableHaulingDropdownOpen]);
+
   const redistributeManualHaulingTargets = (targetProductionValue, haulings) => {
     const target = Number(targetProductionValue);
     if (!Number.isFinite(target) || target <= 0) return haulings;
@@ -653,19 +776,14 @@ const ProductionList = () => {
   useEffect(() => {
     const run = async () => {
       if (!showModal || !isManualMode) return;
-      if (!formData.miningSiteId) {
-        setAvailableHaulingsForProduction([]);
-        setSelectedAvailableHaulingId('');
-        return;
-      }
 
       setLoadingAvailableHaulings(true);
       try {
-        const res = await haulingService.getAvailableForProduction({
-          miningSiteId: formData.miningSiteId,
+        const query = {
           shift: shiftToApiShift(formData.shift),
           limit: 500,
-        });
+        };
+        const res = await haulingService.getAvailableForProduction(query);
         const list = res?.data || [];
         setAvailableHaulingsForProduction(Array.isArray(list) ? list : []);
       } catch (error) {
@@ -685,15 +803,19 @@ const ProductionList = () => {
       return;
     }
 
-    if (!formData.targetProduction || !formData.haulDistance || selectedTruckIds.length === 0 || selectedExcavatorIds.length === 0) {
+    const effectiveTruckIds = selectedTruckIds.length > 0 ? selectedTruckIds : isManualMode && manualHaulingList.length > 0 ? Array.from(new Set(manualHaulingList.map((h) => h.truckId).filter(Boolean))) : [];
+
+    const effectiveExcavatorIds = selectedExcavatorIds.length > 0 ? selectedExcavatorIds : isManualMode && manualHaulingList.length > 0 ? Array.from(new Set(manualHaulingList.map((h) => h.excavatorId).filter(Boolean))) : [];
+
+    if (!formData.targetProduction || !formData.haulDistance || effectiveTruckIds.length === 0 || effectiveExcavatorIds.length === 0) {
       return;
     }
 
     const targetProd = parseFloat(formData.targetProduction);
     const distance = parseFloat(formData.haulDistance);
 
-    const activeTrucks = trucks.filter((t) => selectedTruckIds.includes(t.id));
-    const activeExcavators = excavators.filter((e) => selectedExcavatorIds.includes(e.id));
+    const activeTrucks = trucks.filter((t) => effectiveTruckIds.includes(t.id));
+    const activeExcavators = excavators.filter((e) => effectiveExcavatorIds.includes(e.id));
 
     if (activeTrucks.length === 0 || activeExcavators.length === 0) return;
 
@@ -723,7 +845,7 @@ const ProductionList = () => {
       trucksOperating: activeTrucks.length,
       excavatorsOperating: activeExcavators.length,
     }));
-  }, [excavators, formData.haulDistance, formData.riskLevel, formData.roadCondition, formData.targetProduction, formData.weatherCondition, selectedExcavatorIds, selectedTruckIds, trucks]);
+  }, [excavators, formData.haulDistance, formData.riskLevel, formData.roadCondition, formData.targetProduction, formData.weatherCondition, isManualMode, manualHaulingList, selectedExcavatorIds, selectedTruckIds, trucks]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -821,15 +943,25 @@ const ProductionList = () => {
       .map((h) => h.excavatorOperatorId)
       .filter(Boolean);
 
-    const truckOperatorCandidates = operators.filter((op) => op.status === 'ACTIVE' && (op.licenseType === 'SIM_B1' || op.licenseType === 'SIM_B2' || op.licenseType === 'SIM_A') && (!op.shift || op.shift === currentShift));
-    const fallbackTruckOperatorCandidates = operators.filter((op) => op.status === 'ACTIVE' && (op.licenseType === 'SIM_B1' || op.licenseType === 'SIM_B2' || op.licenseType === 'SIM_A'));
+    const truckOperatorCandidates = operators.filter(
+      (op) => op.status === 'ACTIVE' && (op.licenseType === 'SIM_B1' || op.licenseType === 'SIM_B2' || op.licenseType === 'SIM_A') && (!op.shift || op.shift === currentShift) && !activeHaulingAssignments[op.id]
+    );
+    const fallbackTruckOperatorCandidates = operators.filter((op) => op.status === 'ACTIVE' && (op.licenseType === 'SIM_B1' || op.licenseType === 'SIM_B2' || op.licenseType === 'SIM_A') && !activeHaulingAssignments[op.id]);
     const effectiveTruckOperators = truckOperatorCandidates.length > 0 ? truckOperatorCandidates : fallbackTruckOperatorCandidates;
-    const defaultOperator = effectiveTruckOperators.find((op) => !usedTruckOperatorIds.includes(op.id)) || effectiveTruckOperators[0] || operators[0];
+    const defaultOperator =
+      effectiveTruckOperators.find((op) => !usedTruckOperatorIds.includes(op.id) && !usedExcavatorOperatorIds.includes(op.id)) ||
+      effectiveTruckOperators.find((op) => !usedTruckOperatorIds.includes(op.id)) ||
+      effectiveTruckOperators[0] ||
+      operators[0];
 
-    const excavatorOperatorCandidates = operators.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT' && (!op.shift || op.shift === currentShift));
-    const fallbackExcavatorOperatorCandidates = operators.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT');
+    const excavatorOperatorCandidates = operators.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT' && (!op.shift || op.shift === currentShift) && !activeHaulingAssignments[op.id]);
+    const fallbackExcavatorOperatorCandidates = operators.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT' && !activeHaulingAssignments[op.id]);
     const effectiveExcavatorOperators = excavatorOperatorCandidates.length > 0 ? excavatorOperatorCandidates : fallbackExcavatorOperatorCandidates;
-    const defaultExcavatorOperator = effectiveExcavatorOperators.find((op) => !usedExcavatorOperatorIds.includes(op.id)) || effectiveExcavatorOperators[0] || null;
+    const defaultExcavatorOperator =
+      effectiveExcavatorOperators.find((op) => !usedExcavatorOperatorIds.includes(op.id) && op.id !== defaultOperator?.id) ||
+      effectiveExcavatorOperators.find((op) => !usedExcavatorOperatorIds.includes(op.id)) ||
+      effectiveExcavatorOperators[0] ||
+      null;
 
     const defaultLoadingPoint = activeLoadingPoints[manualHaulingList.length % activeLoadingPoints.length];
     const defaultDumpingPoint = activeDumpingPoints[manualHaulingList.length % activeDumpingPoints.length];
@@ -875,6 +1007,18 @@ const ProductionList = () => {
     if (!selectedAvailableHaulingId) return;
     const selected = availableHaulingsForProduction.find((h) => h.id === selectedAvailableHaulingId);
     if (!selected) return;
+
+    if (!formData.miningSiteId && selected.loadingPoint?.miningSiteId) {
+      handleMiningSiteChange(selected.loadingPoint.miningSiteId);
+    }
+
+    if (selected.truckId) {
+      setSelectedTruckIds((prev) => (prev.includes(selected.truckId) ? prev : [...prev, selected.truckId]));
+    }
+
+    if (selected.excavatorId) {
+      setSelectedExcavatorIds((prev) => (prev.includes(selected.excavatorId) ? prev : [...prev, selected.excavatorId]));
+    }
 
     setManualHaulingList((prev) => {
       if (prev.some((x) => x.isExisting && x.id === selected.id)) return prev;
@@ -1010,8 +1154,18 @@ const ProductionList = () => {
               .filter((x) => x.tempId !== tempId && Boolean(x.excavatorId))
               .map((x) => x.excavatorOperatorId)
               .filter(Boolean);
-            const candidates = operators.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT' && (!op.shift || op.shift === currentShift) && !usedExcavatorOperatorIds.includes(op.id));
-            const fallbackCandidates = operators.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT' && !usedExcavatorOperatorIds.includes(op.id));
+            const candidates = operators.filter(
+              (op) =>
+                op.status === 'ACTIVE' &&
+                op.licenseType === 'OPERATOR_ALAT_BERAT' &&
+                (!op.shift || op.shift === currentShift) &&
+                !usedExcavatorOperatorIds.includes(op.id) &&
+                !activeHaulingAssignments[op.id] &&
+                (!updated.operatorId || op.id !== updated.operatorId)
+            );
+            const fallbackCandidates = operators.filter(
+              (op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT' && !usedExcavatorOperatorIds.includes(op.id) && !activeHaulingAssignments[op.id] && (!updated.operatorId || op.id !== updated.operatorId)
+            );
             const selectedCandidate = candidates[0] || fallbackCandidates[0] || null;
             if (!updated.excavatorOperatorId && selectedCandidate?.id) {
               updated.excavatorOperatorId = selectedCandidate.id;
@@ -1262,6 +1416,128 @@ const ProductionList = () => {
           return;
         }
 
+        const allOperatorIds = manualHaulingList.map((h) => h.operatorId).filter(Boolean);
+        const duplicateOperators = allOperatorIds.filter((id, idx) => allOperatorIds.indexOf(id) !== idx);
+        if (duplicateOperators.length > 0) {
+          const duplicateOperatorNames = [...new Set(duplicateOperators)]
+            .map((id) => {
+              const op = operators.find((o) => o.id === id);
+              return op?.user?.fullName || op?.employeeNumber || op?.id || id;
+            })
+            .join(', ');
+          alert(`Operator ${duplicateOperatorNames} dipilih lebih dari sekali. Setiap operator hanya boleh digunakan untuk satu hauling activity dalam batch yang sama.`);
+          return;
+        }
+
+        const allExcavatorOperatorIds = manualHaulingList
+          .filter((h) => h.excavatorId)
+          .map((h) => h.excavatorOperatorId)
+          .filter(Boolean);
+        const duplicateExcavatorOperators = allExcavatorOperatorIds.filter((id, idx) => allExcavatorOperatorIds.indexOf(id) !== idx);
+        if (duplicateExcavatorOperators.length > 0) {
+          const duplicateExcavatorOperatorNames = [...new Set(duplicateExcavatorOperators)]
+            .map((id) => {
+              const op = operators.find((o) => o.id === id);
+              return op?.user?.fullName || op?.employeeNumber || op?.id || id;
+            })
+            .join(', ');
+          alert(`Excavator Operator ${duplicateExcavatorOperatorNames} dipilih lebih dari sekali. Setiap excavator operator hanya boleh digunakan untuk satu hauling activity dalam batch yang sama.`);
+          return;
+        }
+
+        const samePersonRows = manualHaulingList
+          .map((h, idx) => ({
+            idx,
+            operatorId: h.operatorId,
+            excavatorOperatorId: h.excavatorId ? h.excavatorOperatorId : null,
+          }))
+          .filter((x) => x.excavatorOperatorId && x.operatorId && x.excavatorOperatorId === x.operatorId);
+        if (samePersonRows.length > 0) {
+          const details = samePersonRows
+            .map((x) => {
+              const op = operators.find((o) => o.id === x.operatorId);
+              const name = op?.user?.fullName || op?.employeeNumber || op?.id || x.operatorId;
+              return `Hauling #${x.idx + 1}: ${name}`;
+            })
+            .join('\n');
+          alert(`Operator dan Excavator Operator tidak boleh orang yang sama dalam satu hauling.\n\n${details}`);
+          return;
+        }
+
+        const operatorSet = new Set(allOperatorIds);
+        const excavatorOperatorSet = new Set(allExcavatorOperatorIds);
+        const crossRoleIds = [...operatorSet].filter((id) => excavatorOperatorSet.has(id));
+        if (crossRoleIds.length > 0) {
+          const names = crossRoleIds
+            .map((id) => {
+              const op = operators.find((o) => o.id === id);
+              return op?.user?.fullName || op?.employeeNumber || op?.id || id;
+            })
+            .join(', ');
+          alert(`Orang yang sama tidak boleh dipakai sebagai Operator dan Excavator Operator pada batch yang sama.\n\n${names}`);
+          return;
+        }
+
+        if (newHaulings.length > 0) {
+          try {
+            const activeRes = await haulingService.getActive();
+            const activeActivities = activeRes?.data || [];
+            const conflictStatuses = new Set(['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE']);
+            const anyRoleToActive = new Map();
+
+            const upsert = (id, activity, role) => {
+              if (!id) return;
+              const existing = anyRoleToActive.get(id);
+              if (!existing) {
+                anyRoleToActive.set(id, { activity, role });
+                return;
+              }
+              const roles = new Set(
+                String(existing.role || '')
+                  .split('&')
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+              );
+              roles.add(role);
+              anyRoleToActive.set(id, { activity: existing.activity || activity, role: Array.from(roles).join(' & ') });
+            };
+
+            activeActivities.forEach((a) => {
+              if (!conflictStatuses.has(a?.status)) return;
+              const activity = a.activityNumber || a.id;
+              upsert(a?.operatorId, activity, 'Operator');
+              upsert(a?.excavatorOperatorId, activity, 'Excavator Operator');
+            });
+
+            const conflicts = [];
+            newHaulings.forEach((h, idx) => {
+              const opId = h.operatorId;
+              const exOpId = h.excavatorId ? h.excavatorOperatorId : null;
+
+              if (opId && anyRoleToActive.has(opId)) {
+                const info = anyRoleToActive.get(opId);
+                const op = operators.find((o) => o.id === opId);
+                const opName = op?.user?.fullName || op?.employeeNumber || op?.id || opId;
+                conflicts.push(`Hauling baru #${idx + 1}: Operator ${opName} sedang aktif di hauling ${info?.activity || ''}${info?.role ? ` (${info.role})` : ''}`);
+              }
+
+              if (exOpId && anyRoleToActive.has(exOpId)) {
+                const info = anyRoleToActive.get(exOpId);
+                const exOp = operators.find((o) => o.id === exOpId);
+                const exOpName = exOp?.user?.fullName || exOp?.employeeNumber || exOp?.id || exOpId;
+                conflicts.push(`Hauling baru #${idx + 1}: Excavator Operator ${exOpName} sedang aktif di hauling ${info?.activity || ''}${info?.role ? ` (${info.role})` : ''}`);
+              }
+            });
+
+            if (conflicts.length > 0) {
+              alert(`Tidak bisa membuat hauling baru karena ada operator/excavator operator yang sedang aktif.\n\n${conflicts.join('\n')}\n\nSilakan ganti operator/excavator operator, atau selesaikan hauling yang masih aktif.`);
+              return;
+            }
+          } catch (error) {
+            console.warn('[Production] Failed to pre-check active hauling assignments:', error);
+          }
+        }
+
         manualHaulingTotalTrips = manualHaulingList.length;
 
         for (const hauling of manualHaulingList) {
@@ -1357,12 +1633,15 @@ const ProductionList = () => {
         }
       }
 
+      const targetProductionNum = Number(formData.targetProduction);
+      const actualProductionNum = Number(formData.actualProduction);
+
       const payload = {
         recordDate: `${formData.recordDate}T00:00:00.000Z`,
         shift: formData.shift,
         miningSiteId: formData.miningSiteId,
-        targetProduction: parseFloat(formData.targetProduction),
-        actualProduction: parseFloat(formData.actualProduction),
+        targetProduction: Number.isFinite(targetProductionNum) ? targetProductionNum : 0,
+        actualProduction: Number.isFinite(actualProductionNum) ? actualProductionNum : 0,
       };
 
       const fields = [
@@ -2102,21 +2381,162 @@ const ProductionList = () => {
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="col-span-2">
                     <label className="text-xs font-medium text-slate-400 mb-1 block">Use existing hauling (load = 0)</label>
-                    <select
-                      value={selectedAvailableHaulingId}
-                      onChange={(e) => setSelectedAvailableHaulingId(e.target.value)}
-                      className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200"
-                      disabled={loadingAvailableHaulings}
-                    >
-                      <option value="">{loadingAvailableHaulings ? 'Loading...' : 'Select hauling activity'}</option>
-                      {availableHaulingsForProduction
-                        .filter((h) => !manualHaulingList.some((x) => x.isExisting && x.id === h.id))
-                        .map((h) => (
-                          <option key={h.id} value={h.id}>
-                            {h.activityNumber || h.id} | {h.truck?.code || 'N/A'} | target {h.targetWeight || 0}t
-                          </option>
-                        ))}
-                    </select>
+                    <div ref={availableHaulingDropdownRef} className="relative">
+                      {(() => {
+                        const filtered = availableHaulingsForProduction.filter((h) => !manualHaulingList.some((x) => x.isExisting && x.id === h.id));
+                        let lockedSiteId = formData.miningSiteId || '';
+                        if (!lockedSiteId && manualHaulingList.length > 0) {
+                          const anyLoadingPointId = manualHaulingList.find((h) => h.loadingPointId)?.loadingPointId;
+                          const lp = anyLoadingPointId ? loadingPoints.find((p) => p.id === anyLoadingPointId) : null;
+                          lockedSiteId = lp?.miningSiteId || '';
+                        }
+                        const inLockedSiteCount = lockedSiteId ? filtered.filter((h) => h.loadingPoint?.miningSiteId === lockedSiteId).length : filtered.length;
+                        const ordered = lockedSiteId
+                          ? [...filtered].sort((a, b) => {
+                              const aSite = a.loadingPoint?.miningSiteId || '';
+                              const bSite = b.loadingPoint?.miningSiteId || '';
+                              const aRank = aSite && aSite === lockedSiteId ? 0 : 1;
+                              const bRank = bSite && bSite === lockedSiteId ? 0 : 1;
+                              return aRank - bRank;
+                            })
+                          : filtered;
+                        const selected = selectedAvailableHaulingId ? availableHaulingsForProduction.find((h) => h.id === selectedAvailableHaulingId) : null;
+                        const activity = selected?.activityNumber || selected?.id || '';
+                        const truck = selected?.truck?.code || '';
+                        const status = selected?.status || '';
+                        const lw = Number(selected?.loadWeight ?? 0);
+                        const tw = Number(selected?.targetWeight ?? 0);
+                        const loadStr = Number.isFinite(lw) ? (Math.round(lw * 10) / 10).toString() : '0';
+                        const targetStr = Number.isFinite(tw) ? (Math.round(tw * 10) / 10).toString() : '0';
+
+                        return (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => !loadingAvailableHaulings && setAvailableHaulingDropdownOpen((v) => !v)}
+                              disabled={loadingAvailableHaulings}
+                              className={`w-full px-3 py-2.5 text-left border rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${loadingAvailableHaulings ? 'opacity-60 cursor-not-allowed' : ''} ${
+                                availableHaulingDropdownOpen ? 'border-sky-500/40' : 'border-slate-700/50'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  {selected ? (
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <span className="text-sm font-semibold text-slate-100 truncate">{activity}</span>
+                                      <span className="text-sm text-slate-300 truncate">Truck {truck || 'N/A'}</span>
+                                      <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${getHaulingStatusPillClass(status)}`}>{status || 'N/A'}</span>
+                                      <span className="text-xs text-slate-400 whitespace-nowrap">
+                                        Load {loadStr}/{targetStr}t
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <div className="text-sm text-slate-300">{loadingAvailableHaulings ? 'Loading...' : 'Select hauling activity'}</div>
+                                  )}
+                                  <div className="text-xs text-slate-500 truncate">
+                                    {selected
+                                      ? `${selected?.loadingPoint?.code || selected?.loadingPoint?.name || 'LP'} → ${selected?.dumpingPoint?.code || selected?.dumpingPoint?.name || 'DP'} | ${
+                                          selected?.roadSegment?.code || selected?.roadSegment?.name || (selected?.roadSegmentId ? 'ROAD' : '-')
+                                        }`
+                                      : lockedSiteId
+                                      ? `${inLockedSiteCount} available for selected site (${filtered.length} total)`
+                                      : `${filtered.length} available`}
+                                  </div>
+                                </div>
+                                <ChevronDown size={18} className={`text-slate-400 flex-shrink-0 transition-transform ${availableHaulingDropdownOpen ? 'rotate-180' : ''}`} />
+                              </div>
+                            </button>
+
+                            {availableHaulingDropdownOpen && (
+                              <div className="absolute z-50 mt-2 w-full rounded-lg border border-slate-700/60 bg-slate-950/95 shadow-lg">
+                                <div className="max-h-80 overflow-y-auto">
+                                  {loadingAvailableHaulings ? (
+                                    <div className="px-4 py-3 text-sm text-slate-300">Loading...</div>
+                                  ) : filtered.length === 0 ? (
+                                    <div className="px-4 py-3 text-sm text-slate-400">No available hauling found</div>
+                                  ) : (
+                                    <>
+                                      {lockedSiteId && inLockedSiteCount !== filtered.length && (
+                                        <div className="sticky top-0 z-10 px-4 py-2 text-xs border-b border-slate-800/60 bg-slate-950/95 text-amber-200">Mining Site is locked. Items from different site are preview-only.</div>
+                                      )}
+                                      {ordered.map((h) => {
+                                        const act = h.activityNumber || h.id;
+                                        const tcode = h.truck?.code || 'N/A';
+                                        const exc = h.excavatorId ? h.excavator?.code || 'N/A' : '-';
+                                        const op = h.operator?.user?.fullName || h.operator?.employeeNumber || 'N/A';
+                                        const exop = h.excavatorId ? h.excavatorOperator?.user?.fullName || h.excavatorOperator?.employeeNumber || 'N/A' : '-';
+                                        const lwn = Number(h.loadWeight ?? 0);
+                                        const twn = Number(h.targetWeight ?? 0);
+                                        const lws = Number.isFinite(lwn) ? (Math.round(lwn * 10) / 10).toString() : '0';
+                                        const tws = Number.isFinite(twn) ? (Math.round(twn * 10) / 10).toString() : '0';
+                                        const dist = Number(h.roadSegment?.distance ?? h.distance ?? 0);
+                                        const dstr = Number.isFinite(dist) ? (Math.round(dist * 10) / 10).toString() : '0';
+                                        const lp = h.loadingPoint?.code || h.loadingPoint?.name || 'LP';
+                                        const dp = h.dumpingPoint?.code || h.dumpingPoint?.name || 'DP';
+                                        const road = h.roadSegment?.code || h.roadSegment?.name || (h.roadSegmentId ? 'ROAD' : '-');
+                                        const st = h.status || 'N/A';
+                                        const sh = h.shift || '';
+                                        const itemSiteId = h.loadingPoint?.miningSiteId || '';
+                                        const mismatchedSite = !!(itemSiteId && lockedSiteId && itemSiteId !== lockedSiteId);
+                                        const active = !mismatchedSite && h.id === selectedAvailableHaulingId;
+
+                                        return (
+                                          <button
+                                            key={h.id}
+                                            type="button"
+                                            onClick={() => {
+                                              if (mismatchedSite) return;
+                                              if (itemSiteId && !lockedSiteId) {
+                                                handleMiningSiteChange(itemSiteId);
+                                              }
+
+                                              setSelectedAvailableHaulingId(h.id);
+                                              setAvailableHaulingDropdownOpen(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-3 border-b border-slate-800/60 ${
+                                              mismatchedSite ? 'cursor-not-allowed bg-amber-500/10 border-l-4 border-l-amber-400/70 hover:bg-amber-500/10' : 'hover:bg-slate-900/40'
+                                            } ${active ? 'bg-slate-900/50' : ''}`}
+                                            title={mismatchedSite ? `Different Mining Site (preview only)\n\n${formatHaulingOptionLabel(h)}` : formatHaulingOptionLabel(h)}
+                                          >
+                                            <div className="flex items-start justify-between gap-3">
+                                              <div className="min-w-0">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                  <span className="text-sm font-semibold text-slate-100 truncate">{act}</span>
+                                                  <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${getHaulingStatusPillClass(st)}`}>
+                                                    {st}
+                                                    {sh ? ` ${sh}` : ''}
+                                                  </span>
+                                                  {mismatchedSite && <span className="px-2 py-0.5 rounded text-xs font-semibold whitespace-nowrap bg-amber-500/20 text-amber-200">Different site • preview</span>}
+                                                </div>
+                                                <div className="mt-1 text-sm text-slate-200 truncate">
+                                                  Truck {tcode} • Exc {exc}
+                                                </div>
+                                                <div className="mt-1 text-xs text-slate-400 truncate">
+                                                  Op {op} • ExOp {exop}
+                                                </div>
+                                                <div className="mt-1 text-xs text-slate-500 truncate">
+                                                  {lp} → {dp} • {road} • {dstr}km
+                                                </div>
+                                              </div>
+                                              <div className="flex-shrink-0 text-right">
+                                                <div className={`text-sm font-semibold whitespace-nowrap ${mismatchedSite ? 'text-amber-200' : 'text-sky-300'}`}>
+                                                  {lws}/{tws}t
+                                                </div>
+                                                <div className="text-xs text-slate-500 whitespace-nowrap">Load/Target</div>
+                                              </div>
+                                            </div>
+                                          </button>
+                                        );
+                                      })}
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
                   </div>
                   <div className="flex items-end">
                     <button type="button" onClick={handleAddExistingHaulingToManualList} className="w-full text-sm bg-sky-600 text-white px-3 py-2 rounded hover:bg-sky-700" disabled={!selectedAvailableHaulingId}>
@@ -2195,7 +2615,10 @@ const ProductionList = () => {
                             <select
                               value={hauling.operatorId}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'operatorId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
+                              title={loadingActiveHaulingAssignments ? 'Checking active hauling assignments...' : ''}
+                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''} ${
+                                !hauling.isExisting && hauling.operatorId && activeHaulingAssignments[hauling.operatorId] ? 'border-amber-500/60 ring-1 ring-amber-500/20' : ''
+                              }`}
                               disabled={hauling.isExisting}
                             >
                               <option value="">Select Operator</option>
@@ -2212,11 +2635,17 @@ const ProductionList = () => {
                                 const base = operators.filter((op) => op.status === 'ACTIVE' && (op.licenseType === 'SIM_B1' || op.licenseType === 'SIM_B2' || op.licenseType === 'SIM_A') && (!op.shift || op.shift === currentShift));
                                 const selected = operators.find((op) => op.id === hauling.operatorId);
                                 const list = selected && !base.some((x) => x.id === selected.id) ? [selected, ...base] : base;
-                                return list.map((op) => (
-                                  <option key={op.id} value={op.id}>
-                                    {op.employeeNumber} - {op.user?.fullName || 'N/A'} ({op.shift})
-                                  </option>
-                                ));
+                                return list.map((op) => {
+                                  const activeInfo = activeHaulingAssignments[op.id];
+                                  const isBusy = Boolean(activeInfo);
+                                  const disabled = !hauling.isExisting && isBusy && op.id !== hauling.operatorId;
+                                  const label = `${op.employeeNumber} - ${op.user?.fullName || 'N/A'} (${op.shift})${isBusy ? ` • ACTIVE ${activeInfo.activity}${activeInfo.roles ? ` (${activeInfo.roles})` : ''}` : ''}`;
+                                  return (
+                                    <option key={op.id} value={op.id} disabled={disabled}>
+                                      {label}
+                                    </option>
+                                  );
+                                });
                               })()}
                             </select>
                           </div>
@@ -2227,7 +2656,10 @@ const ProductionList = () => {
                             <select
                               value={hauling.excavatorOperatorId || ''}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'excavatorOperatorId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
+                              title={loadingActiveHaulingAssignments ? 'Checking active hauling assignments...' : ''}
+                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''} ${
+                                !hauling.isExisting && hauling.excavatorOperatorId && activeHaulingAssignments[hauling.excavatorOperatorId] ? 'border-amber-500/60 ring-1 ring-amber-500/20' : ''
+                              }`}
                               disabled={!hauling.excavatorId || hauling.isExisting}
                             >
                               <option value="">Select Excavator Operator</option>
@@ -2244,11 +2676,17 @@ const ProductionList = () => {
                                 const base = operators.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT' && (!op.shift || op.shift === currentShift));
                                 const selected = operators.find((op) => op.id === hauling.excavatorOperatorId);
                                 const list = selected && !base.some((x) => x.id === selected.id) ? [selected, ...base] : base;
-                                return list.map((op) => (
-                                  <option key={op.id} value={op.id}>
-                                    {op.employeeNumber} - {op.user?.fullName || 'N/A'} ({op.shift})
-                                  </option>
-                                ));
+                                return list.map((op) => {
+                                  const activeInfo = activeHaulingAssignments[op.id];
+                                  const isBusy = Boolean(activeInfo);
+                                  const disabled = !hauling.isExisting && isBusy && op.id !== hauling.excavatorOperatorId;
+                                  const label = `${op.employeeNumber} - ${op.user?.fullName || 'N/A'} (${op.shift})${isBusy ? ` • ACTIVE ${activeInfo.activity}${activeInfo.roles ? ` (${activeInfo.roles})` : ''}` : ''}`;
+                                  return (
+                                    <option key={op.id} value={op.id} disabled={disabled}>
+                                      {label}
+                                    </option>
+                                  );
+                                });
                               })()}
                             </select>
                           </div>

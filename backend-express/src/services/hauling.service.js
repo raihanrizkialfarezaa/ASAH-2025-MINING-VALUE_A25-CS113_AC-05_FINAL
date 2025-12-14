@@ -9,7 +9,7 @@ const updateProductionAchievementByHaulingId = async (haulingActivityId) => {
       where: {
         equipmentAllocation: {
           path: ['hauling_activity_ids'],
-          array_contains: haulingActivityId,
+          array_contains: [haulingActivityId],
         },
       },
     });
@@ -736,6 +736,8 @@ export const haulingService = {
       return updated;
     });
 
+    await updateProductionAchievementByHaulingId(id);
+
     return updatedActivity;
   },
 
@@ -783,6 +785,8 @@ export const haulingService = {
 
       return updated;
     });
+
+    await updateProductionAchievementByHaulingId(id);
 
     return updatedActivity;
   },
@@ -919,6 +923,8 @@ export const haulingService = {
       return updated;
     });
 
+    await updateProductionAchievementByHaulingId(id);
+
     return updatedActivity;
   },
 
@@ -972,6 +978,8 @@ export const haulingService = {
 
       return updated;
     });
+
+    await updateProductionAchievementByHaulingId(id);
 
     return updatedActivity;
   },
@@ -1230,7 +1238,7 @@ export const haulingService = {
       updated.loadWeight !== null &&
       updated.loadWeight >= updated.targetWeight;
 
-    updateProductionAchievementByHaulingId(id);
+    await updateProductionAchievementByHaulingId(id);
 
     return updated;
   },
@@ -1334,6 +1342,8 @@ export const haulingService = {
         where: { id },
       });
     });
+
+    await updateProductionAchievementByHaulingId(id);
 
     return { message: 'Hauling activity deleted successfully', id };
   },

@@ -690,21 +690,32 @@ class AIService {
               excavatorOperatorPickIndex += 1;
             }
 
+            const assignedExcavatorId = excavatorId && excavatorOperatorId ? excavatorId : null;
+
             const activityNumber = `HA-${dateStr}-${(sequence + i).toString().padStart(3, '0')}`;
 
             // Get actual fuel consumption from equipment data
             const truckData = truckMap.get(truckId);
-            const excavatorData = excavatorMap.get(excavatorId);
+            const excavatorData = assignedExcavatorId
+              ? excavatorMap.get(assignedExcavatorId)
+              : null;
 
             // Truck fuel consumption (L/km) - use actual data or default
             const truckFuelConsumptionPerKm = truckData?.fuelConsumption || 1.0;
 
             // Excavator fuel consumption (L/hr) - use actual data or default
-            const excavatorFuelConsumptionPerHr = excavatorData?.fuelConsumption || 50;
+            const excavatorFuelConsumptionPerHr = assignedExcavatorId
+              ? excavatorData?.fuelConsumption || 50
+              : 0;
 
             // Calculate estimated loading time (hours) based on excavator production rate
-            const excavatorProductionRate = excavatorData?.productionRate || 5; // ton/min
-            const estimatedLoadingTimeHours = targetWeightPerHauling / excavatorProductionRate / 60;
+            const excavatorProductionRate = assignedExcavatorId
+              ? excavatorData?.productionRate || 5
+              : 0;
+            const estimatedLoadingTimeHours =
+              assignedExcavatorId && excavatorProductionRate > 0
+                ? targetWeightPerHauling / excavatorProductionRate / 60
+                : 0;
 
             // Calculate fuel consumed
             // Truck: distance * fuel rate (round trip = distance * 2)
@@ -721,9 +732,9 @@ class AIService {
             const activityData = {
               activityNumber,
               truckId,
-              excavatorId,
+              excavatorId: assignedExcavatorId,
               operatorId,
-              excavatorOperatorId,
+              excavatorOperatorId: assignedExcavatorId ? excavatorOperatorId : null,
               supervisorId: effectiveSupervisorId,
               loadingPointId: effectiveLoadingPointId,
               dumpingPointId: effectiveDumpingPointId,
@@ -779,10 +790,12 @@ class AIService {
             });
 
             // Update excavator status to ACTIVE (if not already)
-            await tx.excavator.update({
-              where: { id: excavatorId },
-              data: { status: EXCAVATOR_STATUS.ACTIVE },
-            });
+            if (assignedExcavatorId) {
+              await tx.excavator.update({
+                where: { id: assignedExcavatorId },
+                data: { status: EXCAVATOR_STATUS.ACTIVE },
+              });
+            }
 
             activities.push(activity);
           }

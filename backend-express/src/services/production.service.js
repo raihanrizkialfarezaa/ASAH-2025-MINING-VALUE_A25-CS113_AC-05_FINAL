@@ -138,23 +138,71 @@ export const productionService = {
       throw ApiError.badRequest('Invalid record date');
     }
 
-    const achievement =
-      data.targetProduction > 0 ? (data.actualProduction / data.targetProduction) * 100 : 0;
+    const targetProduction = Number(data.targetProduction);
+    if (!Number.isFinite(targetProduction) || targetProduction <= 0) {
+      throw ApiError.badRequest('Invalid target production');
+    }
+    const miningSiteId = data.miningSiteId;
+    if (!miningSiteId) {
+      throw ApiError.badRequest('Mining site is required');
+    }
+
+    const uniqueKey = {
+      recordDate_shift_miningSiteId: {
+        recordDate,
+        shift: data.shift,
+        miningSiteId,
+      },
+    };
+
+    const existing = await prisma.productionRecord.findUnique({
+      where: uniqueKey,
+      select: { id: true, actualProduction: true },
+    });
+
+    const incomingActualRaw = Number(data.actualProduction);
+    const hasIncomingActual = Number.isFinite(incomingActualRaw);
+
+    let derivedActual = null;
+    if (!existing && !hasIncomingActual) {
+      const haulingIds = Array.isArray(data?.equipmentAllocation?.hauling_activity_ids)
+        ? data.equipmentAllocation.hauling_activity_ids.filter(Boolean)
+        : [];
+      if (haulingIds.length > 0) {
+        const activities = await prisma.haulingActivity.findMany({
+          where: { id: { in: haulingIds } },
+          select: { loadWeight: true },
+        });
+        const totalLoadWeight = activities.reduce((sum, a) => sum + (Number(a.loadWeight) || 0), 0);
+        derivedActual = Number.isFinite(totalLoadWeight) ? totalLoadWeight : 0;
+      }
+    }
+
+    const actualProduction = hasIncomingActual
+      ? incomingActualRaw
+      : existing
+        ? Number(existing.actualProduction) || 0
+        : derivedActual !== null
+          ? derivedActual
+          : 0;
+
+    const achievement = targetProduction > 0 ? (actualProduction / targetProduction) * 100 : 0;
+
+    const rest = { ...data };
+    delete rest.miningSiteId;
 
     const payload = {
-      ...data,
+      ...rest,
       recordDate,
+      shift: data.shift,
+      miningSite: { connect: { id: miningSiteId } },
+      targetProduction,
+      actualProduction,
       achievement,
     };
 
     const record = await prisma.productionRecord.upsert({
-      where: {
-        recordDate_shift_miningSiteId: {
-          recordDate,
-          shift: payload.shift,
-          miningSiteId: payload.miningSiteId,
-        },
-      },
+      where: uniqueKey,
       update: payload,
       create: payload,
       include: {
@@ -180,14 +228,26 @@ export const productionService = {
       throw ApiError.notFound('Production record not found');
     }
 
-    const targetProduction = data.targetProduction ?? record.targetProduction;
-    const actualProduction = data.actualProduction ?? record.actualProduction;
+    const nextTargetRaw = data.targetProduction ?? record.targetProduction;
+    const nextActualRaw = data.actualProduction ?? record.actualProduction;
+    const targetProduction = Number(nextTargetRaw);
+    const actualProductionCandidate = Number(nextActualRaw);
+    const actualProduction = Number.isFinite(actualProductionCandidate)
+      ? actualProductionCandidate
+      : 0;
     const achievement = targetProduction > 0 ? (actualProduction / targetProduction) * 100 : 0;
+
+    const miningSiteId = data.miningSiteId;
+    const rest = { ...data };
+    delete rest.miningSiteId;
 
     const updatedRecord = await prisma.productionRecord.update({
       where: { id },
       data: {
-        ...data,
+        ...rest,
+        ...(miningSiteId ? { miningSite: { connect: { id: miningSiteId } } } : {}),
+        ...(data.targetProduction !== undefined ? { targetProduction } : {}),
+        ...(data.actualProduction !== undefined ? { actualProduction } : {}),
         achievement,
       },
     });

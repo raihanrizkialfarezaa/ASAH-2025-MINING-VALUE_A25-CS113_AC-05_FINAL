@@ -23,12 +23,9 @@
 "cmioppkad06ba96tevnqresoq","MV Borneo Sentosa","MOTHER_VESSEL",15914.89493523471
 "cmioppkae06bb96tewdq8u3eq","MV Mahakam Makmur","MOTHER_VESSEL",12407.11282712804
 "cmioppkag06bc96tegji4s63r","MV Lontar Mulia","MOTHER_VESSEL",7918.014331204326
-"cmioppkah06bd96tepdf6hrel","MV Kapuas Sejahtera","MOTHER_VESSEL",10144.39743988282
 "cmioppkaj06be96te1pvy23iu","MV Kalimantan Prima","MOTHER_VESSEL",20799.11484146405
-"cmioppkak06bf96tewcbg1kzb","MV Nusantara Mulia","MOTHER_VESSEL",13753.08353633124
 "cmioppkam06bg96tenthdjrw9","MV Barito Sentosa","MOTHER_VESSEL",16785.72802315099
 "cmioppkan06bh96te470a8iqu","MV Samudera Jaya","MOTHER_VESSEL",19965.41191804929
-"cmioppkao06bi96teqepymn9b","MV Maritim Prima","MOTHER_VESSEL",10855.36411811282
 "cmioppkar06bj96te5cfiqzbm","MV Samudra Prima","MOTHER_VESSEL",11042.26640791417
 "cmioppkas06bk96te7pbngvzo","MV Barito Sejahtera","MOTHER_VESSEL",17694.70822785109
 "cmioppkau06bl96tewgnc0lwm","MV Lontar Jaya","MOTHER_VESSEL",11380.64439262923
@@ -39,18 +36,17 @@
 "cmioppkb106bq96te5311y8n6","MV Mahakam Jaya","MOTHER_VESSEL",18664.62362475864
 "cmioppkb206br96teu00sqqnj","MV Kapuas Indah","MOTHER_VESSEL",20767.10316986422
 "cmioppkb406bs96teyn1cjc55","MV Maritim Makmur","MOTHER_VESSEL",7288.27387309505
-"cmioppkb706bt96te1s2mg8px","MV Lontar Jaya","MOTHER_VESSEL",16718.8629183515
 "cmioppkba06bu96telv1s89t4","MV Maritim Utama","MOTHER_VESSEL",10062.2256981502
 "cmioppkbd06bv96teys1mvs5m","MV Kapuas Prima","MOTHER_VESSEL",9047.749552405021
 "cmioppkbf06bw96tev58wp25x","MV Kalimantan Indah","MOTHER_VESSEL",10813.60065353437
 "cmioppkbh06bx96tes2ta8muw","MV Borneo Sejahtera","MOTHER_VESSEL",21298.68786257575
-"cmioppkbj06by96terw9kk5ex","MV Kalimantan Prima","MOTHER_VESSEL",10370.55092640982
+"cmioppkak06bf96tewcbg1kzb","MV Nusantara Mulia","MOTHER_VESSEL",13753.08353633124
+"cmioppkao06bi96teqepymn9b","MV Maritim Prima","MOTHER_VESSEL",10855.36411811282
+"cmioppkb706bt96te1s2mg8px","MV Lontar Jaya","MOTHER_VESSEL",16718.8629183515
 "cmioppkbp06bz96tep4972agj","MV Borneo Indah","MOTHER_VESSEL",16339.23290527413
-"cmioppkbs06c096tenq6umb3x","MV Kapuas Utama","MOTHER_VESSEL",7021.903049525169
 "cmioppkbu06c196tet297ukxd","MV Kapuas Indah","MOTHER_VESSEL",18713.15087487376
 "cmioppkbx06c296te88ppdqys","MV Borneo Indah","MOTHER_VESSEL",13924.05088813471
 "cmioppkbz06c396te0l8ihfpd","MV Samudera Indah","MOTHER_VESSEL",12928.99146623175
-"cmioppkc206c496te3k4kssa7","MV Mahakam Prima","MOTHER_VESSEL",17121.12488138083
 "cmioppkc506c596te8olccuxq","MV Nusantara Sentosa","MOTHER_VESSEL",20679.31018164007
 "cmioppkca06c696teb82opmk6","MV Samudra Sentosa","MOTHER_VESSEL",7984.238114218867
 "cmioppkcc06c796te4dt48cre","MV Borneo Utama","MOTHER_VESSEL",10344.42094643946
@@ -67,7 +63,6 @@
 "cmioppkdf06ci96teeztzamj3","MV Borneo Sejahtera","MOTHER_VESSEL",8113.622234087636
 "cmioppkdh06cj96tes5sdll5v","MV Nusantara Prima","MOTHER_VESSEL",16608.2659350364
 "cmioppkdj06ck96tedkvbpn48","MV Nusantara Utama","MOTHER_VESSEL",17821.46140496816
-"cmioppkdl06cl96tekc8hp5yt","MV Kapuas Sejahtera","MOTHER_VESSEL",7560.416522586434
 "cmioppkdn06cm96te3j50vhl1","MV Kapuas Sentosa","MOTHER_VESSEL",8257.998442131364
 "cmioppkdo06cn96teb2lcrom3","MV Samudera Indah","MOTHER_VESSEL",9025.804727118379
 "cmioppkdq06co96te5pl97tdd","MV Borneo Sejahtera","MOTHER_VESSEL",16126.05290671028
@@ -82,12 +77,15 @@
 "cmioppke506cx96tejeptftuh","MV Borneo Kencana","MOTHER_VESSEL",16860.30295500836
 "cmioppke606cy96ter86qi81b","MV Maritim Mulia","MOTHER_VESSEL",8671.954005106994
 "cmioppke806cz96tel8xltl3w","MV Lontar Mulia","MOTHER_VESSEL",20064.21524316321
-"cmioppke906d096te0bvwp8x7","MV Barito Prima","MOTHER_VESSEL",9857.672332080858
 "cmioppkeb06d196tevf3zyqb9","MV Lontar Mulia","MOTHER_VESSEL",12999.09990330955
 "cmioppked06d296te9h4wjysx","MV Samudera Mulia","MOTHER_VESSEL",17162.35050298116
 "cmioppkef06d396teawzrhpz4","MV Lontar Sejahtera","MOTHER_VESSEL",7236.416734961773
 "cmioppkei06d496tega5bvqiq","MV Kalimantan Jaya","MOTHER_VESSEL",11086.82721655657
 "cmioppkek06d596tetya9obnl","MV Maritim Kencana","MOTHER_VESSEL",16805.62697830579
+"cmioppkbs06c096tenq6umb3x","MV Kapuas Utama","MOTHER_VESSEL",7021.903049525169
+"cmioppkc206c496te3k4kssa7","MV Mahakam Prima","MOTHER_VESSEL",17121.12488138083
+"cmioppke906d096te0bvwp8x7","MV Barito Prima","MOTHER_VESSEL",9857.672332080858
+"cmioppkdl06cl96tekc8hp5yt","MV Kapuas Sejahtera","MOTHER_VESSEL",7560.416522586434
 "cmioppkem06d696te5paqfjqy","MV Samudra Sejahtera","MOTHER_VESSEL",18784.1993757025
 "cmioppkeo06d796tefgvknydx","MV Samudera Kencana","MOTHER_VESSEL",18261.4032305044
 "cmioppkeq06d896te1meygqwd","MV Maritim Kencana","MOTHER_VESSEL",18633.96738485886
@@ -96,24 +94,18 @@
 "cmioppkex06db96tei8z3d28x","MV Samudera Mulia","MOTHER_VESSEL",8597.987233264179
 "cmioppkf006dc96tekop3pdwh","MV Maritim Indah","MOTHER_VESSEL",9944.689797206916
 "cmioppkf206dd96tec76t4ev3","MV Lontar Utama","MOTHER_VESSEL",14717.6808763328
-"cmioppkf406de96tekxe6elb7","MV Maritim Indah","MOTHER_VESSEL",12101.39860355411
 "cmioppkf606df96teaiy38e3y","MV Nusantara Sejahtera","MOTHER_VESSEL",20339.81677626092
-"cmioppkf806dg96tevob8trob","MV Samudera Jaya","MOTHER_VESSEL",12040.74291047909
 "cmioppkf906dh96tel0mto364","Barge Kalimantan Sentosa","BARGE",2137.95305158834
-"cmioppkfb06di96tecvm3icqm","Barge Barito Prima","BARGE",3392.345071236068
 "cmioppkfd06dj96tefwpw3jgv","Barge Maritim Indah","BARGE",4240.360360798691
 "cmioppkff06dk96tejksy5nr4","Barge Samudra Prima","BARGE",3523.65645288285
 "cmioppkfh06dl96tebey6e40d","Barge Mahakam Sejahtera","BARGE",5069.665000680845
 "cmioppkfj06dm96tevgfd9l54","Barge Barito Jaya","BARGE",4130.44484668145
 "cmioppkfk06dn96tei2np54jb","Barge Maritim Jaya","BARGE",3025.028737385388
 "cmioppkfm06do96te0dyu1bf5","Barge Kapuas Indah","BARGE",5371.451425952049
-"cmioppkfn06dp96te4476e9fa","Barge Kalimantan Sentosa","BARGE",1955.168736094579
 "cmioppkfp06dq96teypkpu5jk","Barge Kapuas Prima","BARGE",3434.64310210089
 "cmioppkfr06dr96teyh4pdtdd","Barge Kalimantan Kencana","BARGE",2752.687801299372
-"cmioppkft06ds96tep88gcxht","Barge Barito Mulia","BARGE",5536.37827883607
 "cmioppkfv06dt96tesd32zrrk","Barge Maritim Jaya","BARGE",5075.709716596528
 "cmioppkfx06du96tea2nda6dv","Barge Samudera Mulia","BARGE",5568.242630902933
-"cmioppkfz06dv96teqjym859a","Barge Kapuas Abadi","BARGE",4896.372552967512
 "cmioppkg006dw96tepgh44qlu","Barge Samudera Indah","BARGE",5785.096333210774
 "cmioppkg206dx96ten74tpbgo","Barge Lontar Indah","BARGE",5179.783528656335
 "cmioppkg406dy96tezed2r2dw","Barge Nusantara Kencana","BARGE",4241.792305430227
@@ -131,17 +123,20 @@
 "cmioppkgs06ea96te8q3xkk54","Barge Mahakam Prima","BARGE",3870.02279131455
 "cmioppkgu06eb96tefjiii0ks","Barge Mahakam Indah","BARGE",4853.774091868778
 "cmioppkgw06ec96tedq2621e9","Barge Samudra Sentosa","BARGE",3112.332235329673
+"cmioppkf806dg96tevob8trob","MV Samudera Jaya","MOTHER_VESSEL",12040.74291047909
+"cmioppkfb06di96tecvm3icqm","Barge Barito Prima","BARGE",3392.345071236068
+"cmioppkfn06dp96te4476e9fa","Barge Kalimantan Sentosa","BARGE",1955.168736094579
+"cmioppkft06ds96tep88gcxht","Barge Barito Mulia","BARGE",5536.37827883607
+"cmioppkfz06dv96teqjym859a","Barge Kapuas Abadi","BARGE",4896.372552967512
 "cmioppkgy06ed96tecizjm8f8","Barge Mahakam Kencana","BARGE",5365.239557166085
 "cmioppkh006ee96temxzmkh3s","Barge Nusantara Prima","BARGE",5499.519349927206
 "cmioppkh206ef96ten0ewecjf","Barge Lontar Indah","BARGE",3946.878345864121
 "cmioppkh406eg96te9qq514m1","Barge Kalimantan Indah","BARGE",4594.89263619202
-"cmioppkh606eh96teosl5tgek","Barge Kapuas Utama","BARGE",2113.072104844132
 "cmioppkh906ei96te4fyw0hgk","Barge Samudra Makmur","BARGE",1965.611837155687
 "cmioppkhb06ej96teclbnycw9","Barge Barito Jaya","BARGE",5753.073619174145
 "cmioppkhd06ek96tepg2aw3e4","Barge Kalimantan Sejahtera","BARGE",1946.102212474897
 "cmioppkhf06el96tehsj3d65r","Barge Samudera Utama","BARGE",3483.783544040136
 "cmioppkhh06em96teve7dm6q4","Barge Samudera Prima","BARGE",2927.849141556206
-"cmioppkhj06en96texk6oawf7","Barge Samudera Makmur","BARGE",4302.006071875958
 "cmioppkhl06eo96te0odatv31","Barge Samudra Abadi","BARGE",4623.461485157961
 "cmioppkhn06ep96terttafz9w","Barge Borneo Sejahtera","BARGE",5105.904300413237
 "cmioppkhp06eq96tefxl8pwe0","Barge Nusantara Jaya","BARGE",1912.932582900041
@@ -174,6 +169,7 @@
 "cmioppkiw06fh96telq6ta8mr","Barge Barito Mulia","BARGE",5622.63625538021
 "cmioppkix06fi96tezh6jw5q5","Barge Barito Makmur","BARGE",3246.526687663981
 "cmioppkiz06fj96teg39hl2ef","Barge Samudera Jaya","BARGE",5428.962142614118
+"cmioppkhj06en96texk6oawf7","Barge Samudera Makmur","BARGE",4302.006071875958
 "cmioppkj006fk96teeg1zz9pm","Barge Samudera Abadi","BARGE",3238.260061740174
 "cmioppkj206fl96texosmci3a","Barge Lontar Abadi","BARGE",5160.093604275726
 "cmioppkj406fm96tewmzlug3b","Barge Mahakam Abadi","BARGE",4934.250045062305
@@ -183,11 +179,9 @@
 "cmioppkja06fq96te4r6k4ko1","Barge Kalimantan Utama","BARGE",3692.461745098783
 "cmioppkjb06fr96tehyqyj8ar","Barge Borneo Sejahtera","BARGE",2830.3745885426
 "cmioppkjd06fs96teksstg7pw","Barge Borneo Sejahtera","BARGE",4163.855463310008
-"cmioppkje06ft96temp6bk9q0","Barge Barito Utama","BARGE",3751.549360116765
 "cmioppkjg06fu96tegq66uuff","Barge Mahakam Sentosa","BARGE",2021.644918073331
 "cmioppkji06fv96te8dayxfgk","Barge Kalimantan Kencana","BARGE",2931.842031678751
 "cmioppkjk06fw96te1snzljey","Barge Barito Mulia","BARGE",4144.027353240515
-"cmioppkjm06fx96te431jg0ws","Barge Maritim Prima","BARGE",1813.551703489222
 "cmioppkjn06fy96tejz99mrl4","Barge Mahakam Kencana","BARGE",2153.720014313381
 "cmioppkjp06fz96te4jq6if5r","Barge Samudera Makmur","BARGE",2025.727350681595
 "cmioppkjq06g096te7a23ficb","Barge Nusantara Sentosa","BARGE",4980.614564314374
@@ -197,10 +191,8 @@
 "cmioppkjx06g496tejodvb0y8","Barge Kapuas Kencana","BARGE",4224.621467791217
 "cmioppkjy06g596tehex5f4ot","Barge Lontar Utama","BARGE",3233.278963748566
 "cmioppkk006g696telxnz624l","Barge Samudera Abadi","BARGE",4052.164937402922
-"cmioppkk206g796teuteq4994","Barge Nusantara Abadi","BARGE",5763.229640441707
 "cmioppkk306g896tes51err8t","Barge Lontar Prima","BARGE",4624.967324767624
 "cmioppkk506g996te019r2oj4","Barge Kalimantan Makmur","BARGE",4234.237610490861
-"cmioppkk706ga96tevhr8fhtt","Barge Nusantara Makmur","BARGE",3364.306846039131
 "cmioppkk806gb96tezvi5ar9m","Barge Nusantara Makmur","BARGE",4788.403376086425
 "cmioppkk906gc96ter0xuxf0x","Barge Kalimantan Kencana","BARGE",5291.661535494939
 "cmioppkkb06gd96teqp3nljty","Barge Nusantara Sentosa","BARGE",3513.177067269281
@@ -217,6 +209,9 @@
 "cmioppkks06go96te793du5f4","Barge Barito Utama","BARGE",5154.862661910986
 "cmioppkku06gp96tevho84q70","Barge Samudra Abadi","BARGE",5783.287952238756
 "cmioppkkw06gq96telh52895g","Barge Borneo Utama","BARGE",1940.105412779076
+"cmioppkjm06fx96te431jg0ws","Barge Maritim Prima","BARGE",1813.551703489222
+"cmioppkk206g796teuteq4994","Barge Nusantara Abadi","BARGE",5763.229640441707
+"cmioppkk706ga96tevhr8fhtt","Barge Nusantara Makmur","BARGE",3364.306846039131
 "cmioppkky06gr96tedc8fyb9z","Barge Kapuas Sejahtera","BARGE",4974.218757032708
 "cmioppkl006gs96te7qa13q4y","Barge Kalimantan Kencana","BARGE",2697.342770480504
 "cmioppkl206gt96te8ivgmpfe","Barge Nusantara Mulia","BARGE",3502.494679051046
@@ -232,13 +227,11 @@
 "cmioppklj06h396te5gnzrgv8","Barge Lontar Sejahtera","BARGE",2149.358824845021
 "cmioppklk06h496te1cgeujoh","Barge Samudra Sentosa","BARGE",3293.409746273026
 "cmioppklm06h596teg4l8ajhn","Barge Samudra Sentosa","BARGE",3238.185062518636
-"cmioppkln06h696te09oizyva","Barge Barito Prima","BARGE",5005.960745561656
 "cmioppklp06h796teb226jgq9","Barge Samudra Kencana","BARGE",3211.45697542111
 "cmioppklr06h896tef9wa12uf","Barge Kalimantan Sejahtera","BARGE",2827.712784068965
 "cmioppkls06h996tesd1srt8a","Barge Kalimantan Indah","BARGE",2424.129789977937
 "cmioppklv06ha96te6f49au7y","Barge Kapuas Mulia","BARGE",5125.961135708933
 "cmioppklx06hb96te8ows9cdj","Barge Maritim Prima","BARGE",4527.617672932948
-"cmioppklz06hc96texrmcp19f","Barge Borneo Jaya","BARGE",3127.324680694921
 "cmioppkm106hd96te6gs8046a","Barge Kalimantan Abadi","BARGE",5377.029299709666
 "cmioppkm306he96tenjcs1dfo","Barge Maritim Makmur","BARGE",5503.929889181743
 "cmioppkm506hf96te9fojabxr","Barge Borneo Abadi","BARGE",5315.443650777634
@@ -260,10 +253,10 @@
 "cmioppko906hv96te8szi9n8a","Barge Borneo Prima","BARGE",2685.742389461813
 "cmioppkob06hw96teo4pv7ars","Barge Barito Prima","BARGE",4643.607869426183
 "cmioppkod06hx96tel3hbbfr8","Barge Maritim Indah","BARGE",3023.764517137976
+"cmioppklz06hc96texrmcp19f","Barge Borneo Jaya","BARGE",3127.324680694921
 "cmioppkof06hy96te75kdgb1o","Barge Mahakam Sentosa","BARGE",5344.743313338773
 "cmioppkoi06hz96teyia3akw4","Barge Barito Mulia","BARGE",3334.868502500382
 "cmioppkok06i096texm1m370r","Barge Barito Prima","BARGE",1825.808681341666
-"cmioppkon06i196tet6lfxnbc","Barge Samudera Makmur","BARGE",4665.986471156998
 "cmioppkop06i296tezoww3dmh","Barge Maritim Prima","BARGE",2779.517287134403
 "cmioppkor06i396tesir6skbv","Barge Kapuas Jaya","BARGE",2505.387934804372
 "cmioppkot06i496teju1n73g6","Barge Kalimantan Sejahtera","BARGE",3229.767452533699
@@ -290,7 +283,6 @@
 "cmioppkq506ip96tew3s55fvq","Barge Kapuas Makmur","BARGE",2511.074648641398
 "cmioppkq606iq96te5iycaued","Barge Lontar Sejahtera","BARGE",2570.649538940205
 "cmioppkq806ir96tezni8ssr5","Barge Mahakam Sentosa","BARGE",2955.643072053769
-"cmioppkq906is96te0a1c5njo","Barge Kapuas Utama","BARGE",4961.695168141362
 "cmioppkqb06it96tehm2hxn7h","Barge Nusantara Abadi","BARGE",4111.503672180988
 "cmioppkqc06iu96tefcv3o4nl","Barge Lontar Utama","BARGE",5722.020121574949
 "cmioppkqe06iv96teh0csmpsu","Barge Mahakam Prima","BARGE",4479.441421677337
@@ -303,6 +295,7 @@
 "cmioppkqq06j296te70ohdbfz","Barge Nusantara Abadi","BARGE",5640.959027285783
 "cmioppkqs06j396tembwalshi","Barge Samudra Indah","BARGE",4290.904767146751
 "cmioppkqu06j496te7wqy01bw","Barge Kalimantan Kencana","BARGE",3370.104107354693
+"cmioppkq906is96te0a1c5njo","Barge Kapuas Utama","BARGE",4961.695168141362
 "cmioppkqw06j596teh1tch8gw","Barge Maritim Kencana","BARGE",2786.391394962645
 "cmioppkqy06j696te67cpeqwm","Barge Barito Sentosa","BARGE",4436.958394878775
 "cmioppkr006j796te6dcdhib6","Barge Barito Indah","BARGE",2212.920808670409
@@ -315,9 +308,7 @@
 "cmioppkrc06je96te3dt1b4yy","Barge Lontar Mulia","BARGE",4009.648520718853
 "cmioppkre06jf96tez164wu4n","Barge Mahakam Mulia","BARGE",2330.955130299329
 "cmioppkrg06jg96tec3moqm8n","Barge Maritim Mulia","BARGE",1877.110135558646
-"cmioppkrh06jh96te3xwhda1y","Barge Barito Jaya","BARGE",3912.130168465124
 "cmioppkrj06ji96te9po28655","Barge Nusantara Mulia","BARGE",2342.020033357793
-"cmioppkrl06jj96tee7n7wnx4","Barge Samudera Utama","BARGE",5072.686163585496
 "cmioppkrn06jk96tejccw8zti","Barge Lontar Sejahtera","BARGE",5749.200231704915
 "cmioppkrp06jl96tew333ztdu","Barge Maritim Prima","BARGE",1905.885012505405
 "cmioppkrq06jm96te74u07xv9","Barge Borneo Sejahtera","BARGE",5072.487497695645
@@ -336,7 +327,6 @@
 "cmioppkse06jz96teptof9808","Barge Borneo Abadi","BARGE",2083.163096752945
 "cmioppksg06k096te0zayhqav","Barge Kalimantan Abadi","BARGE",2041.224993971023
 "cmioppksh06k196teegadrwvk","Barge Lontar Sentosa","BARGE",1910.903949794883
-"cmioppksj06k296terpjghq8y","Barge Maritim Sentosa","BARGE",1930.826266637818
 "cmioppksk06k396te7zrl6x4f","Barge Samudra Kencana","BARGE",4981.445044283902
 "cmioppksm06k496teujfhcaos","Barge Lontar Utama","BARGE",2291.44489763987
 "cmioppksn06k596te8yyqy56p","Barge Samudra Prima","BARGE",2846.336850017099
@@ -346,13 +336,13 @@
 "cmioppkst06k996tef491eahd","Barge Samudra Makmur","BARGE",4302.998045873297
 "cmioppksv06ka96tejp85kcn0","Barge Mahakam Mulia","BARGE",2565.172322553114
 "cmioppksw06kb96tefuwas3th","Barge Nusantara Utama","BARGE",2853.450222167082
+"cmioppkrl06jj96tee7n7wnx4","Barge Samudera Utama","BARGE",5072.686163585496
+"cmioppksj06k296terpjghq8y","Barge Maritim Sentosa","BARGE",1930.826266637818
 "cmioppksy06kc96te8tdr33iq","Barge Samudra Makmur","BARGE",4058.639124762788
 "cmioppksz06kd96teki7v9ixk","Barge Mahakam Indah","BARGE",2984.479771220572
 "cmioppkt106ke96teuvaihp8w","Barge Kapuas Utama","BARGE",4289.221814974362
 "cmioppkt306kf96tep9z6ton9","Barge Kalimantan Abadi","BARGE",4402.692133771139
 "cmioppkt406kg96tebp54rsqj","Barge Kapuas Utama","BARGE",2003.421268551209
-"cmioppkt506kh96tepfw4edvj","Barge Maritim Indah","BARGE",3957.040127786132
-"cmioppkt706ki96tehvf88kuh","Barge Kapuas Jaya","BARGE",3994.908905946563
 "cmioppkt906kj96te19dc59az","Barge Samudera Mulia","BARGE",2376.592112250596
 "cmioppktb06kk96te2p2q4y6h","Barge Kapuas Prima","BARGE",5029.109498726291
 "cmioppktc06kl96tevhftbvh7","Barge Kalimantan Prima","BARGE",4852.7180533528
@@ -362,46 +352,43 @@
 "cmioppkti06kp96tedf9ykirx","Barge Mahakam Utama","BARGE",3031.288890354416
 "cmioppktj06kq96temkorboeu","Barge Borneo Kencana","BARGE",4118.542123258925
 "cmioppktl06kr96tenhz5tnjq","Barge Kapuas Jaya","BARGE",2085.431148370501
-"cmioppktm06ks96teis19gi4s","Barge Samudra Prima","BARGE",5064.272950005579
 "cmioppkto06kt96tea2xfnr4j","Barge Nusantara Sejahtera","BARGE",5351.094825720388
 "cmioppktq06ku96tee6fyy2qi","Barge Borneo Utama","BARGE",5793.3111363964
-"cmioppktr06kv96te42o65mif","Barge Kalimantan Mulia","BARGE",3785.408269777694
 "cmioppktt06kw96te4cnuki9c","Barge Samudera Kencana","BARGE",2694.664877589383
-"cmioppktv06kx96tehxdys7a3","Barge Nusantara Sentosa","BARGE",2971.303880891148
 "cmioppktw06ky96teh5k3tc29","Barge Lontar Utama","BARGE",4060.837944966346
 "cmioppkty06kz96tevsrixkni","Barge Kalimantan Indah","BARGE",3675.575321606317
 "cmioppktz06l096teklw1f8zo","Barge Maritim Makmur","BARGE",2707.805709571088
-"cmioppku006l196te2v5eb4mo","Barge Kalimantan Makmur","BARGE",2937.216283469188
 "cmioppku106l296te7ugibcq6","Barge Samudera Jaya","BARGE",5651.874989632393
 "cmioppku306l396tewv0v7h7q","Barge Kalimantan Sentosa","BARGE",2453.112094951454
 "cmioppku506l496te5apyoeku","Barge Nusantara Sentosa","BARGE",4041.764960159359
 "cmioppku706l596tem6q07uhw","Barge Samudra Sejahtera","BARGE",2889.054800814693
-"cmioppku906l696teivb3p6jq","Barge Kapuas Makmur","BARGE",4353.62707858788
 "cmioppkua06l796te2xig3ls7","Barge Samudera Kencana","BARGE",3735.988500784122
 "cmioppkuc06l896textha5hqs","Barge Mahakam Abadi","BARGE",4654.080900055258
 "cmioppkue06l996tedcevo1t3","Barge Borneo Prima","BARGE",2499.857721441549
 "cmioppkug06la96tea20evrw0","Barge Lontar Sejahtera","BARGE",2208.669002970868
-"cmioppkuj06lb96tefnpdat45","Barge Lontar Sejahtera","BARGE",5547.872060956623
 "cmioppkul06lc96tedf9c560n","Barge Nusantara Prima","BARGE",2977.306275562618
 "cmioppkuo06ld96te6x1kf736","Barge Borneo Jaya","BARGE",4882.546497023819
 "cmioppkur06le96tenxerhf48","Barge Kapuas Jaya","BARGE",2079.547835679067
-"cmioppkuu06lf96teriokk00a","Barge Borneo Prima","BARGE",4068.957373185575
 "cmioppkux06lg96te8phvranl","Barge Borneo Sentosa","BARGE",3922.128055399702
 "cmioppkv106lh96tejpedhfbq","Barge Kapuas Abadi","BARGE",5621.607556384399
 "cmioppkv706li96tesz79c5f1","Barge Nusantara Kencana","BARGE",3813.741558901691
+"cmioppkt706ki96tehvf88kuh","Barge Kapuas Jaya","BARGE",3994.908905946563
+"cmioppktm06ks96teis19gi4s","Barge Samudra Prima","BARGE",5064.272950005579
+"cmioppktr06kv96te42o65mif","Barge Kalimantan Mulia","BARGE",3785.408269777694
+"cmioppktv06kx96tehxdys7a3","Barge Nusantara Sentosa","BARGE",2971.303880891148
+"cmioppku006l196te2v5eb4mo","Barge Kalimantan Makmur","BARGE",2937.216283469188
+"cmioppku906l696teivb3p6jq","Barge Kapuas Makmur","BARGE",4353.62707858788
+"cmioppkuj06lb96tefnpdat45","Barge Lontar Sejahtera","BARGE",5547.872060956623
+"cmioppkuu06lf96teriokk00a","Barge Borneo Prima","BARGE",4068.957373185575
 "cmioppkvb06lj96te8eiv73pp","Barge Samudera Prima","BARGE",4200.252789189291
 "cmioppkve06lk96tehvt6gr9t","Barge Mahakam Utama","BARGE",2548.521079151705
 "cmioppkvh06ll96tew4s5brzu","Barge Samudra Jaya","BARGE",2170.890768694373
 "cmioppkvm06lm96ted48zo294","Barge Samudra Abadi","BARGE",4568.681470709165
-"cmioppkvp06ln96ted5yb9cxq","Barge Nusantara Prima","BARGE",2104.242647946664
 "cmioppkvs06lo96tecp7e4bt6","Barge Barito Abadi","BARGE",2690.063692334325
-"cmioppkvu06lp96tep86aosfw","Barge Maritim Kencana","BARGE",3236.789708793889
 "cmioppkvx06lq96tehzpmaylr","Barge Mahakam Jaya","BARGE",2285.581572277478
 "cmioppkw006lr96tepdm2zgbf","Barge Samudra Abadi","BARGE",2170.020075328285
-"cmioppkw306ls96tek3qg3w8c","Barge Barito Makmur","BARGE",3538.052721369654
 "cmioppkw606lt96te8zigk02o","Barge Kalimantan Sentosa","BARGE",4951.197369359315
 "cmioppkw806lu96tehx886sak","Barge Borneo Indah","BARGE",4919.940479142891
-"cmioppkwa06lv96te34rb9b1w","Barge Nusantara Indah","BARGE",2426.398265086883
 "cmioppkwc06lw96tevi1m4fdv","Barge Kalimantan Indah","BARGE",3856.401823422055
 "cmioppkwe06lx96te0o2xr6ph","Barge Nusantara Utama","BARGE",4853.475080812013
 "cmioppkwh06ly96te6x7aqvzr","Barge Samudra Abadi","BARGE",2337.763342827629
@@ -410,7 +397,6 @@
 "cmioppkwo06m196te6ifj61hf","Barge Samudera Mulia","BARGE",3216.971888186657
 "cmioppkwp06m296teu8kz9gc3","Barge Mahakam Indah","BARGE",4889.113254507623
 "cmioppkwr06m396tep0rbattj","Barge Lontar Kencana","BARGE",2739.12796057051
-"cmioppkwt06m496te41xgct9z","Barge Maritim Prima","BARGE",2182.121267494317
 "cmioppkww06m596tebsi3lugk","Barge Samudra Sejahtera","BARGE",4372.737443141469
 "cmioppkx206m696telst9c1l0","Barge Samudra Indah","BARGE",3350.009946211648
 "cmioppkx406m796te473dj9ys","Barge Maritim Utama","BARGE",5506.260809213158
@@ -426,12 +412,16 @@
 "cmioppkxq06mh96tecf4m3xo8","Barge Nusantara Sejahtera","BARGE",3562.353314894039
 "cmioppkxs06mi96te9frfc792","Barge Samudra Kencana","BARGE",5569.170240301894
 "cmioppkxw06mj96tefoxdpt5c","Barge Borneo Makmur","BARGE",2102.183129982756
-"cmioppkxz06mk96te8j2kjdlg","Barge Maritim Sejahtera","BARGE",5566.799477251408
 "cmioppky106ml96te1ea2vo80","Barge Mahakam Indah","BARGE",4152.789599510666
 "cmioppky306mm96tewk92rbjf","Barge Kalimantan Kencana","BARGE",3916.440718058703
 "cmioppky506mn96teeliexltb","Barge Barito Jaya","BARGE",2839.230279687632
 "cmioppky806mo96tenf7ve8q7","Barge Borneo Sejahtera","BARGE",4932.056379769637
 "cmioppkya06mp96teore2xa28","Barge Barito Utama","BARGE",3624.193075957869
+"cmioppkvu06lp96tep86aosfw","Barge Maritim Kencana","BARGE",3236.789708793889
+"cmioppkw306ls96tek3qg3w8c","Barge Barito Makmur","BARGE",3538.052721369654
+"cmioppkwa06lv96te34rb9b1w","Barge Nusantara Indah","BARGE",2426.398265086883
+"cmioppkwt06m496te41xgct9z","Barge Maritim Prima","BARGE",2182.121267494317
+"cmioppkxz06mk96te8j2kjdlg","Barge Maritim Sejahtera","BARGE",5566.799477251408
 "cmioppkyd06mq96temv6pg6ff","Barge Borneo Sentosa","BARGE",4074.400812210734
 "cmioppkyg06mr96te92pqyk89","Barge Barito Makmur","BARGE",2732.656624209518
 "cmioppkyi06ms96tew1lhaalz","Barge Samudera Kencana","BARGE",4709.125259175718
@@ -443,7 +433,6 @@
 "cmioppkyu06my96te6y02vjzn","Barge Samudra Sentosa","BARGE",2848.674676141658
 "cmioppkyw06mz96teefwnkskr","Barge Nusantara Sentosa","BARGE",2011.40571114401
 "cmioppkyy06n096te010pbww7","Barge Nusantara Mulia","BARGE",4054.567644744895
-"cmioppkz006n196tex6js3n5u","Barge Lontar Mulia","BARGE",5778.441364134735
 "cmioppkz206n296te1ike9vmt","Barge Barito Kencana","BARGE",5560.299431587178
 "cmioppkz406n396tegyr5hmc5","Barge Kalimantan Abadi","BARGE",3008.248816588725
 "cmioppkz606n496tedqs1b1ec","Barge Mahakam Abadi","BARGE",3437.288466840985
@@ -459,22 +448,22 @@
 "cmioppkzr06ne96te5ckbxlke","Tugboat Kalimantan-458","TUG_BOAT",0
 "cmioppkzt06nf96tehw05ht5b","Tugboat Lontar-459","TUG_BOAT",0
 "cmioppkzu06ng96teowsrat5w","Tugboat Maritim-460","TUG_BOAT",0
-"cmioppkzw06nh96tevq6omlt8","Tugboat Borneo-461","TUG_BOAT",0
 "cmioppkzy06ni96tebd7v8f2t","Tugboat Maritim-462","TUG_BOAT",0
 "cmioppl0006nj96tefx5l5wyq","Tugboat Nusantara-463","TUG_BOAT",0
-"cmioppl0206nk96tekxqtdmyi","Tugboat Mahakam-464","TUG_BOAT",0
 "cmioppl0406nl96tegc250zhj","Tugboat Borneo-465","TUG_BOAT",0
 "cmioppl0606nm96texdsgg187","Tugboat Mahakam-466","TUG_BOAT",0
-"cmioppl0906nn96tex2n0fwcg","Tugboat Barito-467","TUG_BOAT",0
 "cmioppl0b06no96te4chmzk6u","Tugboat Maritim-468","TUG_BOAT",0
-"cmioppl0c06np96tebq4wmfm2","Tugboat Mahakam-469","TUG_BOAT",0
 "cmioppl0e06nq96tevn71zr15","Tugboat Barito-470","TUG_BOAT",0
 "cmioppl0g06nr96tecd7deugv","Tugboat Lontar-471","TUG_BOAT",0
-"cmioppl0i06ns96te4i3o3azy","Tugboat Borneo-472","TUG_BOAT",0
 "cmioppl0k06nt96te7hwdjv2w","Tugboat Maritim-473","TUG_BOAT",0
 "cmioppl0m06nu96tei2w3lqvp","Tugboat Samudra-474","TUG_BOAT",0
 "cmioppl0p06nv96tebsotc5d2","Tugboat Samudra-475","TUG_BOAT",0
 "cmioppl0r06nw96teqnfs2m9j","Tugboat Borneo-476","TUG_BOAT",0
+"cmioppkzw06nh96tevq6omlt8","Tugboat Borneo-461","TUG_BOAT",0
+"cmioppl0206nk96tekxqtdmyi","Tugboat Mahakam-464","TUG_BOAT",0
+"cmioppl0906nn96tex2n0fwcg","Tugboat Barito-467","TUG_BOAT",0
+"cmioppl0c06np96tebq4wmfm2","Tugboat Mahakam-469","TUG_BOAT",0
+"cmioppl0i06ns96te4i3o3azy","Tugboat Borneo-472","TUG_BOAT",0
 "cmioppl0s06nx96tewn11k9se","Tugboat Kapuas-477","TUG_BOAT",0
 "cmioppl0u06ny96tematedykt","Tugboat Samudera-478","TUG_BOAT",0
 "cmioppl0v06nz96te9tpvhwz2","Tugboat Samudera-479","TUG_BOAT",0
@@ -483,7 +472,6 @@
 "cmioppl1006o296teiw9yq4cl","Tugboat Samudra-482","TUG_BOAT",0
 "cmioppl1106o396teq1ue4x7m","Tugboat Samudera-483","TUG_BOAT",0
 "cmioppl1306o496te25xm1lz9","Tugboat Kapuas-484","TUG_BOAT",0
-"cmioppl1506o596terttjipjz","Tugboat Mahakam-485","TUG_BOAT",0
 "cmioppl1706o696teim46xjwz","Tugboat Borneo-486","TUG_BOAT",0
 "cmioppl1906o796tefoyr7igs","Tugboat Maritim-487","TUG_BOAT",0
 "cmioppl1a06o896tei0l75al7","Tugboat Kapuas-488","TUG_BOAT",0
@@ -501,12 +489,10 @@
 "cmioppl1t06ok96te3r9bbwg0","Tugboat Borneo-500","TUG_BOAT",0
 "cmioppl1u06ol96teuht8nuqo","Tugboat Lontar-501","TUG_BOAT",0
 "cmioppl1w06om96tewrzf5702","Tugboat Lontar-502","TUG_BOAT",0
-"cmioppl1x06on96te8n19eko8","Tugboat Samudra-503","TUG_BOAT",0
 "cmioppl1y06oo96tenxk8gf22","Tugboat Lontar-504","TUG_BOAT",0
 "cmioppl2006op96teye6ix8m5","Tugboat Samudera-505","TUG_BOAT",0
 "cmioppl2206oq96te71yo4eu4","Tugboat Mahakam-506","TUG_BOAT",0
 "cmioppl2306or96temzabt0gy","Tugboat Samudera-507","TUG_BOAT",0
-"cmioppl2506os96tew5rqo5le","Tugboat Borneo-508","TUG_BOAT",0
 "cmioppl2706ot96te5989gble","Tugboat Kapuas-509","TUG_BOAT",0
 "cmioppl2806ou96tedm9ez1ud","Tugboat Mahakam-510","TUG_BOAT",0
 "cmioppl2906ov96telj8if1oa","Tugboat Lontar-511","TUG_BOAT",0
@@ -518,6 +504,8 @@
 "cmioppl2j06p196te5l640pfe","Tugboat Kalimantan-517","TUG_BOAT",0
 "cmioppl2l06p296te0vasdgj7","Tugboat Borneo-518","TUG_BOAT",0
 "cmioppl2m06p396tetw45dbz1","Tugboat Samudera-519","TUG_BOAT",0
+"cmioppl1x06on96te8n19eko8","Tugboat Samudra-503","TUG_BOAT",0
+"cmioppl2506os96tew5rqo5le","Tugboat Borneo-508","TUG_BOAT",0
 "cmioppl2o06p496te755zfox7","Tugboat Lontar-520","TUG_BOAT",0
 "cmioppl2p06p596teatdc2akp","Tugboat Borneo-521","TUG_BOAT",0
 "cmioppl2r06p696tevfh4w4kf","Tugboat Lontar-522","TUG_BOAT",0
@@ -525,35 +513,27 @@
 "cmioppl2t06p896te70qqv665","Tugboat Nusantara-524","TUG_BOAT",0
 "cmioppl2v06p996tes9nxw4pq","Tugboat Kapuas-525","TUG_BOAT",0
 "cmioppl2w06pa96tee4gmb5sg","Tugboat Nusantara-526","TUG_BOAT",0
-"cmioppl2y06pb96te2t24b8td","Tugboat Mahakam-527","TUG_BOAT",0
 "cmioppl3006pc96te4ruj8bfn","Tugboat Borneo-528","TUG_BOAT",0
 "cmioppl3206pd96tedu44tukh","Tugboat Kapuas-529","TUG_BOAT",0
 "cmioppl3406pe96tepiovx9wj","Tugboat Kapuas-530","TUG_BOAT",0
-"cmioppl3506pf96te4kowe3n0","Tugboat Kalimantan-531","TUG_BOAT",0
 "cmioppl3606pg96teq0s0rk9p","Tugboat Kapuas-532","TUG_BOAT",0
-"cmioppl3806ph96ten17ieji1","Tugboat Kalimantan-533","TUG_BOAT",0
 "cmioppl3a06pi96teysel4qpq","Tugboat Kalimantan-534","TUG_BOAT",0
-"cmioppl3b06pj96tey01h4k2a","Tugboat Maritim-535","TUG_BOAT",0
 "cmioppl3d06pk96tec0u5kh5b","Tugboat Samudra-536","TUG_BOAT",0
 "cmioppl3f06pl96tej9jc0htp","Tugboat Samudra-537","TUG_BOAT",0
 "cmioppl3h06pm96tewi50lskc","Tugboat Mahakam-538","TUG_BOAT",0
 "cmioppl3i06pn96teqtzlww5m","Tugboat Samudra-539","TUG_BOAT",0
 "cmioppl3k06po96tele77fxwq","Tugboat Lontar-540","TUG_BOAT",0
 "cmioppl3m06pp96teuy3baifc","Tugboat Samudra-541","TUG_BOAT",0
-"cmioppl3n06pq96te1qwxa4df","Tugboat Samudra-542","TUG_BOAT",0
 "cmioppl3p06pr96tee34cu9go","Tugboat Samudra-543","TUG_BOAT",0
 "cmioppl3q06ps96teb7vg1ovf","Tugboat Nusantara-544","TUG_BOAT",0
 "cmioppl3r06pt96te0zye1d4w","Tugboat Samudra-545","TUG_BOAT",0
 "cmioppl3t06pu96teqk4qn17l","Tugboat Borneo-546","TUG_BOAT",0
 "cmioppl3u06pv96tez0hzihtb","Tugboat Samudra-547","TUG_BOAT",0
-"cmioppl3w06pw96te2v05qku9","Tugboat Kalimantan-548","TUG_BOAT",0
 "cmioppl3y06px96teng4euymn","Tugboat Samudra-549","TUG_BOAT",0
 "cmioppl4006py96tezws9xwa7","Tugboat Barito-550","TUG_BOAT",0
-"cmioppl4106pz96tes6usj4nl","Tugboat Kalimantan-551","TUG_BOAT",0
 "cmioppl4206q096teji3fb0lm","Tugboat Lontar-552","TUG_BOAT",0
 "cmioppl4406q196tepaiatkar","Tugboat Mahakam-553","TUG_BOAT",0
 "cmioppl4506q296te7vdi4a9b","Tugboat Mahakam-554","TUG_BOAT",0
-"cmioppl4706q396tefkrvodav","Tugboat Samudra-555","TUG_BOAT",0
 "cmioppl4806q496teb5u9h91f","Tugboat Lontar-556","TUG_BOAT",0
 "cmioppl4a06q596teccqmcu6c","Tugboat Samudera-557","TUG_BOAT",0
 "cmioppl4c06q696teyxqb6rx6","Tugboat Borneo-558","TUG_BOAT",0
@@ -561,6 +541,13 @@
 "cmioppl4g06q896tep74p2c9w","Tugboat Kalimantan-560","TUG_BOAT",0
 "cmioppl4h06q996teeydgzhxm","Tugboat Samudra-561","TUG_BOAT",0
 "cmioppl4j06qa96te4pydzgg1","Tugboat Samudra-562","TUG_BOAT",0
+"cmioppl3506pf96te4kowe3n0","Tugboat Kalimantan-531","TUG_BOAT",0
+"cmioppl3806ph96ten17ieji1","Tugboat Kalimantan-533","TUG_BOAT",0
+"cmioppl3b06pj96tey01h4k2a","Tugboat Maritim-535","TUG_BOAT",0
+"cmioppl3n06pq96te1qwxa4df","Tugboat Samudra-542","TUG_BOAT",0
+"cmioppl3w06pw96te2v05qku9","Tugboat Kalimantan-548","TUG_BOAT",0
+"cmioppl4106pz96tes6usj4nl","Tugboat Kalimantan-551","TUG_BOAT",0
+"cmioppl4706q396tefkrvodav","Tugboat Samudra-555","TUG_BOAT",0
 "cmioppl4k06qb96tem9e1cy08","Tugboat Kapuas-563","TUG_BOAT",0
 "cmioppl4l06qc96teikgy5zql","Tugboat Kapuas-564","TUG_BOAT",0
 "cmioppl4n06qd96tekv26m6as","Tugboat Samudra-565","TUG_BOAT",0
@@ -571,7 +558,6 @@
 "cmioppl4v06qi96teigr2m9rn","Tugboat Lontar-570","TUG_BOAT",0
 "cmioppl4x06qj96te62ehu6n5","Tugboat Mahakam-571","TUG_BOAT",0
 "cmioppl4y06qk96te8r50qrwp","Tugboat Lontar-572","TUG_BOAT",0
-"cmioppl5006ql96te1f1na6ux","Tugboat Mahakam-573","TUG_BOAT",0
 "cmioppl5206qm96teitq5koqj","Tugboat Samudera-574","TUG_BOAT",0
 "cmioppl5306qn96te6r0jcmvr","Tugboat Barito-575","TUG_BOAT",0
 "cmioppl5506qo96te2ql7q5u3","Tugboat Barito-576","TUG_BOAT",0
@@ -584,8 +570,6 @@
 "cmioppl5m06qv96te2m6u66wt","Tugboat Maritim-583","TUG_BOAT",0
 "cmioppl5u06qw96tei008oeg0","Tugboat Kapuas-584","TUG_BOAT",0
 "cmioppl6006qx96te4sy2cdp3","Tugboat Nusantara-585","TUG_BOAT",0
-"cmioppl6406qy96teopxet39e","Tugboat Kapuas-586","TUG_BOAT",0
-"cmioppl6c06qz96tej1jwzdkq","Tugboat Nusantara-587","TUG_BOAT",0
 "cmioppl6h06r096teffgklfuv","Tugboat Samudra-588","TUG_BOAT",0
 "cmioppl6k06r196tekzme5tpy","Tugboat Samudra-589","TUG_BOAT",0
 "cmioppl6r06r296temkvs2yb7","Tugboat Borneo-590","TUG_BOAT",0
@@ -595,7 +579,24 @@
 "cmioppl7806r696tez8j0w3ks","Tugboat Kalimantan-594","TUG_BOAT",0
 "cmioppl7b06r796tefkf8l6ou","Tugboat Barito-595","TUG_BOAT",0
 "cmioppl7d06r896te0tuq7jnn","Tugboat Kalimantan-596","TUG_BOAT",0
-"cmioppl7f06r996tewhz8czwl","Tugboat Samudra-597","TUG_BOAT",0
 "cmioppl7h06ra96tetiz3hvip","Tugboat Borneo-598","TUG_BOAT",0
 "cmioppl7j06rb96te0smxm2o6","Tugboat Mahakam-599","TUG_BOAT",0
 "cmioppl7m06rc96tednnr977j","Tugboat Mahakam-600","TUG_BOAT",0
+"cmipnujbt000552cauf7s4ehn","MV SINMA","BARGE",12000
+"cmioppkah06bd96tepdf6hrel","MV Kapuas Sejahtera","MOTHER_VESSEL",10144.39743988282
+"cmioppkbj06by96terw9kk5ex","MV Kalimantan Prima","MOTHER_VESSEL",10370.55092640982
+"cmioppkf406de96tekxe6elb7","MV Maritim Indah","MOTHER_VESSEL",12101.39860355411
+"cmioppkh606eh96teosl5tgek","Barge Kapuas Utama","BARGE",2113.072104844132
+"cmioppl6406qy96teopxet39e","Tugboat Kapuas-586","TUG_BOAT",0
+"cmioppl6c06qz96tej1jwzdkq","Tugboat Nusantara-587","TUG_BOAT",0
+"cmioppl7f06r996tewhz8czwl","Tugboat Samudra-597","TUG_BOAT",0
+"cmioppkje06ft96temp6bk9q0","Barge Barito Utama","BARGE",3751.549360116765
+"cmioppkln06h696te09oizyva","Barge Barito Prima","BARGE",5005.960745561656
+"cmioppkon06i196tet6lfxnbc","Barge Samudera Makmur","BARGE",4665.986471156998
+"cmioppkrh06jh96te3xwhda1y","Barge Barito Jaya","BARGE",3912.130168465124
+"cmioppkt506kh96tepfw4edvj","Barge Maritim Indah","BARGE",3957.040127786132
+"cmioppkvp06ln96ted5yb9cxq","Barge Nusantara Prima","BARGE",2104.242647946664
+"cmioppkz006n196tex6js3n5u","Barge Lontar Mulia","BARGE",5778.441364134735
+"cmioppl1506o596terttjipjz","Tugboat Mahakam-485","TUG_BOAT",0
+"cmioppl2y06pb96te2t24b8td","Tugboat Mahakam-527","TUG_BOAT",0
+"cmioppl5006ql96te1f1na6ux","Tugboat Mahakam-573","TUG_BOAT",0
