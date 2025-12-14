@@ -600,17 +600,52 @@ class AIService {
           }
         }
 
-        if (effectiveMiningSiteId && effectiveRoadSegmentId) {
+        if (effectiveRoadSegmentId) {
           const rs = await prisma.roadSegment.findUnique({
             where: { id: effectiveRoadSegmentId },
-            select: { id: true, miningSiteId: true, isActive: true },
+            select: { id: true, miningSiteId: true, isActive: true, distance: true },
           });
-          if (!rs || rs.isActive !== true || rs.miningSiteId !== effectiveMiningSiteId) {
+          if (!rs || rs.isActive !== true) {
             effectiveRoadSegmentId = null;
+          } else {
+            if (!effectiveMiningSiteId) {
+              effectiveMiningSiteId = rs.miningSiteId;
+            } else if (rs.miningSiteId !== effectiveMiningSiteId) {
+              effectiveRoadSegmentId = null;
+            }
           }
         }
 
-        if (effectiveMiningSiteId && effectiveLoadingPointId) {
+        if (!effectiveMiningSiteId) {
+          const fallbackSite = await prisma.miningSite.findFirst({
+            where: {
+              isActive: true,
+              loadingPoints: { some: { isActive: true } },
+              dumpingPoints: { some: { isActive: true } },
+              roadSegments: { some: { isActive: true } },
+            },
+            include: {
+              loadingPoints: { where: { isActive: true }, take: 1 },
+              dumpingPoints: { where: { isActive: true }, take: 1 },
+              roadSegments: { where: { isActive: true }, take: 1 },
+            },
+            orderBy: { createdAt: 'asc' },
+          });
+          if (fallbackSite) {
+            effectiveMiningSiteId = fallbackSite.id;
+            if (!effectiveLoadingPointId && fallbackSite.loadingPoints[0]) {
+              effectiveLoadingPointId = fallbackSite.loadingPoints[0].id;
+            }
+            if (!effectiveDumpingPointId && fallbackSite.dumpingPoints[0]) {
+              effectiveDumpingPointId = fallbackSite.dumpingPoints[0].id;
+            }
+            if (!effectiveRoadSegmentId && fallbackSite.roadSegments[0]) {
+              effectiveRoadSegmentId = fallbackSite.roadSegments[0].id;
+            }
+          }
+        }
+
+        if (effectiveLoadingPointId) {
           const lp = await prisma.loadingPoint.findUnique({
             where: { id: effectiveLoadingPointId },
             select: { id: true, miningSiteId: true, isActive: true },
@@ -620,7 +655,7 @@ class AIService {
           }
         }
 
-        if (effectiveMiningSiteId && effectiveDumpingPointId) {
+        if (effectiveDumpingPointId) {
           const dp = await prisma.dumpingPoint.findUnique({
             where: { id: effectiveDumpingPointId },
             select: { id: true, miningSiteId: true, isActive: true },
@@ -630,50 +665,55 @@ class AIService {
           }
         }
 
-        if (!effectiveLoadingPointId) {
-          const defaultLoadingPoint = await prisma.loadingPoint.findFirst({
+        if (!effectiveLoadingPointId && effectiveMiningSiteId) {
+          const siteLoadingPoint = await prisma.loadingPoint.findFirst({
             where: {
               isActive: true,
-              ...(effectiveMiningSiteId ? { miningSiteId: effectiveMiningSiteId } : {}),
+              miningSiteId: effectiveMiningSiteId,
             },
             orderBy: { createdAt: 'asc' },
           });
-          if (defaultLoadingPoint) {
-            effectiveLoadingPointId = defaultLoadingPoint.id;
-          } else {
-            const fallbackLoadingPoint = await prisma.loadingPoint.findFirst({
-              where: { isActive: true },
-              orderBy: { createdAt: 'asc' },
-            });
-            if (fallbackLoadingPoint) {
-              effectiveLoadingPointId = fallbackLoadingPoint.id;
-            } else {
-              throw new Error('No active loading point found');
-            }
+          if (siteLoadingPoint) {
+            effectiveLoadingPointId = siteLoadingPoint.id;
           }
         }
 
-        if (!effectiveDumpingPointId) {
-          const defaultDumpingPoint = await prisma.dumpingPoint.findFirst({
+        if (!effectiveDumpingPointId && effectiveMiningSiteId) {
+          const siteDumpingPoint = await prisma.dumpingPoint.findFirst({
             where: {
               isActive: true,
-              ...(effectiveMiningSiteId ? { miningSiteId: effectiveMiningSiteId } : {}),
+              miningSiteId: effectiveMiningSiteId,
             },
             orderBy: { createdAt: 'asc' },
           });
-          if (defaultDumpingPoint) {
-            effectiveDumpingPointId = defaultDumpingPoint.id;
-          } else {
-            const fallbackDumpingPoint = await prisma.dumpingPoint.findFirst({
-              where: { isActive: true },
-              orderBy: { createdAt: 'asc' },
-            });
-            if (fallbackDumpingPoint) {
-              effectiveDumpingPointId = fallbackDumpingPoint.id;
-            } else {
-              throw new Error('No active dumping point found');
-            }
+          if (siteDumpingPoint) {
+            effectiveDumpingPointId = siteDumpingPoint.id;
           }
+        }
+
+        if (!effectiveRoadSegmentId && effectiveMiningSiteId) {
+          const siteRoadSegment = await prisma.roadSegment.findFirst({
+            where: {
+              isActive: true,
+              miningSiteId: effectiveMiningSiteId,
+            },
+            orderBy: { createdAt: 'asc' },
+          });
+          if (siteRoadSegment) {
+            effectiveRoadSegmentId = siteRoadSegment.id;
+          }
+        }
+
+        if (!effectiveLoadingPointId) {
+          throw new Error(`No active loading point found for mining site. Please select a valid mining site with loading points.`);
+        }
+
+        if (!effectiveDumpingPointId) {
+          throw new Error(`No active dumping point found for mining site. Please select a valid mining site with dumping points.`);
+        }
+
+        if (!effectiveRoadSegmentId) {
+          logger.warn('No road segment found for mining site, hauling will be created without road segment');
         }
 
         const today = new Date();
