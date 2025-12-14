@@ -300,6 +300,7 @@ model Operator {
   user                  User                @relation(fields: [userId], references: [id])
   trucks                Truck[]
   haulingActivities     HaulingActivity[]
+  excavatorHaulingActivities HaulingActivity[] @relation("HaulingExcavatorOperator")
   incidentReports       IncidentReport[]
   
   @@map("operators")
@@ -331,8 +332,9 @@ model HaulingActivity {
   activityNumber        String              @unique
   
   truckId               String
-  excavatorId           String
+  excavatorId           String?             // Made optional - excavator is not always required
   operatorId            String
+  excavatorOperatorId   String?
   supervisorId          String
   
   loadingPointId        String
@@ -380,8 +382,9 @@ model HaulingActivity {
   updatedAt             DateTime            @updatedAt
   
   truck         Truck           @relation(fields: [truckId], references: [id])
-  excavator     Excavator       @relation(fields: [excavatorId], references: [id])
+  excavator     Excavator?      @relation(fields: [excavatorId], references: [id])
   operator      Operator        @relation(fields: [operatorId], references: [id])
+  excavatorOperator Operator?    @relation("HaulingExcavatorOperator", fields: [excavatorOperatorId], references: [id])
   supervisor    User            @relation(fields: [supervisorId], references: [id])
   loadingPoint  LoadingPoint    @relation(fields: [loadingPointId], references: [id])
   dumpingPoint  DumpingPoint    @relation(fields: [dumpingPointId], references: [id])

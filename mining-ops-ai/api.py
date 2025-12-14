@@ -23,7 +23,9 @@ try:
         OLLAMA_MODEL,
         load_fresh_data,
         analyze_hauling_for_production,
-        get_hauling_based_recommendations
+        get_hauling_based_recommendations,
+        get_recommendations_with_allocations,
+        generate_dynamic_hauling_allocation
     )
     print("✅ Berhasil mengimpor 'otak' dari simulator.py")
 except ImportError as e:
@@ -215,6 +217,68 @@ async def dapatkan_strategi_dengan_hauling(request: RecommendationRequest):
             
     except Exception as e:
         print(f"❌ Error di /get_strategies_with_hauling: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+
+@app.post("/get_strategies_with_allocations")
+async def dapatkan_strategi_dengan_alokasi(request: RecommendationRequest):
+    """
+    ENDPOINT ENHANCED: Get AI strategies WITH pre-computed hauling activity allocations.
+    This enables direct hauling activity creation from recommendations.
+    
+    Each strategy includes:
+    - Original simulation results
+    - hauling_allocations: Array of hauling items with:
+        - truckId (required)
+        - excavatorId (optional - can be null)
+        - truckOperatorId (required, filtered by SIM_B1/B2/A license)
+        - excavatorOperatorId (optional, filtered by OPERATOR_ALAT_BERAT license)
+    - allocation_summary: Summary of allocated resources
+    """
+    try:
+        print(f"📡 Menerima request strategi dengan hauling allocations...")
+        
+        active_financial_params = {}
+        if request.financial_params:
+            active_financial_params = request.financial_params.dict()
+        else:
+            active_financial_params = CONFIG['financial_params']
+        
+        # Get recommendations with pre-computed allocations
+        top_3_list = get_recommendations_with_allocations(
+            request.fixed_conditions.dict(),
+            request.decision_variables.dict(),
+            active_financial_params 
+        )
+        
+        if top_3_list:
+            data = load_fresh_data()
+            formatted_json_str = format_konteks_for_llm(top_3_list, data)
+            formatted_data = json.loads(formatted_json_str)
+            
+            # Add hauling allocations to each strategy in the response
+            for i, strategy in enumerate(formatted_data):
+                key = f"OPSI_{i+1}"
+                if key in strategy and i < len(top_3_list):
+                    raw_strategy = top_3_list[i]
+                    
+                    # Add hauling allocations
+                    strategy[key]['HAULING_ALLOCATIONS'] = raw_strategy.get('hauling_allocations', [])
+                    strategy[key]['ALLOCATION_SUMMARY'] = raw_strategy.get('allocation_summary', {})
+                    
+                    # Also include hauling data for backward compatibility
+                    strategy[key]['HAULING_DATA'] = {
+                        'has_hauling_data': raw_strategy.get('has_hauling_data', False),
+                        'hauling_activity_count': raw_strategy.get('hauling_activity_count', 0),
+                        'hauling_analysis': raw_strategy.get('hauling_analysis', {})
+                    }
+            
+            return {"top_3_strategies": formatted_data}
+        else:
+            raise HTTPException(status_code=500, detail="Simulasi selesai tapi tidak menghasilkan rekomendasi valid.")
+            
+    except Exception as e:
+        print(f"❌ Error di /get_strategies_with_allocations: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 

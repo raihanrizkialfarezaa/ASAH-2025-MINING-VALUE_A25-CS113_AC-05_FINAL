@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { haulingService } from '../../services/haulingService';
 import { truckService, excavatorService, operatorService } from '../../services';
-import { loadingPointService, dumpingPointService, roadSegmentService } from '../../services/locationService';
+import { loadingPointService, dumpingPointService, roadSegmentService, miningSiteService } from '../../services/locationService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
@@ -32,6 +32,7 @@ import {
   Calendar,
   User,
   Construction,
+  Mountain,
 } from 'lucide-react';
 
 const HaulingList = () => {
@@ -48,10 +49,17 @@ const HaulingList = () => {
   const [trucks, setTrucks] = useState([]);
   const [excavators, setExcavators] = useState([]);
   const [operators, setOperators] = useState([]);
-  const [filteredOperators, setFilteredOperators] = useState([]);
+  const [filteredTruckOperators, setFilteredTruckOperators] = useState([]);
+  const [filteredExcavatorOperators, setFilteredExcavatorOperators] = useState([]);
   const [loadingPoints, setLoadingPoints] = useState([]);
   const [dumpingPoints, setDumpingPoints] = useState([]);
   const [roadSegments, setRoadSegments] = useState([]);
+  const [miningSites, setMiningSites] = useState([]);
+  const [filteredLoadingPoints, setFilteredLoadingPoints] = useState([]);
+  const [filteredDumpingPoints, setFilteredDumpingPoints] = useState([]);
+  const [filteredRoadSegments, setFilteredRoadSegments] = useState([]);
+  const [siteAutoFillInfo, setSiteAutoFillInfo] = useState(null);
+  const [haulingList, setHaulingList] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [shiftFilter, setShiftFilter] = useState('');
@@ -69,6 +77,7 @@ const HaulingList = () => {
   });
   const [formData, setFormData] = useState({
     activityNumber: '',
+    miningSiteId: '',
     truckId: '',
     truckIds: [],
     excavatorId: '',
@@ -174,16 +183,6 @@ const HaulingList = () => {
     applyFiltersAndPagination();
   }, [applyFiltersAndPagination]);
 
-  // Filter operators by shift selection
-  useEffect(() => {
-    if (formData.shift && operators.length > 0) {
-      const shiftOperators = operators.filter((op) => op.shift === formData.shift);
-      setFilteredOperators(shiftOperators.length > 0 ? shiftOperators : operators);
-    } else {
-      setFilteredOperators(operators);
-    }
-  }, [formData.shift, operators]);
-
   const fetchActivities = async () => {
     setLoading(true);
     try {
@@ -215,23 +214,118 @@ const HaulingList = () => {
 
   const loadResources = async () => {
     try {
-      const [trucksRes, excavatorsRes, operatorsRes, loadingRes, dumpingRes, roadsRes] = await Promise.all([
+      const [trucksRes, excavatorsRes, operatorsRes, loadingRes, dumpingRes, roadsRes, sitesRes] = await Promise.all([
         truckService.getAll({ limit: 1000 }),
         excavatorService.getAll({ limit: 1000 }),
         operatorService.getAll({ limit: 1000 }),
         loadingPointService.getAll({ limit: 1000 }),
         dumpingPointService.getAll({ limit: 1000 }),
         roadSegmentService.getAll({ limit: 1000 }),
+        miningSiteService.getAll({ limit: 1000 }),
       ]);
-      setTrucks(Array.isArray(trucksRes.data) ? trucksRes.data : []);
-      setExcavators(Array.isArray(excavatorsRes.data) ? excavatorsRes.data : []);
-      setOperators(Array.isArray(operatorsRes.data) ? operatorsRes.data : []);
+      const trucksData = Array.isArray(trucksRes.data) ? trucksRes.data : [];
+      const excavatorsData = Array.isArray(excavatorsRes.data) ? excavatorsRes.data : [];
+      const operatorsData = Array.isArray(operatorsRes.data) ? operatorsRes.data : [];
+
+      setTrucks(trucksData);
+      setExcavators(excavatorsData);
+      setOperators(operatorsData);
       setLoadingPoints(Array.isArray(loadingRes.data) ? loadingRes.data : []);
       setDumpingPoints(Array.isArray(dumpingRes.data) ? dumpingRes.data : []);
       setRoadSegments(Array.isArray(roadsRes.data) ? roadsRes.data : []);
+      setMiningSites(Array.isArray(sitesRes.data) ? sitesRes.data : []);
+
+      // Filter operators by competency (TRUCK vs EXCAVATOR based on license type)
+      const truckOperators = operatorsData.filter((op) => op.status === 'ACTIVE' && (op.licenseType === 'SIM_B1' || op.licenseType === 'SIM_B2' || op.licenseType === 'SIM_A'));
+      const excavatorOperators = operatorsData.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT');
+
+      setFilteredTruckOperators(truckOperators.length > 0 ? truckOperators : operatorsData.filter((op) => op.status === 'ACTIVE'));
+      setFilteredExcavatorOperators(excavatorOperators.length > 0 ? excavatorOperators : operatorsData.filter((op) => op.status === 'ACTIVE'));
     } catch (error) {
       console.error('Failed to fetch resources:', error);
     }
+  };
+
+  // Handle Mining Site selection - Auto-fill road segments, loading points, dumping points
+  const handleMiningSiteChange = (siteId) => {
+    const siteRoadSegments = roadSegments.filter((rs) => rs.miningSiteId === siteId && rs.isActive !== false);
+    const siteLoadingPoints = loadingPoints.filter((lp) => lp.miningSiteId === siteId && lp.isActive !== false);
+    const siteDumpingPoints = dumpingPoints.filter((dp) => dp.miningSiteId === siteId && dp.isActive !== false);
+
+    setFilteredRoadSegments(siteRoadSegments);
+    setFilteredLoadingPoints(siteLoadingPoints);
+    setFilteredDumpingPoints(siteDumpingPoints);
+
+    let autoFilledData = { miningSiteId: siteId };
+    let autoFillDetails = {
+      roadCount: siteRoadSegments.length,
+      lpCount: siteLoadingPoints.length,
+      dpCount: siteDumpingPoints.length,
+    };
+
+    // Auto-fill default values from first options
+    if (siteRoadSegments.length > 0) {
+      autoFilledData.roadSegmentId = siteRoadSegments[0].id;
+      autoFilledData.distance = siteRoadSegments[0].distance || 0;
+      autoFillDetails.defaultRoad = siteRoadSegments[0].name;
+    }
+    if (siteLoadingPoints.length > 0) {
+      autoFilledData.loadingPointId = siteLoadingPoints[0].id;
+      autoFillDetails.defaultLP = siteLoadingPoints[0].name;
+    }
+    if (siteDumpingPoints.length > 0) {
+      autoFilledData.dumpingPointId = siteDumpingPoints[0].id;
+      autoFillDetails.defaultDP = siteDumpingPoints[0].name;
+    }
+
+    setSiteAutoFillInfo(autoFillDetails);
+    setFormData((prev) => ({ ...prev, ...autoFilledData }));
+
+    // Also update existing hauling list items with new defaults
+    if (haulingList.length > 0) {
+      const defaultRoad = siteRoadSegments[0];
+      const defaultLP = siteLoadingPoints[0];
+      const defaultDP = siteDumpingPoints[0];
+
+      setHaulingList((prev) =>
+        prev.map((h) => ({
+          ...h,
+          roadSegmentId: defaultRoad?.id || '',
+          roadSegmentName: defaultRoad?.name || 'N/A',
+          distance: defaultRoad?.distance || h.distance,
+          loadingPointId: defaultLP?.id || h.loadingPointId,
+          loadingPointName: defaultLP?.name || h.loadingPointName,
+          dumpingPointId: defaultDP?.id || h.dumpingPointId,
+          dumpingPointName: defaultDP?.name || h.dumpingPointName,
+        }))
+      );
+    }
+  };
+
+  const applyMiningSiteFiltersOnly = (siteId) => {
+    const siteRoadSegments = roadSegments.filter((rs) => rs.miningSiteId === siteId && rs.isActive !== false);
+    const siteLoadingPoints = loadingPoints.filter((lp) => lp.miningSiteId === siteId && lp.isActive !== false);
+    const siteDumpingPoints = dumpingPoints.filter((dp) => dp.miningSiteId === siteId && dp.isActive !== false);
+
+    setFilteredRoadSegments(siteRoadSegments);
+    setFilteredLoadingPoints(siteLoadingPoints);
+    setFilteredDumpingPoints(siteDumpingPoints);
+
+    setSiteAutoFillInfo({
+      roadCount: siteRoadSegments.length,
+      lpCount: siteLoadingPoints.length,
+      dpCount: siteDumpingPoints.length,
+    });
+  };
+
+  const mergeWithSelected = (baseList, allList, selectedId) => {
+    const base = Array.isArray(baseList) ? baseList : [];
+    const all = Array.isArray(allList) ? allList : [];
+    if (!selectedId) return base;
+    if (base.some((x) => x.id === selectedId)) return base;
+    const selected = all.find((x) => x.id === selectedId);
+    if (!selected) return base;
+    return [...base, selected];
   };
 
   const handleSort = (field) => {
@@ -282,6 +376,175 @@ const HaulingList = () => {
     return code;
   };
 
+  // === NEW: Individual Hauling Item Management (like ProductionList) ===
+  const handleAddHauling = () => {
+    if (!formData.miningSiteId) {
+      alert('Pilih Mining Site terlebih dahulu untuk menambah hauling');
+      return;
+    }
+
+    const activeLoadingPoints = filteredLoadingPoints.length > 0 ? filteredLoadingPoints : loadingPoints.filter((lp) => lp.isActive !== false);
+    const activeDumpingPoints = filteredDumpingPoints.length > 0 ? filteredDumpingPoints : dumpingPoints.filter((dp) => dp.isActive !== false);
+    const activeRoadSegments = filteredRoadSegments.length > 0 ? filteredRoadSegments : roadSegments.filter((rs) => rs.isActive !== false);
+
+    if (activeLoadingPoints.length === 0) {
+      alert('Tidak ada loading point aktif untuk site ini.');
+      return;
+    }
+    if (activeDumpingPoints.length === 0) {
+      alert('Tidak ada dumping point aktif untuk site ini.');
+      return;
+    }
+
+    const assignedActiveTruckIds = new Set(
+      allActivities
+        .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
+        .map((a) => a.truckId)
+        .filter(Boolean)
+    );
+
+    const availableTrucks = trucks.filter((t) => (t.status === 'IDLE' || t.status === 'STANDBY') && !assignedActiveTruckIds.has(t.id));
+    const availableExcavators = excavators.filter((e) => e.status === 'IDLE' || e.status === 'STANDBY' || e.status === 'ACTIVE');
+
+    // Find trucks/excavators not yet used in hauling list
+    const usedTruckIds = haulingList.map((h) => h.truckId).filter(Boolean);
+    const usedExcavatorIds = haulingList.map((h) => h.excavatorId).filter(Boolean);
+
+    const nextTruck = availableTrucks.find((t) => !usedTruckIds.includes(t.id)) || availableTrucks[haulingList.length % Math.max(availableTrucks.length, 1)];
+    const nextExcavator = availableExcavators.find((e) => !usedExcavatorIds.includes(e.id)) || availableExcavators[haulingList.length % Math.max(availableExcavators.length, 1)];
+
+    // Operator rotation based on shift
+    const shiftMapping = { SHIFT_1: 'SHIFT_1', PAGI: 'SHIFT_1', SHIFT_2: 'SHIFT_2', SIANG: 'SHIFT_2', SHIFT_3: 'SHIFT_3', MALAM: 'SHIFT_3' };
+    const currentShift = shiftMapping[formData.shift] || 'SHIFT_1';
+
+    // Filter operators by shift and competency
+    const shiftTruckOperators = filteredTruckOperators.filter((op) => op.shift === currentShift);
+    const shiftExcavatorOperators = filteredExcavatorOperators.filter((op) => op.shift === currentShift);
+
+    const activeTruckOperators = shiftTruckOperators.length > 0 ? shiftTruckOperators : filteredTruckOperators;
+    const activeExcavatorOperators = shiftExcavatorOperators.length > 0 ? shiftExcavatorOperators : filteredExcavatorOperators;
+
+    const assignedActiveOperatorIds = new Set(
+      allActivities
+        .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
+        .map((a) => a.operatorId)
+        .filter(Boolean)
+    );
+
+    const usedTruckOperatorIds = haulingList.map((h) => h.truckOperatorId).filter(Boolean);
+    const usedExcavatorOperatorIds = haulingList
+      .filter((h) => Boolean(h.excavatorId))
+      .map((h) => h.excavatorOperatorId)
+      .filter(Boolean);
+
+    const availableTruckOperators = activeTruckOperators.filter((op) => !assignedActiveOperatorIds.has(op.id) && !usedTruckOperatorIds.includes(op.id));
+    const fallbackTruckOperators = activeTruckOperators.filter((op) => !usedTruckOperatorIds.includes(op.id));
+    const defaultTruckOperator = availableTruckOperators[0] || fallbackTruckOperators[0] || operators[0];
+
+    const availableExcavatorOperators = activeExcavatorOperators.filter((op) => !assignedActiveOperatorIds.has(op.id) && !usedExcavatorOperatorIds.includes(op.id));
+    const fallbackExcavatorOperator = activeExcavatorOperators.find((op) => !usedExcavatorOperatorIds.includes(op.id));
+    const defaultExcavatorOperator = availableExcavatorOperators[0] || fallbackExcavatorOperator;
+
+    const defaultLoadingPoint = activeLoadingPoints[haulingList.length % activeLoadingPoints.length];
+    const defaultDumpingPoint = activeDumpingPoints[haulingList.length % activeDumpingPoints.length];
+    const defaultRoadSegment = activeRoadSegments[haulingList.length % Math.max(activeRoadSegments.length, 1)];
+
+    const numHaulings = haulingList.length + 1;
+    const targetWeight = formData.targetWeight ? parseFloat(formData.targetWeight) / numHaulings : 30;
+
+    const newHauling = {
+      tempId: Date.now(),
+      isExisting: false,
+      truckId: nextTruck?.id || '',
+      excavatorId: nextExcavator?.id || '', // Excavator is optional
+      truckOperatorId: defaultTruckOperator?.id || '',
+      excavatorOperatorId: nextExcavator?.id ? defaultExcavatorOperator?.id || '' : '',
+      loadingPointId: defaultLoadingPoint?.id || '',
+      dumpingPointId: defaultDumpingPoint?.id || '',
+      roadSegmentId: defaultRoadSegment?.id || '',
+      // Display values
+      truckCode: nextTruck?.code || 'N/A',
+      truckCapacity: nextTruck?.capacity || 0,
+      excavatorCode: nextExcavator?.code || '-',
+      excavatorModel: nextExcavator?.model || '',
+      truckOperatorName: defaultTruckOperator?.user?.fullName || defaultTruckOperator?.employeeNumber || 'N/A',
+      excavatorOperatorName: nextExcavator?.id ? defaultExcavatorOperator?.user?.fullName || defaultExcavatorOperator?.employeeNumber || '-' : '-',
+      loadingPointName: defaultLoadingPoint?.name || 'N/A',
+      dumpingPointName: defaultDumpingPoint?.name || 'N/A',
+      roadSegmentName: defaultRoadSegment?.name || 'N/A',
+      // Values
+      loadWeight: '',
+      targetWeight: targetWeight,
+      status: 'LOADING',
+      distance: defaultRoadSegment?.distance || parseFloat(formData.distance) || 3,
+    };
+
+    console.log('[HaulingList] Adding hauling item:', newHauling);
+
+    setHaulingList((prev) => {
+      const updated = [...prev, newHauling];
+      // Redistribute target weight evenly
+      const newTargetPerHauling = formData.targetWeight ? parseFloat(formData.targetWeight) / updated.length : 30;
+      return updated.map((h) => ({ ...h, targetWeight: newTargetPerHauling }));
+    });
+  };
+
+  const handleRemoveHauling = (tempId) => {
+    setHaulingList((prev) => {
+      const existing = prev.find((h) => h.tempId === tempId);
+      if (existing?.isExisting) return prev;
+      const filtered = prev.filter((h) => h.tempId !== tempId);
+      if (filtered.length > 0 && formData.targetWeight) {
+        const newTargetPerHauling = parseFloat(formData.targetWeight) / filtered.length;
+        return filtered.map((h) => ({ ...h, targetWeight: newTargetPerHauling }));
+      }
+      return filtered;
+    });
+  };
+
+  const handleUpdateHauling = (tempId, field, value) => {
+    setHaulingList((prev) =>
+      prev.map((h) => {
+        if (h.tempId !== tempId) return h;
+
+        const updated = { ...h, [field]: value };
+
+        // Update display names when IDs change
+        if (field === 'truckId') {
+          const selectedTruck = trucks.find((t) => t.id === value);
+          updated.truckCode = selectedTruck?.code || 'N/A';
+          updated.truckCapacity = selectedTruck?.capacity || 0;
+        } else if (field === 'excavatorId') {
+          const selectedExcavator = excavators.find((e) => e.id === value);
+          updated.excavatorCode = selectedExcavator?.code || '-';
+          updated.excavatorModel = selectedExcavator?.model || '';
+          if (!value) {
+            updated.excavatorOperatorId = '';
+            updated.excavatorOperatorName = '-';
+          }
+        } else if (field === 'truckOperatorId') {
+          const selectedOp = operators.find((o) => o.id === value);
+          updated.truckOperatorName = selectedOp?.user?.fullName || selectedOp?.employeeNumber || 'N/A';
+        } else if (field === 'excavatorOperatorId') {
+          const selectedOp = operators.find((o) => o.id === value);
+          updated.excavatorOperatorName = selectedOp?.user?.fullName || selectedOp?.employeeNumber || '-';
+        } else if (field === 'loadingPointId') {
+          const selectedLP = loadingPoints.find((lp) => lp.id === value);
+          updated.loadingPointName = selectedLP?.name || 'N/A';
+        } else if (field === 'dumpingPointId') {
+          const selectedDP = dumpingPoints.find((dp) => dp.id === value);
+          updated.dumpingPointName = selectedDP?.name || 'N/A';
+        } else if (field === 'roadSegmentId') {
+          const selectedRS = roadSegments.find((rs) => rs.id === value);
+          updated.roadSegmentName = selectedRS?.name || 'N/A';
+          updated.distance = selectedRS?.distance || updated.distance;
+        }
+
+        return updated;
+      })
+    );
+  };
+
   const statusOptions = [
     { value: 'PLANNED', label: 'Planned', color: 'gray' },
     { value: 'IN_QUEUE', label: 'In Queue', color: 'yellow' },
@@ -306,13 +569,14 @@ const HaulingList = () => {
     const now = new Date();
     const defaultTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
     setFormData({
-      activityNumber: '', // Will be auto-generated based on number of trucks selected
+      activityNumber: '',
+      miningSiteId: '',
       truckId: '',
-      truckIds: [], // Now supports multi-select by default
+      truckIds: [],
       excavatorId: '',
-      excavatorIds: [], // Now supports multi-select by default
+      excavatorIds: [],
       operatorId: '',
-      operatorIds: [], // Now supports multi-select by default
+      operatorIds: [],
       loadingPointId: '',
       dumpingPointId: '',
       roadSegmentId: '',
@@ -324,6 +588,12 @@ const HaulingList = () => {
       status: 'LOADING',
       remarks: '',
     });
+    // Reset hauling list and site filters
+    setHaulingList([]);
+    setFilteredLoadingPoints([]);
+    setFilteredDumpingPoints([]);
+    setFilteredRoadSegments([]);
+    setSiteAutoFillInfo(null);
     setShowModal(true);
   };
 
@@ -331,70 +601,70 @@ const HaulingList = () => {
     setModalMode('edit');
     setSelectedActivity(activity);
 
-    // Robust: Ensure referenced resources exist in the dropdown lists
-    try {
-      const missingResources = [];
-
-      if (activity.truckId && !trucks.find((t) => t.id === activity.truckId)) {
-        missingResources.push(
-          truckService.getById(activity.truckId).then((res) => {
-            if (res.data) setTrucks((prev) => [...prev, res.data]);
-          })
-        );
+    const ensure = async (id, list, service, setter) => {
+      if (!id) return null;
+      const existing = Array.isArray(list) ? list.find((x) => x.id === id) : null;
+      if (existing) return existing;
+      try {
+        const res = await service.getById(id);
+        const data = res?.data || null;
+        if (data) {
+          setter((prev) => {
+            const arr = Array.isArray(prev) ? prev : [];
+            if (arr.some((x) => x.id === id)) return arr;
+            return [...arr, data];
+          });
+        }
+        return data;
+      } catch {
+        return null;
       }
+    };
 
-      if (activity.excavatorId && !excavators.find((e) => e.id === activity.excavatorId)) {
-        missingResources.push(
-          excavatorService.getById(activity.excavatorId).then((res) => {
-            if (res.data) setExcavators((prev) => [...prev, res.data]);
-          })
-        );
-      }
+    const [selectedTruck, selectedExcavator, selectedOperator, selectedExcavatorOperator, selectedLoadingPoint, selectedDumpingPoint, selectedRoadSegment] = await Promise.all([
+      ensure(activity.truckId, trucks, truckService, setTrucks),
+      ensure(activity.excavatorId, excavators, excavatorService, setExcavators),
+      ensure(activity.operatorId, operators, operatorService, setOperators),
+      ensure(activity.excavatorOperatorId, operators, operatorService, setOperators),
+      ensure(activity.loadingPointId, loadingPoints, loadingPointService, setLoadingPoints),
+      ensure(activity.dumpingPointId, dumpingPoints, dumpingPointService, setDumpingPoints),
+      ensure(activity.roadSegmentId, roadSegments, roadSegmentService, setRoadSegments),
+    ]);
 
-      if (activity.operatorId && !operators.find((o) => o.id === activity.operatorId)) {
-        missingResources.push(
-          operatorService.getById(activity.operatorId).then((res) => {
-            if (res.data) setOperators((prev) => [...prev, res.data]);
-          })
-        );
-      }
+    const resolvedLoadingPoint = selectedLoadingPoint || activity.loadingPoint;
+    const resolvedDumpingPoint = selectedDumpingPoint || activity.dumpingPoint;
+    const resolvedRoadSegment = selectedRoadSegment || activity.roadSegment;
 
-      if (activity.loadingPointId && !loadingPoints.find((l) => l.id === activity.loadingPointId)) {
-        missingResources.push(
-          loadingPointService.getById(activity.loadingPointId).then((res) => {
-            if (res.data) setLoadingPoints((prev) => [...prev, res.data]);
-          })
-        );
-      }
+    const inferredSiteId =
+      resolvedLoadingPoint?.miningSiteId ||
+      resolvedDumpingPoint?.miningSiteId ||
+      resolvedRoadSegment?.miningSiteId ||
+      activity.loadingPoint?.miningSiteId ||
+      activity.dumpingPoint?.miningSiteId ||
+      activity.roadSegment?.miningSiteId ||
+      loadingPoints.find((lp) => lp.id === activity.loadingPointId)?.miningSiteId ||
+      dumpingPoints.find((dp) => dp.id === activity.dumpingPointId)?.miningSiteId ||
+      roadSegments.find((rs) => rs.id === activity.roadSegmentId)?.miningSiteId ||
+      '';
 
-      if (activity.dumpingPointId && !dumpingPoints.find((d) => d.id === activity.dumpingPointId)) {
-        missingResources.push(
-          dumpingPointService.getById(activity.dumpingPointId).then((res) => {
-            if (res.data) setDumpingPoints((prev) => [...prev, res.data]);
-          })
-        );
-      }
-
-      if (activity.roadSegmentId && !roadSegments.find((r) => r.id === activity.roadSegmentId)) {
-        missingResources.push(
-          roadSegmentService.getById(activity.roadSegmentId).then((res) => {
-            if (res.data) setRoadSegments((prev) => [...prev, res.data]);
-          })
-        );
-      }
-
-      if (missingResources.length > 0) {
-        await Promise.all(missingResources);
-      }
-    } catch (error) {
-      console.error('Error ensuring resources exist for edit:', error);
+    if (inferredSiteId) {
+      applyMiningSiteFiltersOnly(inferredSiteId);
+    } else {
+      setFilteredRoadSegments([]);
+      setFilteredLoadingPoints([]);
+      setFilteredDumpingPoints([]);
+      setSiteAutoFillInfo(null);
     }
 
     setFormData({
       activityNumber: activity.activityNumber || '',
+      miningSiteId: inferredSiteId || '',
       truckId: activity.truckId || '',
+      truckIds: [],
       excavatorId: activity.excavatorId || '',
+      excavatorIds: [],
       operatorId: activity.operatorId || '',
+      operatorIds: [],
       loadingPointId: activity.loadingPointId || '',
       dumpingPointId: activity.dumpingPointId || '',
       roadSegmentId: activity.roadSegmentId || '',
@@ -406,6 +676,54 @@ const HaulingList = () => {
       status: activity.status || 'LOADING',
       remarks: activity.remarks || '',
     });
+
+    const resolvedTruck = selectedTruck || activity.truck;
+    const resolvedExcavator = selectedExcavator || activity.excavator;
+    const resolvedTruckOperator = selectedOperator || activity.operator;
+    const resolvedExcavatorOperator = selectedExcavatorOperator || activity.excavatorOperator;
+
+    const resolvedShift = activity.shift || 'SHIFT_1';
+    let inferredExcavatorOperatorId = activity.excavatorOperatorId || resolvedExcavatorOperator?.id || '';
+    if (!inferredExcavatorOperatorId && (activity.excavatorId || resolvedExcavator?.id)) {
+      const candidates = (operators || []).filter((op) => {
+        if (!op) return false;
+        if (op.status !== 'ACTIVE') return false;
+        if (op.licenseType !== 'OPERATOR_ALAT_BERAT') return false;
+        if (op.shift && op.shift !== resolvedShift) return false;
+        return true;
+      });
+      if (candidates.length === 1) {
+        inferredExcavatorOperatorId = candidates[0].id;
+      }
+    }
+    const inferredExcavatorOperator = inferredExcavatorOperatorId && inferredExcavatorOperatorId !== resolvedExcavatorOperator?.id ? operators.find((op) => op.id === inferredExcavatorOperatorId) || null : resolvedExcavatorOperator;
+
+    setHaulingList([
+      {
+        tempId: Date.now(),
+        isExisting: true,
+        truckId: activity.truckId || '',
+        excavatorId: activity.excavatorId || '',
+        truckOperatorId: activity.operatorId || '',
+        excavatorOperatorId: inferredExcavatorOperatorId || '',
+        loadingPointId: activity.loadingPointId || '',
+        dumpingPointId: activity.dumpingPointId || '',
+        roadSegmentId: activity.roadSegmentId || '',
+        truckCode: resolvedTruck?.code || 'N/A',
+        truckCapacity: resolvedTruck?.capacity || 0,
+        excavatorCode: resolvedExcavator?.code || '-',
+        excavatorModel: resolvedExcavator?.model || '',
+        truckOperatorName: resolvedTruckOperator?.user?.fullName || resolvedTruckOperator?.employeeNumber || 'N/A',
+        excavatorOperatorName: inferredExcavatorOperator?.user?.fullName || inferredExcavatorOperator?.employeeNumber || '-',
+        loadingPointName: resolvedLoadingPoint?.name || 'N/A',
+        dumpingPointName: resolvedDumpingPoint?.name || 'N/A',
+        roadSegmentName: resolvedRoadSegment?.name || 'N/A',
+        loadWeight: activity.loadWeight ?? '',
+        targetWeight: activity.targetWeight ?? 30,
+        status: activity.status || 'LOADING',
+        distance: resolvedRoadSegment?.distance ?? activity.distance ?? 0,
+      },
+    ]);
     setShowModal(true);
   };
 
@@ -418,25 +736,375 @@ const HaulingList = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Check if multi-equipment mode (arrays have items)
+      if (modalMode === 'edit' && haulingList.length > 0) {
+        if (!selectedActivity?.id) {
+          window.alert('No activity selected to update');
+          return;
+        }
+
+        const normalized = haulingList.map((h) =>
+          h.excavatorId
+            ? h
+            : {
+                ...h,
+                excavatorOperatorId: '',
+                excavatorOperatorName: '-',
+              }
+        );
+        setHaulingList(normalized);
+
+        const existingItem = normalized.find((h) => h.isExisting) || normalized[0];
+        const newItems = normalized.filter((h) => h.tempId !== existingItem.tempId);
+
+        const hauling = existingItem;
+        if (!hauling.truckId) {
+          window.alert('Wajib pilih truck');
+          return;
+        }
+        if (!hauling.truckOperatorId) {
+          window.alert('Wajib pilih truck operator');
+          return;
+        }
+        if (!hauling.loadingPointId) {
+          window.alert('Wajib pilih loading point');
+          return;
+        }
+        if (!hauling.dumpingPointId) {
+          window.alert('Wajib pilih dumping point');
+          return;
+        }
+        if (hauling.excavatorId && !hauling.excavatorOperatorId) {
+          window.alert('Wajib pilih excavator operator');
+          return;
+        }
+
+        const assignedActiveTruckIdsForEdit = new Set(
+          allActivities
+            .filter((a) => a.id !== selectedActivity.id)
+            .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
+            .map((a) => a.truckId)
+            .filter(Boolean)
+        );
+        if (assignedActiveTruckIdsForEdit.has(hauling.truckId)) {
+          const existing = allActivities.find((a) => a.id !== selectedActivity.id && a.truckId === hauling.truckId && ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status));
+          window.alert(`Truck is already assigned${existing?.activityNumber ? ` (${existing.activityNumber})` : ''}`);
+          return;
+        }
+
+        const assignedActiveOperatorIdsForEdit = new Set(
+          allActivities
+            .filter((a) => a.id !== selectedActivity.id)
+            .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
+            .map((a) => a.operatorId)
+            .filter(Boolean)
+        );
+        if (assignedActiveOperatorIdsForEdit.has(hauling.truckOperatorId)) {
+          const existing = allActivities.find((a) => a.id !== selectedActivity.id && a.operatorId === hauling.truckOperatorId && ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status));
+          window.alert(`Operator is already assigned${existing?.activityNumber ? ` (${existing.activityNumber})` : ''}`);
+          return;
+        }
+
+        const payload = {
+          activityNumber: selectedActivity.activityNumber || formData.activityNumber?.trim() || generateAutoActivityNumber(),
+          truckId: hauling.truckId,
+          excavatorId: hauling.excavatorId || null,
+          excavatorOperatorId: hauling.excavatorId ? hauling.excavatorOperatorId || null : null,
+          operatorId: hauling.truckOperatorId,
+          loadingPointId: hauling.loadingPointId,
+          dumpingPointId: hauling.dumpingPointId,
+          shift: formData.shift,
+          loadingStartTime: new Date(formData.loadingStartTime).toISOString(),
+          loadWeight: hauling.loadWeight === '' ? 0 : parseFloat(hauling.loadWeight),
+          targetWeight: hauling.targetWeight === '' || hauling.targetWeight === undefined || hauling.targetWeight === null ? 30 : Number.isFinite(parseFloat(hauling.targetWeight)) ? parseFloat(hauling.targetWeight) : 30,
+          distance: hauling.distance === '' || hauling.distance === undefined || hauling.distance === null ? 0 : Number.isFinite(parseFloat(hauling.distance)) ? parseFloat(hauling.distance) : 0,
+        };
+
+        if (hauling.roadSegmentId) payload.roadSegmentId = hauling.roadSegmentId;
+        if (formData.remarks) payload.remarks = formData.remarks.trim();
+        if (selectedActivity.status) payload.status = selectedActivity.status;
+
+        await haulingService.update(selectedActivity.id, payload);
+
+        if (newItems.length > 0) {
+          const assignedActiveTruckIds = new Set(
+            allActivities
+              .filter((a) => a.id !== selectedActivity.id)
+              .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
+              .map((a) => a.truckId)
+              .filter(Boolean)
+          );
+          const assignedActiveOperatorIds = new Set(
+            allActivities
+              .filter((a) => a.id !== selectedActivity.id)
+              .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
+              .map((a) => a.operatorId)
+              .filter(Boolean)
+          );
+          const batchTruckIds = new Set([existingItem.truckId].filter(Boolean));
+          const batchOperatorIds = new Set([existingItem.truckOperatorId].filter(Boolean));
+
+          const primaryExcavatorId = normalized.find((h) => Boolean(h.excavatorId))?.excavatorId;
+
+          const baseCode = generateAutoActivityNumber();
+          const prefix = baseCode.split('-').slice(0, 2).join('-');
+          const existingCodes = new Set(allActivities.map((a) => a.activityNumber));
+          if (selectedActivity.activityNumber) existingCodes.add(selectedActivity.activityNumber);
+
+          const errors = [];
+
+          for (let i = 0; i < newItems.length; i++) {
+            const item = newItems[i];
+
+            if (!item.truckId) {
+              errors.push(`Hauling ${i + 1}: Truck is required`);
+              continue;
+            }
+            if (assignedActiveTruckIds.has(item.truckId)) {
+              const existing = allActivities.find((a) => a.truckId === item.truckId && ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status));
+              errors.push(`Hauling ${i + 1}: Truck is already assigned${existing?.activityNumber ? ` (${existing.activityNumber})` : ''}`);
+              continue;
+            }
+            if (batchTruckIds.has(item.truckId)) {
+              errors.push(`Hauling ${i + 1}: Truck is duplicated in this batch`);
+              continue;
+            }
+            batchTruckIds.add(item.truckId);
+            if (!item.truckOperatorId) {
+              errors.push(`Hauling ${i + 1}: Truck Operator is required`);
+              continue;
+            }
+            if (assignedActiveOperatorIds.has(item.truckOperatorId)) {
+              const existing = allActivities.find((a) => a.operatorId === item.truckOperatorId && ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status));
+              errors.push(`Hauling ${i + 1}: Operator is already assigned${existing?.activityNumber ? ` (${existing.activityNumber})` : ''}`);
+              continue;
+            }
+            if (batchOperatorIds.has(item.truckOperatorId)) {
+              errors.push(`Hauling ${i + 1}: Operator is duplicated in this batch`);
+              continue;
+            }
+            batchOperatorIds.add(item.truckOperatorId);
+            if (!item.loadingPointId) {
+              errors.push(`Hauling ${i + 1}: Loading Point is required`);
+              continue;
+            }
+            if (!item.dumpingPointId) {
+              errors.push(`Hauling ${i + 1}: Dumping Point is required`);
+              continue;
+            }
+
+            let actNum = i + 1;
+            let activityNumber = `${prefix}-${String(actNum).padStart(3, '0')}`;
+            while (existingCodes.has(activityNumber)) {
+              actNum++;
+              activityNumber = `${prefix}-${String(actNum).padStart(3, '0')}`;
+            }
+            existingCodes.add(activityNumber);
+
+            const createPayload = {
+              activityNumber,
+              truckId: item.truckId,
+              excavatorId: item.excavatorId || primaryExcavatorId || null,
+              excavatorOperatorId: item.excavatorId || primaryExcavatorId ? item.excavatorOperatorId || null : null,
+              operatorId: item.truckOperatorId,
+              loadingPointId: item.loadingPointId,
+              dumpingPointId: item.dumpingPointId,
+              shift: formData.shift,
+              loadingStartTime: new Date(formData.loadingStartTime).toISOString(),
+              loadWeight: item.loadWeight === '' ? 0 : parseFloat(item.loadWeight),
+              targetWeight: item.targetWeight === '' || item.targetWeight === undefined || item.targetWeight === null ? 30 : Number.isFinite(parseFloat(item.targetWeight)) ? parseFloat(item.targetWeight) : 30,
+              distance:
+                item.distance === '' || item.distance === undefined || item.distance === null
+                  ? Number.isFinite(parseFloat(formData.distance))
+                    ? parseFloat(formData.distance)
+                    : 0
+                  : Number.isFinite(parseFloat(item.distance))
+                  ? parseFloat(item.distance)
+                  : 0,
+              status: item.status || 'LOADING',
+            };
+
+            if (item.roadSegmentId) createPayload.roadSegmentId = item.roadSegmentId;
+            if (formData.remarks) createPayload.remarks = formData.remarks.trim();
+
+            try {
+              await haulingService.create(createPayload);
+            } catch (err) {
+              console.error(`Failed to create hauling ${i + 1} in edit:`, err);
+              errors.push(`Hauling ${i + 1}: ${err.response?.data?.message || err.message}`);
+            }
+          }
+
+          if (errors.length > 0) {
+            window.alert(`Validation/Creation errors:\n${errors.join('\n')}`);
+          }
+        }
+
+        setShowModal(false);
+        fetchActivities();
+        return;
+      }
+
+      // === NEW: Create using haulingList (like ProductionList) ===
+      if (modalMode === 'create' && haulingList.length > 0) {
+        const normalizedHaulingList = haulingList.map((h) =>
+          h.excavatorId
+            ? h
+            : {
+                ...h,
+                excavatorOperatorId: '',
+                excavatorOperatorName: '-',
+              }
+        );
+
+        setHaulingList(normalizedHaulingList);
+
+        if (!normalizedHaulingList.some((h) => Boolean(h.truckId))) {
+          window.alert('Wajib pilih minimal 1 truck');
+          return;
+        }
+
+        const primaryExcavatorId = normalizedHaulingList.find((h) => Boolean(h.excavatorId))?.excavatorId;
+
+        const assignedActiveTruckIds = new Set(
+          allActivities
+            .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
+            .map((a) => a.truckId)
+            .filter(Boolean)
+        );
+        const assignedActiveOperatorIds = new Set(
+          allActivities
+            .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
+            .map((a) => a.operatorId)
+            .filter(Boolean)
+        );
+        const batchTruckIds = new Set();
+        const batchOperatorIds = new Set();
+
+        const baseCode = generateAutoActivityNumber();
+        const prefix = baseCode.split('-').slice(0, 2).join('-');
+        const existingCodes = new Set(allActivities.map((a) => a.activityNumber));
+
+        let createdCount = 0;
+        let failedCount = 0;
+        const errors = [];
+
+        for (let i = 0; i < normalizedHaulingList.length; i++) {
+          const hauling = normalizedHaulingList[i];
+
+          // Validate required fields
+          if (!hauling.truckId) {
+            errors.push(`Hauling ${i + 1}: Truck is required`);
+            continue;
+          }
+          if (assignedActiveTruckIds.has(hauling.truckId)) {
+            const existing = allActivities.find((a) => a.truckId === hauling.truckId && ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status));
+            errors.push(`Hauling ${i + 1}: Truck is already assigned${existing?.activityNumber ? ` (${existing.activityNumber})` : ''}`);
+            continue;
+          }
+          if (batchTruckIds.has(hauling.truckId)) {
+            errors.push(`Hauling ${i + 1}: Truck is duplicated in this batch`);
+            continue;
+          }
+          batchTruckIds.add(hauling.truckId);
+          if (!hauling.truckOperatorId) {
+            errors.push(`Hauling ${i + 1}: Truck Operator is required`);
+            continue;
+          }
+          if (assignedActiveOperatorIds.has(hauling.truckOperatorId)) {
+            const existing = allActivities.find((a) => a.operatorId === hauling.truckOperatorId && ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status));
+            errors.push(`Hauling ${i + 1}: Operator is already assigned${existing?.activityNumber ? ` (${existing.activityNumber})` : ''}`);
+            continue;
+          }
+          if (batchOperatorIds.has(hauling.truckOperatorId)) {
+            errors.push(`Hauling ${i + 1}: Operator is duplicated in this batch`);
+            continue;
+          }
+          batchOperatorIds.add(hauling.truckOperatorId);
+          if (!hauling.loadingPointId) {
+            errors.push(`Hauling ${i + 1}: Loading Point is required`);
+            continue;
+          }
+          if (!hauling.dumpingPointId) {
+            errors.push(`Hauling ${i + 1}: Dumping Point is required`);
+            continue;
+          }
+          const effectiveExcavatorId = hauling.excavatorId || primaryExcavatorId || null;
+          if (effectiveExcavatorId && !hauling.excavatorOperatorId) {
+            errors.push(`Hauling ${i + 1}: Excavator Operator is required`);
+            continue;
+          }
+
+          // Generate unique activity number
+          let actNum = i + 1;
+          let activityNumber = `${prefix}-${String(actNum).padStart(3, '0')}`;
+          while (existingCodes.has(activityNumber)) {
+            actNum++;
+            activityNumber = `${prefix}-${String(actNum).padStart(3, '0')}`;
+          }
+          existingCodes.add(activityNumber);
+
+          const payload = {
+            activityNumber,
+            truckId: hauling.truckId,
+            excavatorId: effectiveExcavatorId,
+            excavatorOperatorId: effectiveExcavatorId ? hauling.excavatorOperatorId || null : null,
+            operatorId: hauling.truckOperatorId, // Main operator is truck operator
+            loadingPointId: hauling.loadingPointId,
+            dumpingPointId: hauling.dumpingPointId,
+            shift: formData.shift,
+            loadingStartTime: new Date(formData.loadingStartTime).toISOString(),
+            loadWeight: hauling.loadWeight === '' ? 0 : parseFloat(hauling.loadWeight),
+            targetWeight: hauling.targetWeight === '' || hauling.targetWeight === undefined || hauling.targetWeight === null ? 30 : Number.isFinite(parseFloat(hauling.targetWeight)) ? parseFloat(hauling.targetWeight) : 30,
+            distance:
+              hauling.distance === '' || hauling.distance === undefined || hauling.distance === null
+                ? Number.isFinite(parseFloat(formData.distance))
+                  ? parseFloat(formData.distance)
+                  : 0
+                : Number.isFinite(parseFloat(hauling.distance))
+                ? parseFloat(hauling.distance)
+                : 0,
+            status: hauling.status || 'LOADING',
+          };
+
+          if (hauling.roadSegmentId) payload.roadSegmentId = hauling.roadSegmentId;
+          if (formData.remarks) payload.remarks = formData.remarks.trim();
+
+          try {
+            await haulingService.create(payload);
+            createdCount++;
+          } catch (err) {
+            console.error(`Failed to create hauling ${i + 1}:`, err);
+            errors.push(`Hauling ${i + 1}: ${err.response?.data?.message || err.message}`);
+            failedCount++;
+          }
+        }
+
+        if (errors.length > 0) {
+          window.alert(`Validation/Creation errors:\n${errors.join('\n')}`);
+        }
+
+        if (createdCount > 0) {
+          window.alert(`Creation complete: ${createdCount} hauling ${createdCount > 1 ? 'activities' : 'activity'} created${failedCount > 0 ? `, ${failedCount} failed` : ''}`);
+        }
+
+        setShowModal(false);
+        fetchActivities();
+        return;
+      }
+
+      // === LEGACY: Multi-select checkbox mode (keep for backward compatibility) ===
       const hasMultiTrucks = formData.truckIds.length > 0;
       const hasMultiExcavators = formData.excavatorIds.length > 0;
       const hasMultiOperators = formData.operatorIds.length > 0;
       const isMultiMode = hasMultiTrucks || hasMultiExcavators || hasMultiOperators;
 
-      // Multi-equipment creation mode (new default)
       if (modalMode === 'create' && isMultiMode) {
-        // If trucks array is empty but single truckId is set, use single truckId
         const truckIds = hasMultiTrucks ? formData.truckIds : formData.truckId ? [formData.truckId] : [];
         const excavatorIds = hasMultiExcavators ? formData.excavatorIds : formData.excavatorId ? [formData.excavatorId] : [];
         const operatorIds = hasMultiOperators ? formData.operatorIds : formData.operatorId ? [formData.operatorId] : [];
 
         if (truckIds.length === 0) {
           window.alert('Please select at least one truck');
-          return;
-        }
-        if (excavatorIds.length === 0) {
-          window.alert('Please select at least one excavator');
           return;
         }
         if (operatorIds.length === 0) {
@@ -453,10 +1121,14 @@ const HaulingList = () => {
 
         for (let i = 0; i < truckIds.length; i++) {
           const truckId = truckIds[i];
-          const excavatorId = excavatorIds[i % excavatorIds.length] || excavatorIds[0];
+          const excavatorId = excavatorIds.length > 0 ? excavatorIds[i % excavatorIds.length] || excavatorIds[0] : null;
           const operatorId = operatorIds[i % operatorIds.length] || operatorIds[0];
 
-          // Generate unique activity number
+          if (excavatorId) {
+            window.alert('Mode multi-select lama belum mendukung excavator operator. Gunakan mode Hauling Items.');
+            return;
+          }
+
           let actNum = i + 1;
           let activityNumber = `${prefix}-${String(actNum).padStart(3, '0')}`;
           while (existingCodes.has(activityNumber)) {
@@ -468,7 +1140,8 @@ const HaulingList = () => {
           const payload = {
             activityNumber,
             truckId,
-            excavatorId,
+            excavatorId: excavatorId || null,
+            excavatorOperatorId: null,
             operatorId,
             loadingPointId: formData.loadingPointId,
             dumpingPointId: formData.dumpingPointId,
@@ -505,16 +1178,22 @@ const HaulingList = () => {
       const payload = {
         activityNumber: formData.activityNumber.trim() || generateAutoActivityNumber(),
         truckId: formData.truckId,
-        excavatorId: formData.excavatorId,
+        excavatorId: formData.excavatorId || null,
+        excavatorOperatorId: null,
         operatorId: formData.operatorId,
         loadingPointId: formData.loadingPointId,
         dumpingPointId: formData.dumpingPointId,
         shift: formData.shift,
         loadingStartTime: new Date(formData.loadingStartTime).toISOString(),
         loadWeight: formData.loadWeight === '' ? 0 : parseFloat(formData.loadWeight),
-        targetWeight: formData.targetWeight === '' ? 0 : parseFloat(formData.targetWeight),
-        distance: formData.distance === '' ? 0 : parseFloat(formData.distance),
+        targetWeight: formData.targetWeight === '' || formData.targetWeight === undefined || formData.targetWeight === null ? 30 : Number.isFinite(parseFloat(formData.targetWeight)) ? parseFloat(formData.targetWeight) : 30,
+        distance: formData.distance === '' || formData.distance === undefined || formData.distance === null ? 0 : Number.isFinite(parseFloat(formData.distance)) ? parseFloat(formData.distance) : 0,
       };
+
+      if (payload.excavatorId) {
+        window.alert('Mode single lama belum mendukung excavator operator. Gunakan mode Hauling Items.');
+        return;
+      }
 
       if (formData.roadSegmentId) payload.roadSegmentId = formData.roadSegmentId;
       if (formData.remarks) payload.remarks = formData.remarks.trim();
@@ -558,6 +1237,28 @@ const HaulingList = () => {
 
   const activeFiltersCount = [searchQuery, statusFilter, shiftFilter, filters.truckId, filters.excavatorId, filters.minWeight, filters.maxWeight, filters.minDistance, filters.maxDistance, filters.isDelayed].filter(Boolean).length;
 
+  const excludeActiveActivityId = modalMode === 'edit' ? selectedActivity?.id : null;
+  const assignedActiveOperatorIds = new Set(
+    allActivities
+      .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
+      .filter((a) => (excludeActiveActivityId ? a.id !== excludeActiveActivityId : true))
+      .map((a) => a.operatorId)
+      .filter(Boolean)
+  );
+  const assignedActiveTruckIds = new Set(
+    allActivities
+      .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
+      .filter((a) => (excludeActiveActivityId ? a.id !== excludeActiveActivityId : true))
+      .map((a) => a.truckId)
+      .filter(Boolean)
+  );
+  const selectedTruckIds = haulingList.map((h) => h.truckId).filter(Boolean);
+  const selectedTruckOperatorIds = haulingList.map((h) => h.truckOperatorId).filter(Boolean);
+  const selectedExcavatorOperatorIds = haulingList
+    .filter((h) => Boolean(h.excavatorId))
+    .map((h) => h.excavatorOperatorId)
+    .filter(Boolean);
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -582,7 +1283,7 @@ const HaulingList = () => {
           {canEdit && (
             <button onClick={handleCreate} className="flex-1 sm:flex-none bg-sky-600 hover:bg-sky-500 text-white flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-colors">
               <Plus size={20} />
-              <span className="hidden sm:inline">Add Hauling Activity</span>
+              <span className="hidden sm:inline">Add</span>
               <span className="sm:hidden">Add</span>
             </button>
           )}
@@ -1270,263 +1971,51 @@ const HaulingList = () => {
               </div>
             </div>
           </div>
-        ) : modalMode === 'edit' ? (
-          // EDIT MODE - Single equipment selection
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-cyan-500/10 p-4 rounded-lg border border-cyan-500/20">
-              <p className="text-sm text-cyan-300">
-                <strong>Edit Mode:</strong> Update the hauling activity details below.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Activity Number *</label>
-                <input
-                  type="text"
-                  value={formData.activityNumber}
-                  onChange={(e) => setFormData({ ...formData, activityNumber: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
-                  required
-                  placeholder="HA-20251203-001"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">
-                  Shift * <span className="text-xs text-sky-400">(Filters operators by shift)</span>
-                </label>
-                <select
-                  value={formData.shift}
-                  onChange={(e) => setFormData({ ...formData, shift: e.target.value, operatorId: '' })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
-                  required
-                >
-                  <option value="SHIFT_1">Shift 1 (Pagi)</option>
-                  <option value="SHIFT_2">Shift 2 (Siang)</option>
-                  <option value="SHIFT_3">Shift 3 (Malam)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Truck *</label>
-                <select
-                  value={formData.truckId}
-                  onChange={(e) => setFormData({ ...formData, truckId: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
-                  required
-                >
-                  <option value="">Select Truck</option>
-                  {trucks.map((truck) => (
-                    <option key={truck.id} value={truck.id}>
-                      {truck.code} - {truck.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Excavator *</label>
-                <select
-                  value={formData.excavatorId}
-                  onChange={(e) => setFormData({ ...formData, excavatorId: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
-                  required
-                >
-                  <option value="">Select Excavator</option>
-                  {excavators.map((excavator) => (
-                    <option key={excavator.id} value={excavator.id}>
-                      {excavator.code} - {excavator.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">
-                  Operator *{' '}
-                  <span className="text-xs text-slate-500">
-                    ({filteredOperators.length} available for {formData.shift})
-                  </span>
-                </label>
-                <select
-                  value={formData.operatorId}
-                  onChange={(e) => setFormData({ ...formData, operatorId: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
-                  required
-                >
-                  <option value="">Select Operator</option>
-                  {filteredOperators.map((operator) => (
-                    <option key={operator.id} value={operator.id}>
-                      {operator.employeeNumber} - {operator.user?.fullName} ({operator.shift})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Loading Point *</label>
-                <select
-                  value={formData.loadingPointId}
-                  onChange={(e) => setFormData({ ...formData, loadingPointId: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
-                  required
-                >
-                  <option value="">Select Loading Point</option>
-                  {loadingPoints.map((point) => (
-                    <option key={point.id} value={point.id}>
-                      {point.code} - {point.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Dumping Point *</label>
-                <select
-                  value={formData.dumpingPointId}
-                  onChange={(e) => setFormData({ ...formData, dumpingPointId: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
-                  required
-                >
-                  <option value="">Select Dumping Point</option>
-                  {dumpingPoints.map((point) => (
-                    <option key={point.id} value={point.id}>
-                      {point.code} - {point.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Road Segment</label>
-                <select
-                  value={formData.roadSegmentId}
-                  onChange={(e) => setFormData({ ...formData, roadSegmentId: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
-                >
-                  <option value="">Select Road Segment (Optional)</option>
-                  {roadSegments.map((segment) => (
-                    <option key={segment.id} value={segment.id}>
-                      {segment.code} - {segment.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Loading Start Time *</label>
-                <input
-                  type="datetime-local"
-                  value={formData.loadingStartTime}
-                  onChange={(e) => setFormData({ ...formData, loadingStartTime: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Load Weight (ton) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.loadWeight}
-                  onChange={(e) => setFormData({ ...formData, loadWeight: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
-                  required
-                  placeholder="28.5"
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Target Weight (ton) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.targetWeight}
-                  onChange={(e) => setFormData({ ...formData, targetWeight: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
-                  required
-                  placeholder="30.0"
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Distance (km) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.distance}
-                  onChange={(e) => setFormData({ ...formData, distance: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
-                  required
-                  placeholder="2.5"
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Status *</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
-                  required
-                >
-                  <option value="PLANNED">Planned</option>
-                  <option value="IN_QUEUE">In Queue</option>
-                  <option value="LOADING">Loading</option>
-                  <option value="HAULING">Hauling</option>
-                  <option value="DUMPING">Dumping</option>
-                  <option value="RETURNING">Returning</option>
-                  <option value="COMPLETED">Completed</option>
-                  <option value="DELAYED">Delayed</option>
-                  <option value="CANCELLED">Cancelled</option>
-                </select>
-              </div>
-
-              <div className="col-span-2">
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Remarks</label>
-                <textarea
-                  value={formData.remarks}
-                  onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
-                  rows="3"
-                  placeholder="Optional notes or remarks..."
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
-              <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 border border-slate-600 rounded-lg text-slate-300 font-medium hover:bg-slate-700 transition-colors">
-                Cancel
-              </button>
-              <button type="submit" className="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
-                <CheckCircle size={18} />
-                <span>Update Activity</span>
-              </button>
-            </div>
-          </form>
         ) : (
-          // CREATE MODE - Multi-equipment selection by default
+          // CREATE/EDIT MODE - Individual hauling items with Mining Site auto-fill
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-sky-500/10 p-4 rounded-lg border border-sky-500/20">
               <p className="text-sm text-sky-300">
-                <strong>Multi-Equipment Mode:</strong> Select multiple trucks, excavators, and operators to create multiple hauling activities at once. Each truck will generate a separate activity with round-robin assignment of excavators
-                and operators.
+                <strong>{modalMode === 'edit' ? 'Update Hauling Activity:' : 'Create Hauling Activities:'}</strong> Select a mining site to auto-fill locations, then add individual hauling items. Each hauling has 1 Truck, 1 Excavator
+                (optional), and 1-2 Operators.
               </p>
             </div>
 
+            {/* Basic Configuration */}
             <div className="grid grid-cols-2 gap-6">
+              {/* Mining Site Selection - NEW */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">
+                  <Mountain size={16} className="inline mr-2 text-emerald-400" />
+                  Mining Site *
+                </label>
+                <select
+                  value={formData.miningSiteId}
+                  onChange={(e) => handleMiningSiteChange(e.target.value)}
+                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
+                  required
+                >
+                  <option value="">Select Mining Site</option>
+                  {miningSites.map((site) => (
+                    <option key={site.id} value={site.id}>
+                      {site.code || site.name} - {site.name}
+                    </option>
+                  ))}
+                </select>
+                {siteAutoFillInfo && (
+                  <p className="text-xs text-emerald-400 mt-1">
+                    ✓ Auto-filled: {siteAutoFillInfo.lpCount} loading points, {siteAutoFillInfo.dpCount} dumping points, {siteAutoFillInfo.roadCount} road segments
+                  </p>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-semibold text-slate-300 mb-2">
                   Shift * <span className="text-xs text-sky-400">(Filters operators by shift)</span>
                 </label>
                 <select
                   value={formData.shift}
-                  onChange={(e) => setFormData({ ...formData, shift: e.target.value, operatorIds: [], operatorId: '' })}
+                  onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
                   className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
                   required
                 >
@@ -1547,229 +2036,17 @@ const HaulingList = () => {
                 />
               </div>
 
-              {/* Multi-select Trucks */}
-              <div className="col-span-2">
-                <label className="block text-sm font-semibold text-slate-300 mb-2">
-                  <Truck size={16} className="inline mr-2 text-sky-400" />
-                  Select Trucks * <span className="text-xs text-slate-500">({formData.truckIds.length} selected)</span>
-                </label>
-                <div className="border border-slate-700 rounded-lg p-3 max-h-48 overflow-y-auto bg-slate-800/60">
-                  <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-700">
-                    <button type="button" onClick={() => setFormData({ ...formData, truckIds: trucks.map((t) => t.id) })} className="text-xs text-sky-400 hover:text-sky-300">
-                      Select All
-                    </button>
-                    <button type="button" onClick={() => setFormData({ ...formData, truckIds: [] })} className="text-xs text-slate-400 hover:text-slate-300">
-                      Clear All
-                    </button>
-                  </div>
-                  {trucks.map((truck) => (
-                    <label key={truck.id} className="flex items-center gap-2 p-2 hover:bg-sky-500/10 rounded cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.truckIds.includes(truck.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setFormData({ ...formData, truckIds: [...formData.truckIds, truck.id] });
-                          } else {
-                            setFormData({ ...formData, truckIds: formData.truckIds.filter((id) => id !== truck.id) });
-                          }
-                        }}
-                        className="rounded text-sky-500 bg-slate-700 border-slate-600"
-                      />
-                      <span className="text-sm text-slate-300">
-                        <strong className="text-slate-200">{truck.code}</strong> - {truck.name} ({truck.brand} {truck.model})
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                <p className="text-xs text-slate-500 mt-1">Each selected truck will create a separate hauling activity</p>
-              </div>
-
-              {/* Multi-select Excavators */}
               <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">
-                  <Construction size={16} className="inline mr-2 text-blue-400" />
-                  Select Excavators * <span className="text-xs text-slate-500">({formData.excavatorIds.length} selected)</span>
-                </label>
-                <div className="border border-slate-700 rounded-lg p-3 max-h-40 overflow-y-auto bg-slate-800/60">
-                  <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-700">
-                    <button type="button" onClick={() => setFormData({ ...formData, excavatorIds: excavators.map((e) => e.id) })} className="text-xs text-blue-400 hover:text-blue-300">
-                      Select All
-                    </button>
-                    <button type="button" onClick={() => setFormData({ ...formData, excavatorIds: [] })} className="text-xs text-slate-400 hover:text-slate-300">
-                      Clear All
-                    </button>
-                  </div>
-                  {excavators.map((exc) => (
-                    <label key={exc.id} className="flex items-center gap-2 p-2 hover:bg-blue-500/10 rounded cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.excavatorIds.includes(exc.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setFormData({ ...formData, excavatorIds: [...formData.excavatorIds, exc.id] });
-                          } else {
-                            setFormData({ ...formData, excavatorIds: formData.excavatorIds.filter((id) => id !== exc.id) });
-                          }
-                        }}
-                        className="rounded text-blue-500 bg-slate-700 border-slate-600"
-                      />
-                      <span className="text-sm text-slate-300">
-                        <strong className="text-slate-200">{exc.code}</strong> - {exc.name}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                <p className="text-xs text-slate-500 mt-1">Round-robin assignment to trucks</p>
-              </div>
-
-              {/* Multi-select Operators - Filtered by Shift */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">
-                  <User size={16} className="inline mr-2 text-cyan-400" />
-                  Select Operators *{' '}
-                  <span className="text-xs text-slate-500">
-                    ({formData.operatorIds.length} selected, {filteredOperators.length} available for {formData.shift})
-                  </span>
-                </label>
-                <div className="border border-slate-700 rounded-lg p-3 max-h-40 overflow-y-auto bg-slate-800/60">
-                  <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-700">
-                    <button type="button" onClick={() => setFormData({ ...formData, operatorIds: filteredOperators.map((o) => o.id) })} className="text-xs text-cyan-400 hover:text-cyan-300">
-                      Select All
-                    </button>
-                    <button type="button" onClick={() => setFormData({ ...formData, operatorIds: [] })} className="text-xs text-slate-400 hover:text-slate-300">
-                      Clear All
-                    </button>
-                  </div>
-                  {filteredOperators.map((op) => (
-                    <label key={op.id} className="flex items-center gap-2 p-2 hover:bg-cyan-500/10 rounded cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.operatorIds.includes(op.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setFormData({ ...formData, operatorIds: [...formData.operatorIds, op.id] });
-                          } else {
-                            setFormData({ ...formData, operatorIds: formData.operatorIds.filter((id) => id !== op.id) });
-                          }
-                        }}
-                        className="rounded text-cyan-500 bg-slate-700 border-slate-600"
-                      />
-                      <span className="text-sm text-slate-300">
-                        <strong className="text-slate-200">{op.employeeNumber}</strong> - {op.user?.fullName} <span className="text-xs text-slate-500">({op.shift})</span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                <p className="text-xs text-slate-500 mt-1">Round-robin assignment to trucks</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Loading Point *</label>
-                <select
-                  value={formData.loadingPointId}
-                  onChange={(e) => setFormData({ ...formData, loadingPointId: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
-                  required
-                >
-                  <option value="">Select Loading Point</option>
-                  {loadingPoints.map((point) => (
-                    <option key={point.id} value={point.id}>
-                      {point.code} - {point.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Dumping Point *</label>
-                <select
-                  value={formData.dumpingPointId}
-                  onChange={(e) => setFormData({ ...formData, dumpingPointId: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
-                  required
-                >
-                  <option value="">Select Dumping Point</option>
-                  {dumpingPoints.map((point) => (
-                    <option key={point.id} value={point.id}>
-                      {point.code} - {point.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Road Segment</label>
-                <select
-                  value={formData.roadSegmentId}
-                  onChange={(e) => setFormData({ ...formData, roadSegmentId: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
-                >
-                  <option value="">Select Road Segment (Optional)</option>
-                  {roadSegments.map((segment) => (
-                    <option key={segment.id} value={segment.id}>
-                      {segment.code} - {segment.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Load Weight (ton)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.loadWeight}
-                  onChange={(e) => setFormData({ ...formData, loadWeight: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
-                  placeholder="28.5"
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Target Weight (ton)</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-2">Total Target Weight (ton)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={formData.targetWeight}
                   onChange={(e) => setFormData({ ...formData, targetWeight: e.target.value })}
                   className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
-                  placeholder="30.0"
+                  placeholder="300.0 (will be distributed across haulings)"
                   min="0"
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Distance (km)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.distance}
-                  onChange={(e) => setFormData({ ...formData, distance: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors placeholder:text-slate-500"
-                  placeholder="2.5"
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
-                >
-                  <option value="PLANNED">Planned</option>
-                  <option value="IN_QUEUE">In Queue</option>
-                  <option value="LOADING">Loading</option>
-                  <option value="HAULING">Hauling</option>
-                  <option value="DUMPING">Dumping</option>
-                  <option value="RETURNING">Returning</option>
-                  <option value="COMPLETED">Completed</option>
-                  <option value="DELAYED">Delayed</option>
-                  <option value="CANCELLED">Cancelled</option>
-                </select>
               </div>
 
               <div className="col-span-2">
@@ -1784,40 +2061,267 @@ const HaulingList = () => {
               </div>
             </div>
 
-            {/* Preview - Shows when equipment is selected */}
-            {formData.truckIds.length > 0 && formData.excavatorIds.length > 0 && formData.operatorIds.length > 0 && (
-              <div className="bg-cyan-500/10 p-4 rounded-lg border border-cyan-500/20">
-                <h4 className="font-semibold text-cyan-300 mb-2">
-                  Preview: {formData.truckIds.length} hauling {formData.truckIds.length > 1 ? 'activities' : 'activity'} will be created
-                </h4>
-                <div className="text-sm text-cyan-400/80 max-h-32 overflow-y-auto">
-                  {formData.truckIds.map((truckId, idx) => {
-                    const truck = trucks.find((t) => t.id === truckId);
-                    const excId = formData.excavatorIds[idx % formData.excavatorIds.length];
-                    const opId = formData.operatorIds[idx % formData.operatorIds.length];
-                    const exc = excavators.find((e) => e.id === excId);
-                    const op = filteredOperators.find((o) => o.id === opId);
-                    return (
-                      <div key={idx} className="py-1 border-b border-cyan-500/20 last:border-0">
-                        <span className="font-medium text-slate-200">{truck?.code}</span> → Excavator: {exc?.code || 'N/A'}, Operator: {op?.employeeNumber || 'N/A'}
-                      </div>
-                    );
-                  })}
-                </div>
+            {/* Hauling List Section */}
+            <div className="border-t border-slate-700 pt-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                  <Activity className="text-sky-400" size={20} />
+                  Hauling Items ({haulingList.length})
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleAddHauling}
+                  disabled={!formData.miningSiteId || modalMode === 'edit'}
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:bg-slate-600 disabled:cursor-not-allowed"
+                >
+                  <Plus size={16} />
+                  Add Hauling
+                </button>
               </div>
-            )}
 
+              {haulingList.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                  <Activity className="mx-auto mb-2 text-slate-500" size={32} />
+                  <p>{formData.miningSiteId ? 'Click "Add Hauling" to add hauling items' : 'Select a Mining Site first to add hauling items'}</p>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {haulingList.map((hauling, index) => (
+                    <div key={hauling.tempId} className="bg-slate-800/60 p-4 rounded-lg border border-slate-700/50">
+                      <div className="flex justify-between items-start mb-3">
+                        <span className="text-sm font-semibold text-sky-400">Hauling #{index + 1}</span>
+                        <button type="button" onClick={() => handleRemoveHauling(hauling.tempId)} disabled={hauling.isExisting} className="text-red-400 hover:text-red-300 p-1 disabled:opacity-40 disabled:cursor-not-allowed">
+                          <X size={16} />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {/* Truck Selection */}
+                        <div>
+                          <label className="text-xs font-medium text-slate-400 mb-1 block">
+                            <Truck size={12} className="inline mr-1" /> Truck *
+                          </label>
+                          <select
+                            value={hauling.truckId}
+                            onChange={(e) => handleUpdateHauling(hauling.tempId, 'truckId', e.target.value)}
+                            className="w-full bg-slate-900/80 border border-slate-600 text-slate-200 rounded-lg px-2 py-1.5 text-sm"
+                            required
+                          >
+                            <option value="">Select Truck</option>
+                            {trucks
+                              .filter((t) => {
+                                const isSelected = t.id === hauling.truckId;
+                                const statusOk = t.status === 'IDLE' || t.status === 'STANDBY' || isSelected;
+                                const activeOk = !assignedActiveTruckIds.has(t.id) || isSelected;
+                                const dupOk = !selectedTruckIds.includes(t.id) || isSelected;
+                                return statusOk && activeOk && dupOk;
+                              })
+                              .map((truck) => (
+                                <option key={truck.id} value={truck.id}>
+                                  {truck.code} ({truck.capacity}t)
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+
+                        {/* Excavator Selection (Optional) */}
+                        <div>
+                          <label className="text-xs font-medium text-slate-400 mb-1 block">
+                            <Construction size={12} className="inline mr-1" /> Excavator
+                          </label>
+                          <select
+                            value={hauling.excavatorId}
+                            onChange={(e) => handleUpdateHauling(hauling.tempId, 'excavatorId', e.target.value)}
+                            className="w-full bg-slate-900/80 border border-slate-600 text-slate-200 rounded-lg px-2 py-1.5 text-sm"
+                          >
+                            <option value="">No Excavator</option>
+                            {excavators
+                              .filter((e) => {
+                                const isSelected = e.id === hauling.excavatorId;
+                                return e.status === 'IDLE' || e.status === 'STANDBY' || e.status === 'ACTIVE' || isSelected;
+                              })
+                              .map((exc) => (
+                                <option key={exc.id} value={exc.id}>
+                                  {exc.code} - {exc.model}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+
+                        {/* Truck Operator */}
+                        <div>
+                          <label className="text-xs font-medium text-slate-400 mb-1 block">
+                            <User size={12} className="inline mr-1" /> Truck Operator *
+                          </label>
+                          <select
+                            value={hauling.truckOperatorId}
+                            onChange={(e) => handleUpdateHauling(hauling.tempId, 'truckOperatorId', e.target.value)}
+                            className="w-full bg-slate-900/80 border border-slate-600 text-slate-200 rounded-lg px-2 py-1.5 text-sm"
+                            required
+                          >
+                            <option value="">Select Operator</option>
+                            {mergeWithSelected(filteredTruckOperators, operators, hauling.truckOperatorId)
+                              .filter((op) => {
+                                const isSelected = op.id === hauling.truckOperatorId;
+                                const activeOk = !assignedActiveOperatorIds.has(op.id) || isSelected;
+                                const dupOk = !selectedTruckOperatorIds.includes(op.id) || isSelected;
+                                return activeOk && dupOk;
+                              })
+                              .map((op) => (
+                                <option key={op.id} value={op.id}>
+                                  {op.employeeNumber} - {op.user?.fullName}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+
+                        {/* Excavator Operator (Optional) */}
+                        <div>
+                          <label className="text-xs font-medium text-slate-400 mb-1 block">
+                            <User size={12} className="inline mr-1" /> Excavator Operator
+                          </label>
+                          <select
+                            value={hauling.excavatorOperatorId || ''}
+                            onChange={(e) => handleUpdateHauling(hauling.tempId, 'excavatorOperatorId', e.target.value)}
+                            disabled={!hauling.excavatorId}
+                            className="w-full bg-slate-900/80 border border-slate-600 text-slate-200 rounded-lg px-2 py-1.5 text-sm disabled:bg-slate-900/40 disabled:text-slate-500 disabled:cursor-not-allowed"
+                          >
+                            <option value="">No Operator</option>
+                            {mergeWithSelected(filteredExcavatorOperators, operators, hauling.excavatorOperatorId)
+                              .filter((op) => {
+                                const isSelected = op.id === hauling.excavatorOperatorId;
+                                const activeOk = !assignedActiveOperatorIds.has(op.id) || isSelected;
+                                const dupOk = !selectedExcavatorOperatorIds.includes(op.id) || isSelected;
+                                return activeOk && dupOk;
+                              })
+                              .map((op) => (
+                                <option key={op.id} value={op.id}>
+                                  {op.employeeNumber} - {op.user?.fullName}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+
+                        {/* Loading Point */}
+                        <div>
+                          <label className="text-xs font-medium text-slate-400 mb-1 block">
+                            <MapPin size={12} className="inline mr-1" /> Loading Point *
+                          </label>
+                          <select
+                            value={hauling.loadingPointId}
+                            onChange={(e) => handleUpdateHauling(hauling.tempId, 'loadingPointId', e.target.value)}
+                            className="w-full bg-slate-900/80 border border-slate-600 text-slate-200 rounded-lg px-2 py-1.5 text-sm"
+                            required
+                          >
+                            <option value="">Select</option>
+                            {mergeWithSelected(filteredLoadingPoints.length > 0 ? filteredLoadingPoints : loadingPoints, loadingPoints, hauling.loadingPointId).map((lp) => (
+                              <option key={lp.id} value={lp.id}>
+                                {lp.code || lp.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Dumping Point */}
+                        <div>
+                          <label className="text-xs font-medium text-slate-400 mb-1 block">
+                            <MapPin size={12} className="inline mr-1" /> Dumping Point *
+                          </label>
+                          <select
+                            value={hauling.dumpingPointId}
+                            onChange={(e) => handleUpdateHauling(hauling.tempId, 'dumpingPointId', e.target.value)}
+                            className="w-full bg-slate-900/80 border border-slate-600 text-slate-200 rounded-lg px-2 py-1.5 text-sm"
+                            required
+                          >
+                            <option value="">Select</option>
+                            {mergeWithSelected(filteredDumpingPoints.length > 0 ? filteredDumpingPoints : dumpingPoints, dumpingPoints, hauling.dumpingPointId).map((dp) => (
+                              <option key={dp.id} value={dp.id}>
+                                {dp.code || dp.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Road Segment */}
+                        <div>
+                          <label className="text-xs font-medium text-slate-400 mb-1 block">
+                            <Navigation size={12} className="inline mr-1" /> Road Segment
+                          </label>
+                          <select
+                            value={hauling.roadSegmentId}
+                            onChange={(e) => handleUpdateHauling(hauling.tempId, 'roadSegmentId', e.target.value)}
+                            className="w-full bg-slate-900/80 border border-slate-600 text-slate-200 rounded-lg px-2 py-1.5 text-sm"
+                          >
+                            <option value="">Select</option>
+                            {mergeWithSelected(filteredRoadSegments.length > 0 ? filteredRoadSegments : roadSegments, roadSegments, hauling.roadSegmentId).map((rs) => (
+                              <option key={rs.id} value={rs.id}>
+                                {rs.code || rs.name} ({rs.distance}km)
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Load Weight */}
+                        <div>
+                          <label className="text-xs font-medium text-slate-400 mb-1 block">Load Weight (ton)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={hauling.loadWeight}
+                            onChange={(e) => handleUpdateHauling(hauling.tempId, 'loadWeight', e.target.value)}
+                            className="w-full bg-slate-900/80 border border-slate-600 text-slate-200 rounded-lg px-2 py-1.5 text-sm"
+                            placeholder="0"
+                            min="0"
+                          />
+                        </div>
+
+                        {/* Target Weight (auto-distributed) */}
+                        <div>
+                          <label className="text-xs font-medium text-slate-400 mb-1 block">Target (ton)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={hauling.targetWeight}
+                            onChange={(e) => handleUpdateHauling(hauling.tempId, 'targetWeight', e.target.value)}
+                            className="w-full bg-slate-900/80 border border-slate-600 text-slate-200 rounded-lg px-2 py-1.5 text-sm"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Summary Row */}
+                      <div className="mt-3 pt-3 border-t border-slate-700/50 flex gap-4 text-xs text-slate-400">
+                        <span>
+                          <strong className="text-slate-300">{hauling.truckCode}</strong> ({hauling.truckCapacity}t)
+                        </span>
+                        {hauling.excavatorCode && hauling.excavatorCode !== '-' && (
+                          <span>
+                            + <strong className="text-slate-300">{hauling.excavatorCode}</strong>
+                          </span>
+                        )}
+                        <span>
+                          → {hauling.loadingPointName} ⟶ {hauling.dumpingPointName}
+                        </span>
+                        <span className="ml-auto">{hauling.distance}km</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Submit Section */}
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
               <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 border border-slate-600 rounded-lg text-slate-300 font-medium hover:bg-slate-700 transition-colors">
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={formData.truckIds.length === 0 || formData.excavatorIds.length === 0 || formData.operatorIds.length === 0}
+                disabled={haulingList.length === 0}
                 className="bg-sky-600 hover:bg-sky-500 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <Plus size={18} />
-                <span>{formData.truckIds.length > 0 ? `Create ${formData.truckIds.length} ${formData.truckIds.length > 1 ? 'Activities' : 'Activity'}` : 'Create Activity'}</span>
+                <span>{haulingList.length === 0 ? 'Add Hauling Items First' : modalMode === 'edit' ? 'Update Activity' : `Create ${haulingList.length} ${haulingList.length > 1 ? 'Activities' : 'Activity'}`}</span>
               </button>
             </div>
           </form>

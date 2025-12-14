@@ -71,6 +71,11 @@ export const haulingService = {
     return response.data;
   },
 
+  getAvailableForProduction: async (params = {}) => {
+    const response = await apiClient.get('/hauling/available-for-production', { params });
+    return response.data;
+  },
+
   getByIds: async (ids = []) => {
     const response = await apiClient.post('/hauling/by-ids', { ids });
     return response.data;

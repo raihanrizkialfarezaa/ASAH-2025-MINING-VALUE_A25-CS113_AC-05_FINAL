@@ -8,6 +8,11 @@ export const haulingController = {
     res.json(ApiResponse.paginated(result.activities, result.pagination));
   }),
 
+  getAvailableForProduction: catchAsync(async (req, res) => {
+    const activities = await haulingService.getAvailableForProduction(req.query);
+    res.json(ApiResponse.success(activities));
+  }),
+
   getById: catchAsync(async (req, res) => {
     const activity = await haulingService.getById(req.params.id);
     res.json(ApiResponse.success(activity));

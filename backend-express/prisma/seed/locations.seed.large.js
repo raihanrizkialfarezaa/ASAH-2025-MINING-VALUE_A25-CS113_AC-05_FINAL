@@ -48,19 +48,19 @@ export const seedMiningSites = async () => {
 
 export const seedLoadingPoints = async (miningSites) => {
   const loadingPoints = [];
-  const pitSites = miningSites.filter((s) => s.siteType === 'PIT');
 
-  for (let i = 0; i < 600; i++) {
-    const site = pitSites[i % pitSites.length];
+  for (let i = 0; i < miningSites.length; i++) {
+    const site = miningSites[i];
+    const idx = String(i + 1).padStart(4, '0');
 
     loadingPoints.push({
-      code: `LP-${String(i + 1).padStart(4, '0')}`,
+      code: `LP-${idx}`,
       name: `Loading Point ${i + 1}`,
       miningSiteId: site.id,
       isActive: Math.random() > 0.05,
       maxQueueSize: 3 + Math.floor(Math.random() * 7),
-      latitude: site.latitude + (Math.random() - 0.5) * 0.01,
-      longitude: site.longitude + (Math.random() - 0.5) * 0.01,
+      latitude: site.latitude != null ? site.latitude + (Math.random() - 0.5) * 0.01 : null,
+      longitude: site.longitude != null ? site.longitude + (Math.random() - 0.5) * 0.01 : null,
       coalSeam: coalSeams[Math.floor(Math.random() * coalSeams.length)],
       coalQuality: {
         calorie: 4500 + Math.random() * 1500,
@@ -82,25 +82,30 @@ export const seedLoadingPoints = async (miningSites) => {
 
 export const seedDumpingPoints = async (miningSites) => {
   const dumpingPoints = [];
-  const dumpingTypes = ['STOCKPILE', 'CRUSHER', 'WASTE_DUMP', 'ROM_STOCKPILE', 'PORT'];
-  const validSites = miningSites.filter((s) =>
-    ['STOCKPILE', 'CRUSHER', 'PORT', 'ROM_PAD'].includes(s.siteType)
-  );
 
-  for (let i = 0; i < 600; i++) {
-    const site = validSites[i % validSites.length];
-    const dumpingType = dumpingTypes[Math.floor(Math.random() * dumpingTypes.length)];
+  const typeMap = {
+    PIT: 'WASTE_DUMP',
+    STOCKPILE: 'STOCKPILE',
+    CRUSHER: 'CRUSHER',
+    PORT: 'PORT',
+    ROM_PAD: 'ROM_STOCKPILE',
+  };
+
+  for (let i = 0; i < miningSites.length; i++) {
+    const site = miningSites[i];
+    const idx = String(i + 1).padStart(4, '0');
+    const dumpingType = typeMap[site.siteType] || 'STOCKPILE';
 
     dumpingPoints.push({
-      code: `DP-${String(i + 1).padStart(4, '0')}`,
+      code: `DP-${idx}`,
       name: `${dumpingType} ${i + 1}`,
       miningSiteId: site.id,
       dumpingType,
       isActive: Math.random() > 0.05,
       capacity: 20000 + Math.random() * 80000,
       currentStock: Math.random() * 50000,
-      latitude: site.latitude + (Math.random() - 0.5) * 0.01,
-      longitude: site.longitude + (Math.random() - 0.5) * 0.01,
+      latitude: site.latitude != null ? site.latitude + (Math.random() - 0.5) * 0.01 : null,
+      longitude: site.longitude != null ? site.longitude + (Math.random() - 0.5) * 0.01 : null,
     });
   }
 
@@ -117,15 +122,16 @@ export const seedRoadSegments = async (miningSites) => {
   const roadSegments = [];
   const roadConditions = ['EXCELLENT', 'GOOD', 'FAIR', 'POOR'];
 
-  for (let i = 0; i < 600; i++) {
-    const site = miningSites[i % miningSites.length];
+  for (let i = 0; i < miningSites.length; i++) {
+    const site = miningSites[i];
+    const idx = String(i + 1).padStart(4, '0');
 
     roadSegments.push({
-      code: `ROAD-${String(i + 1).padStart(4, '0')}`,
+      code: `ROAD-${idx}`,
       name: `Road Segment ${i + 1}`,
       miningSiteId: site.id,
-      startPoint: `Point-${String.fromCharCode(65 + (i % 26))}`,
-      endPoint: `Point-${String.fromCharCode(66 + (i % 26))}`,
+      startPoint: `LP-${idx}`,
+      endPoint: `DP-${idx}`,
       distance: 0.5 + Math.random() * 4.5,
       roadCondition: roadConditions[Math.floor(Math.random() * roadConditions.length)],
       maxSpeed: 20 + Math.floor(Math.random() * 30),

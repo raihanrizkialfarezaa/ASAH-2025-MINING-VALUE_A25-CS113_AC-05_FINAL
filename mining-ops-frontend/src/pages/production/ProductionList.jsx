@@ -1,26 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { productionService, operatorService } from '../../services';
 import { miningSiteService, loadingPointService, dumpingPointService, roadSegmentService } from '../../services/locationService';
 import { truckService, excavatorService } from '../../services/equipmentService';
 import { haulingService } from '../../services/haulingService';
-import aiService from '../../services/aiService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
-import { Plus, Edit, Trash2, Eye, Calculator, RefreshCw, Search, ChevronDown, Truck, CheckCircle, AlertCircle, Package, MapPin, User, Navigation } from 'lucide-react';
-import {
-  calculateLoadingTime,
-  calculateTravelTime,
-  calculateCycleTime,
-  calculateTripsRequired,
-  calculateTotalDistance,
-  calculateFuelConsumption,
-  getWeatherSpeedFactor,
-  getRoadConditionFactor,
-  getWeatherFuelFactor,
-  formatCurrency,
-  formatTime,
-} from '../../utils/productionCalculations';
+import { Plus, Edit, Trash2, Eye, Calculator, RefreshCw, Search, ChevronDown, Truck, CheckCircle, Package, MapPin, User, Navigation } from 'lucide-react';
+import { calculateCycleTime, calculateTripsRequired, calculateTotalDistance, calculateFuelConsumption, getWeatherSpeedFactor, getRoadConditionFactor, getWeatherFuelFactor } from '../../utils/productionCalculations';
 import { authService } from '../../services/authService';
 
 // Hauling Status Options
@@ -77,8 +64,6 @@ const ProductionList = () => {
   const [relatedHaulingActivities, setRelatedHaulingActivities] = useState([]);
   const [loadingHaulingActivities, setLoadingHaulingActivities] = useState(false);
   const [haulingAchievement, setHaulingAchievement] = useState(null);
-  const [editingHaulingId, setEditingHaulingId] = useState(null);
-  const [haulingEditForm, setHaulingEditForm] = useState({ loadWeight: '', status: '' });
 
   const [isManualMode, setIsManualMode] = useState(false);
   const [manualHaulingList, setManualHaulingList] = useState([]);
@@ -86,6 +71,10 @@ const ProductionList = () => {
   const [filteredLoadingPoints, setFilteredLoadingPoints] = useState([]);
   const [filteredDumpingPoints, setFilteredDumpingPoints] = useState([]);
   const [siteAutoFillInfo, setSiteAutoFillInfo] = useState(null);
+
+  const [availableHaulingsForProduction, setAvailableHaulingsForProduction] = useState([]);
+  const [loadingAvailableHaulings, setLoadingAvailableHaulings] = useState(false);
+  const [selectedAvailableHaulingId, setSelectedAvailableHaulingId] = useState('');
 
   const [formData, setFormData] = useState({
     recordDate: new Date().toISOString().split('T')[0],
@@ -115,11 +104,9 @@ const ProductionList = () => {
   });
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
+    const loadResources = async () => {
       try {
-        const [prodRes, siteRes, truckRes, excRes, opRes, lpRes, dpRes, rsRes] = await Promise.all([
-          productionService.getAll({ page: pagination.page, limit: pagination.limit }),
+        const [siteRes, truckRes, excRes, opRes, lpRes, dpRes, rsRes] = await Promise.all([
           miningSiteService.getAll(),
           truckService.getAll({ limit: 1000 }),
           excavatorService.getAll({ limit: 1000 }),
@@ -129,8 +116,6 @@ const ProductionList = () => {
           roadSegmentService.getAll({ limit: 1000 }),
         ]);
 
-        setProductions(prodRes.data || []);
-        setPagination((prev) => ({ ...prev, totalPages: prodRes.meta?.totalPages || 1 }));
         setMiningSites(Array.isArray(siteRes.data) ? siteRes.data : []);
         setTrucks(Array.isArray(truckRes.data) ? truckRes.data : []);
         setExcavators(Array.isArray(excRes.data) ? excRes.data : []);
@@ -139,12 +124,11 @@ const ProductionList = () => {
         setDumpingPoints(Array.isArray(dpRes.data) ? dpRes.data : []);
         setRoadSegments(Array.isArray(rsRes.data) ? rsRes.data : []);
       } catch (error) {
-        console.error('Failed to fetch data:', error);
-      } finally {
-        setLoading(false);
+        console.error('Failed to fetch resources:', error);
       }
     };
-    loadData();
+
+    loadResources();
   }, []);
 
   useEffect(() => {
@@ -208,63 +192,75 @@ const ProductionList = () => {
           const effectiveRoadCondition = strategyRoadCondition || recommendation.roadCondition || haulingAggregated?.roadCondition || raw.roadCondition || 'GOOD';
           const effectiveShift = strategyShift || recommendation.shift || haulingAggregated?.shift || raw.shift || 'SHIFT_1';
 
+          const loadHaulingActivitiesAsManual = async (activityIds, { action, createdActivities, createdCount } = {}) => {
+            if (!activityIds || activityIds.length === 0) return;
+            try {
+              const response = await haulingService.getByIds(activityIds);
+              if (response.data && response.data.length > 0) {
+                const existingHaulings = response.data.map((ha) => ({
+                  tempId: ha.id,
+                  id: ha.id,
+                  isExisting: true,
+                  truckId: ha.truckId,
+                  excavatorId: ha.excavatorId,
+                  operatorId: ha.operatorId,
+                  excavatorOperatorId: ha.excavatorOperatorId || '',
+                  loadingPointId: ha.loadingPointId,
+                  dumpingPointId: ha.dumpingPointId,
+                  roadSegmentId: ha.roadSegmentId || '',
+                  truckCode: ha.truck?.code || 'N/A',
+                  truckCapacity: ha.truck?.capacity || 0,
+                  excavatorCode: ha.excavator?.code || 'N/A',
+                  excavatorModel: ha.excavator?.name || '',
+                  operatorName: ha.operator?.user?.fullName || ha.operator?.employeeNumber || 'N/A',
+                  excavatorOperatorName: ha.excavatorOperator?.user?.fullName || ha.excavatorOperator?.employeeNumber || '-',
+                  loadingPointName: ha.loadingPoint?.name || 'N/A',
+                  dumpingPointName: ha.dumpingPoint?.name || 'N/A',
+                  roadSegmentName: ha.roadSegment?.name || 'N/A',
+                  roadSegmentDistance: ha.roadSegment?.distance || ha.distance || 3,
+                  loadWeight: ha.loadWeight !== null ? ha.loadWeight.toString() : '',
+                  targetWeight: ha.targetWeight || 30,
+                  status: ha.status || 'LOADING',
+                  distance: ha.distance || 3,
+                  activityNumber: ha.activityNumber,
+                }));
+
+                setManualHaulingList(existingHaulings);
+                setIsManualMode(true);
+
+                setHaulingActivityInfo({
+                  createdActivities: createdActivities || [],
+                  createdCount: createdCount || 0,
+                  action: action || 'reuse',
+                  activityIds: activityIds || [],
+                  equipmentAllocation: equipmentAllocation,
+                  aggregatedData: haulingAggregated,
+                  strategyRank: recommendation.rank,
+                  strategyObjective: raw.strategy_objective || recommendation.strategy_objective || 'AI Recommended',
+                });
+
+                const strategyTargetProduction = parseFloat(raw.total_tonase) || parseFloat(recommendation.total_tonase) || parseFloat(haulingAggregated?.total_tonase) || 0;
+
+                const achievementRes = await haulingService.calculateAchievement([], [], null, null, activityIds, strategyTargetProduction);
+                if (achievementRes.data) {
+                  setHaulingAchievement(achievementRes.data);
+                }
+              }
+            } catch (fetchError) {
+              console.error('[ProductionList] Failed to fetch hauling activities:', fetchError);
+              setIsManualMode(false);
+              setManualHaulingList([]);
+            }
+          };
+
           if (haulingApplied && haulingResult) {
-            setHaulingActivityInfo({
+            await loadHaulingActivitiesAsManual(haulingActivityIds || [], {
+              action: haulingResult.action || 'create',
               createdActivities: haulingResult.createdActivities || [],
               createdCount: haulingResult.createdCount || 0,
-              action: haulingResult.action || 'create',
-              activityIds: haulingActivityIds || [],
-              equipmentAllocation: equipmentAllocation,
-              aggregatedData: haulingAggregated,
-              strategyRank: recommendation.rank,
-              strategyObjective: raw.strategy_objective || recommendation.strategy_objective || 'AI Recommended',
             });
-
-            if (haulingActivityIds && haulingActivityIds.length > 0) {
-              try {
-                const response = await haulingService.getByIds(haulingActivityIds);
-                if (response.data && response.data.length > 0) {
-                  const existingHaulings = response.data.map((ha) => ({
-                    tempId: ha.id,
-                    id: ha.id,
-                    isExisting: true,
-                    truckId: ha.truckId,
-                    excavatorId: ha.excavatorId,
-                    operatorId: ha.operatorId,
-                    loadingPointId: ha.loadingPointId,
-                    dumpingPointId: ha.dumpingPointId,
-                    roadSegmentId: ha.roadSegmentId || '',
-                    truckCode: ha.truck?.code || 'N/A',
-                    truckCapacity: ha.truck?.capacity || 0,
-                    excavatorCode: ha.excavator?.code || 'N/A',
-                    excavatorModel: ha.excavator?.name || '',
-                    operatorName: ha.operator?.user?.fullName || ha.operator?.employeeNumber || 'N/A',
-                    loadingPointName: ha.loadingPoint?.name || 'N/A',
-                    dumpingPointName: ha.dumpingPoint?.name || 'N/A',
-                    roadSegmentName: ha.roadSegment?.name || 'N/A',
-                    roadSegmentDistance: ha.roadSegment?.distance || ha.distance || 3,
-                    loadWeight: ha.loadWeight !== null ? ha.loadWeight.toString() : '',
-                    targetWeight: ha.targetWeight || 30,
-                    status: ha.status || 'LOADING',
-                    distance: ha.distance || 3,
-                    activityNumber: ha.activityNumber,
-                  }));
-                  setManualHaulingList(existingHaulings);
-                  setIsManualMode(true);
-
-                  const strategyTargetProduction = parseFloat(raw.total_tonase) || parseFloat(recommendation.total_tonase) || parseFloat(haulingAggregated?.total_tonase) || 0;
-
-                  const achievementRes = await haulingService.calculateAchievement([], [], null, null, haulingActivityIds, strategyTargetProduction);
-                  if (achievementRes.data) {
-                    setHaulingAchievement(achievementRes.data);
-                  }
-                }
-              } catch (fetchError) {
-                console.error('[ProductionList] Failed to fetch hauling activities:', fetchError);
-                setIsManualMode(false);
-                setManualHaulingList([]);
-              }
-            }
+          } else if (haulingActivityIds && haulingActivityIds.length > 0) {
+            await loadHaulingActivitiesAsManual(haulingActivityIds, { action: 'reuse' });
           } else {
             setIsManualMode(false);
             setManualHaulingList([]);
@@ -576,7 +572,114 @@ const ProductionList = () => {
     }
   };
 
-  const calculateMetrics = () => {
+  const shiftToApiShift = useCallback((shift) => {
+    if (shift === 'PAGI' || shift === 'SHIFT_1') return 'SHIFT_1';
+    if (shift === 'SIANG' || shift === 'SHIFT_2') return 'SHIFT_2';
+    if (shift === 'MALAM' || shift === 'SHIFT_3') return 'SHIFT_3';
+    return shift;
+  }, []);
+
+  const redistributeManualHaulingTargets = (targetProductionValue, haulings) => {
+    const target = Number(targetProductionValue);
+    if (!Number.isFinite(target) || target <= 0) return haulings;
+    if (!Array.isArray(haulings) || haulings.length === 0) return haulings;
+
+    const round2 = (v) => {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return 0;
+      return Math.round(n * 100) / 100;
+    };
+
+    const sum = (arr) => arr.reduce((acc, v) => acc + (Number.isFinite(v) ? v : 0), 0);
+
+    const loads = haulings.map((h) => round2(h.loadWeight ?? 0));
+    const realizedTotal = round2(sum(loads));
+
+    if (realizedTotal > 0 && realizedTotal >= round2(target)) {
+      const scale = target / realizedTotal;
+      const scaled = loads.map((lw) => round2(lw * scale));
+      const delta = round2(target - round2(sum(scaled)));
+      if (scaled.length > 0 && delta !== 0) {
+        scaled[scaled.length - 1] = round2(scaled[scaled.length - 1] + delta);
+      }
+      return haulings.map((h, idx) => ({ ...h, targetWeight: scaled[idx] }));
+    }
+
+    const completedIdx = [];
+    const incompleteIdx = [];
+    for (let i = 0; i < haulings.length; i++) {
+      if ((haulings[i].status || '') === 'COMPLETED') completedIdx.push(i);
+      else incompleteIdx.push(i);
+    }
+
+    const targets = new Array(haulings.length).fill(0);
+
+    if (completedIdx.length === 0) {
+      const per = round2(target / haulings.length);
+      for (let i = 0; i < haulings.length; i++) targets[i] = per;
+      const delta = round2(target - round2(sum(targets)));
+      targets[targets.length - 1] = round2(targets[targets.length - 1] + delta);
+      return haulings.map((h, idx) => ({ ...h, targetWeight: targets[idx] }));
+    }
+
+    for (const idx of completedIdx) {
+      targets[idx] = round2(haulings[idx].loadWeight ?? haulings[idx].targetWeight ?? 0);
+    }
+
+    const completedSum = round2(sum(targets));
+    const remaining = round2(target - completedSum);
+
+    if (incompleteIdx.length === 0) {
+      if (completedSum <= 0) {
+        targets[targets.length - 1] = round2(target);
+        return haulings.map((h, idx) => ({ ...h, targetWeight: targets[idx] }));
+      }
+      const scale = target / completedSum;
+      for (let i = 0; i < targets.length; i++) targets[i] = round2(targets[i] * scale);
+      const delta = round2(target - round2(sum(targets)));
+      targets[targets.length - 1] = round2(targets[targets.length - 1] + delta);
+      return haulings.map((h, idx) => ({ ...h, targetWeight: targets[idx] }));
+    }
+
+    const perIncomplete = round2(remaining / incompleteIdx.length);
+    for (const idx of incompleteIdx) targets[idx] = perIncomplete;
+    const delta = round2(target - round2(sum(targets)));
+    const lastIdx = incompleteIdx[incompleteIdx.length - 1];
+    targets[lastIdx] = round2(targets[lastIdx] + delta);
+
+    return haulings.map((h, idx) => ({ ...h, targetWeight: targets[idx] }));
+  };
+
+  useEffect(() => {
+    const run = async () => {
+      if (!showModal || !isManualMode) return;
+      if (!formData.miningSiteId) {
+        setAvailableHaulingsForProduction([]);
+        setSelectedAvailableHaulingId('');
+        return;
+      }
+
+      setLoadingAvailableHaulings(true);
+      try {
+        const res = await haulingService.getAvailableForProduction({
+          miningSiteId: formData.miningSiteId,
+          shift: shiftToApiShift(formData.shift),
+          limit: 500,
+        });
+        const list = res?.data || [];
+        setAvailableHaulingsForProduction(Array.isArray(list) ? list : []);
+      } catch (error) {
+        console.error('Failed to fetch available haulings for production:', error);
+        setAvailableHaulingsForProduction([]);
+      } finally {
+        setLoadingAvailableHaulings(false);
+      }
+    };
+
+    run();
+  }, [showModal, isManualMode, formData.miningSiteId, formData.shift, shiftToApiShift]);
+
+  const calculateMetrics = useCallback(() => {
     if (isAiPopulated.current) {
       isAiPopulated.current = false;
       return;
@@ -620,14 +723,14 @@ const ProductionList = () => {
       trucksOperating: activeTrucks.length,
       excavatorsOperating: activeExcavators.length,
     }));
-  };
+  }, [excavators, formData.haulDistance, formData.riskLevel, formData.roadCondition, formData.targetProduction, formData.weatherCondition, selectedExcavatorIds, selectedTruckIds, trucks]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       calculateMetrics();
     }, 500);
     return () => clearTimeout(timer);
-  }, [formData.targetProduction, formData.haulDistance, formData.weatherCondition, formData.roadCondition, formData.riskLevel, selectedTruckIds, selectedExcavatorIds]);
+  }, [calculateMetrics]);
 
   const handleCreate = () => {
     setModalMode('create');
@@ -711,9 +814,22 @@ const ProductionList = () => {
 
     const shiftMapping = { SHIFT_1: 'SHIFT_1', PAGI: 'SHIFT_1', SHIFT_2: 'SHIFT_2', SIANG: 'SHIFT_2', SHIFT_3: 'SHIFT_3', MALAM: 'SHIFT_3' };
     const currentShift = shiftMapping[formData.shift] || 'SHIFT_1';
-    const shiftOperators = operators.filter((op) => op.shift === currentShift && op.status === 'ACTIVE');
-    const activeOperators = shiftOperators.length > 0 ? shiftOperators : operators.filter((op) => op.status === 'ACTIVE');
-    const defaultOperator = activeOperators[manualHaulingList.length % Math.max(activeOperators.length, 1)] || operators[0];
+
+    const usedTruckOperatorIds = manualHaulingList.map((h) => h.operatorId).filter(Boolean);
+    const usedExcavatorOperatorIds = manualHaulingList
+      .filter((h) => Boolean(h.excavatorId))
+      .map((h) => h.excavatorOperatorId)
+      .filter(Boolean);
+
+    const truckOperatorCandidates = operators.filter((op) => op.status === 'ACTIVE' && (op.licenseType === 'SIM_B1' || op.licenseType === 'SIM_B2' || op.licenseType === 'SIM_A') && (!op.shift || op.shift === currentShift));
+    const fallbackTruckOperatorCandidates = operators.filter((op) => op.status === 'ACTIVE' && (op.licenseType === 'SIM_B1' || op.licenseType === 'SIM_B2' || op.licenseType === 'SIM_A'));
+    const effectiveTruckOperators = truckOperatorCandidates.length > 0 ? truckOperatorCandidates : fallbackTruckOperatorCandidates;
+    const defaultOperator = effectiveTruckOperators.find((op) => !usedTruckOperatorIds.includes(op.id)) || effectiveTruckOperators[0] || operators[0];
+
+    const excavatorOperatorCandidates = operators.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT' && (!op.shift || op.shift === currentShift));
+    const fallbackExcavatorOperatorCandidates = operators.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT');
+    const effectiveExcavatorOperators = excavatorOperatorCandidates.length > 0 ? excavatorOperatorCandidates : fallbackExcavatorOperatorCandidates;
+    const defaultExcavatorOperator = effectiveExcavatorOperators.find((op) => !usedExcavatorOperatorIds.includes(op.id)) || effectiveExcavatorOperators[0] || null;
 
     const defaultLoadingPoint = activeLoadingPoints[manualHaulingList.length % activeLoadingPoints.length];
     const defaultDumpingPoint = activeDumpingPoints[manualHaulingList.length % activeDumpingPoints.length];
@@ -727,6 +843,7 @@ const ProductionList = () => {
       truckId: availableTruckId,
       excavatorId: availableExcavatorId,
       operatorId: defaultOperator?.id || '',
+      excavatorOperatorId: defaultExcavatorOperator?.id || '',
       loadingPointId: defaultLoadingPoint?.id || '',
       dumpingPointId: defaultDumpingPoint?.id || '',
       roadSegmentId: defaultRoadSegment?.id || '',
@@ -735,6 +852,7 @@ const ProductionList = () => {
       excavatorCode: selectedExcavator?.code || 'N/A',
       excavatorModel: selectedExcavator?.model || '',
       operatorName: defaultOperator?.user?.fullName || defaultOperator?.employeeNumber || 'N/A',
+      excavatorOperatorName: defaultExcavatorOperator?.user?.fullName || defaultExcavatorOperator?.employeeNumber || '-',
       loadingPointName: defaultLoadingPoint?.name || 'N/A',
       dumpingPointName: defaultDumpingPoint?.name || 'N/A',
       roadSegmentName: defaultRoadSegment?.name || 'N/A',
@@ -749,9 +867,51 @@ const ProductionList = () => {
 
     setManualHaulingList((prev) => {
       const updated = [...prev, newHauling];
-      const newTargetPerHauling = formData.targetProduction ? parseFloat(formData.targetProduction) / updated.length : 30;
-      return updated.map((h) => ({ ...h, targetWeight: newTargetPerHauling }));
+      return redistributeManualHaulingTargets(formData.targetProduction, updated);
     });
+  };
+
+  const handleAddExistingHaulingToManualList = () => {
+    if (!selectedAvailableHaulingId) return;
+    const selected = availableHaulingsForProduction.find((h) => h.id === selectedAvailableHaulingId);
+    if (!selected) return;
+
+    setManualHaulingList((prev) => {
+      if (prev.some((x) => x.isExisting && x.id === selected.id)) return prev;
+
+      const item = {
+        tempId: selected.id,
+        id: selected.id,
+        isExisting: true,
+        truckId: selected.truckId,
+        excavatorId: selected.excavatorId || '',
+        operatorId: selected.operatorId,
+        excavatorOperatorId: selected.excavatorOperatorId || '',
+        loadingPointId: selected.loadingPointId,
+        dumpingPointId: selected.dumpingPointId,
+        roadSegmentId: selected.roadSegmentId || '',
+        truckCode: selected.truck?.code || 'N/A',
+        truckCapacity: selected.truck?.capacity || 0,
+        excavatorCode: selected.excavator?.code || 'N/A',
+        excavatorModel: selected.excavator?.name || '',
+        operatorName: selected.operator?.user?.fullName || selected.operator?.employeeNumber || 'N/A',
+        excavatorOperatorName: selected.excavatorOperator?.user?.fullName || selected.excavatorOperator?.employeeNumber || '-',
+        loadingPointName: selected.loadingPoint?.name || 'N/A',
+        dumpingPointName: selected.dumpingPoint?.name || 'N/A',
+        roadSegmentName: selected.roadSegment?.name || 'N/A',
+        roadSegmentDistance: selected.roadSegment?.distance || selected.distance || 3,
+        loadWeight: selected.loadWeight !== null && selected.loadWeight !== undefined ? selected.loadWeight.toString() : '0',
+        targetWeight: selected.targetWeight || 30,
+        status: selected.status || 'LOADING',
+        distance: selected.distance || 3,
+        activityNumber: selected.activityNumber,
+      };
+
+      const updated = [...prev, item];
+      return redistributeManualHaulingTargets(formData.targetProduction, updated);
+    });
+
+    setSelectedAvailableHaulingId('');
   };
 
   const handleRemoveManualHauling = async (tempId) => {
@@ -774,11 +934,7 @@ const ProductionList = () => {
 
     setManualHaulingList((prev) => {
       const filtered = prev.filter((h) => h.tempId !== tempId);
-      if (filtered.length > 0 && formData.targetProduction) {
-        const newTargetPerHauling = parseFloat(formData.targetProduction) / filtered.length;
-        return filtered.map((h) => ({ ...h, targetWeight: h.isExisting ? h.targetWeight : newTargetPerHauling }));
-      }
-      return filtered;
+      return redistributeManualHaulingTargets(formData.targetProduction, filtered);
     });
   };
 
@@ -844,9 +1000,30 @@ const ProductionList = () => {
           const exc = excavators.find((e) => e.id === value);
           updated.excavatorCode = exc?.code || 'N/A';
           updated.excavatorModel = exc?.model || '';
+          if (!value) {
+            updated.excavatorOperatorId = '';
+            updated.excavatorOperatorName = '-';
+          } else {
+            const shiftMapping = { SHIFT_1: 'SHIFT_1', PAGI: 'SHIFT_1', SHIFT_2: 'SHIFT_2', SIANG: 'SHIFT_2', SHIFT_3: 'SHIFT_3', MALAM: 'SHIFT_3' };
+            const currentShift = shiftMapping[formData.shift] || formData.shift || 'SHIFT_1';
+            const usedExcavatorOperatorIds = prev
+              .filter((x) => x.tempId !== tempId && Boolean(x.excavatorId))
+              .map((x) => x.excavatorOperatorId)
+              .filter(Boolean);
+            const candidates = operators.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT' && (!op.shift || op.shift === currentShift) && !usedExcavatorOperatorIds.includes(op.id));
+            const fallbackCandidates = operators.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT' && !usedExcavatorOperatorIds.includes(op.id));
+            const selectedCandidate = candidates[0] || fallbackCandidates[0] || null;
+            if (!updated.excavatorOperatorId && selectedCandidate?.id) {
+              updated.excavatorOperatorId = selectedCandidate.id;
+              updated.excavatorOperatorName = selectedCandidate.user?.fullName || selectedCandidate.employeeNumber || '-';
+            }
+          }
         } else if (field === 'operatorId') {
           const op = operators.find((o) => o.id === value);
           updated.operatorName = op?.user?.fullName || op?.employeeNumber || 'N/A';
+        } else if (field === 'excavatorOperatorId') {
+          const op = operators.find((o) => o.id === value);
+          updated.excavatorOperatorName = op?.user?.fullName || op?.employeeNumber || '-';
         } else if (field === 'loadingPointId') {
           const lp = loadingPoints.find((l) => l.id === value);
           updated.loadingPointName = lp?.name || 'N/A';
@@ -880,7 +1057,6 @@ const ProductionList = () => {
     setHaulingActivityInfo(null);
     setRelatedHaulingActivities([]);
     setHaulingAchievement(null);
-    setEditingHaulingId(null);
     setIsManualMode(true);
     setManualHaulingList([]);
     setSiteAutoFillInfo(null);
@@ -956,6 +1132,7 @@ const ProductionList = () => {
               truckId: ha.truckId,
               excavatorId: ha.excavatorId,
               operatorId: ha.operatorId,
+              excavatorOperatorId: ha.excavatorOperatorId || '',
               loadingPointId: ha.loadingPointId,
               dumpingPointId: ha.dumpingPointId,
               roadSegmentId: ha.roadSegmentId || '',
@@ -964,6 +1141,7 @@ const ProductionList = () => {
               excavatorCode: ha.excavator?.code || 'N/A',
               excavatorModel: ha.excavator?.name || '',
               operatorName: ha.operator?.user?.fullName || ha.operator?.employeeNumber || 'N/A',
+              excavatorOperatorName: ha.excavatorOperator?.user?.fullName || ha.excavatorOperator?.employeeNumber || '-',
               loadingPointName: ha.loadingPoint?.name || 'N/A',
               dumpingPointName: ha.dumpingPoint?.name || 'N/A',
               roadSegmentName: ha.roadSegment?.name || 'N/A',
@@ -1004,81 +1182,6 @@ const ProductionList = () => {
           setLoadingHaulingActivities(false);
         }
       }
-    }
-  };
-
-  // Handle quick edit for hauling activity
-  const handleStartHaulingEdit = (activity) => {
-    setEditingHaulingId(activity.id);
-    setHaulingEditForm({
-      loadWeight: activity.loadWeight !== null ? activity.loadWeight.toString() : '',
-      status: activity.status,
-    });
-  };
-
-  const handleCancelHaulingEdit = () => {
-    setEditingHaulingId(null);
-    setHaulingEditForm({ loadWeight: '', status: '' });
-  };
-
-  const handleSaveHaulingEdit = async (activityId) => {
-    try {
-      const updateData = {};
-      if (haulingEditForm.loadWeight !== '') {
-        updateData.loadWeight = parseFloat(haulingEditForm.loadWeight);
-        // Auto-complete status when load >= target
-        const activity = relatedHaulingActivities.find((a) => a.id === activityId);
-        if (activity && updateData.loadWeight >= (activity.targetWeight || 30)) {
-          updateData.status = 'COMPLETED';
-        }
-      }
-      if (haulingEditForm.status) {
-        updateData.status = haulingEditForm.status;
-      }
-
-      const response = await haulingService.quickUpdate(activityId, updateData);
-
-      if (response.data) {
-        // Update local state
-        setRelatedHaulingActivities((prev) => prev.map((a) => (a.id === activityId ? response.data : a)));
-
-        // Recalculate achievement
-        if (selectedProduction?.equipmentAllocation) {
-          const allocation = selectedProduction.equipmentAllocation;
-          const haulingActivityIds = allocation.hauling_activity_ids || [];
-          const recordDate = new Date(selectedProduction.recordDate);
-          const startDate = new Date(recordDate);
-          startDate.setHours(0, 0, 0, 0);
-          const endDate = new Date(recordDate);
-          endDate.setHours(23, 59, 59, 999);
-
-          const achievementRes = await haulingService.calculateAchievement(
-            allocation.truck_ids || [],
-            allocation.excavator_ids || [],
-            startDate.toISOString(),
-            endDate.toISOString(),
-            haulingActivityIds,
-            selectedProduction?.targetProduction
-          );
-          if (achievementRes.data) {
-            setHaulingAchievement(achievementRes.data);
-            // Auto-update actualProduction from total load weight
-            const totalLoadWeight = achievementRes.data.totalLoadWeight || 0;
-            if (totalLoadWeight > 0) {
-              setFormData((prev) => ({
-                ...prev,
-                actualProduction: totalLoadWeight.toString(),
-              }));
-            }
-          }
-        }
-
-        setEditingHaulingId(null);
-        setHaulingEditForm({ loadWeight: '', status: '' });
-      }
-    } catch (error) {
-      console.error('Failed to update hauling activity:', error);
-      alert('Gagal mengupdate hauling activity');
     }
   };
 
@@ -1144,15 +1247,15 @@ const ProductionList = () => {
 
         console.log('[Production] Existing haulings:', existingHaulings.length, ', New haulings:', newHaulings.length);
 
-        const invalidHaulings = newHaulings.filter((h) => !h.truckId || !h.excavatorId || !h.operatorId || !h.loadingPointId || !h.dumpingPointId);
+        const invalidHaulings = newHaulings.filter((h) => !h.truckId || !h.operatorId || !h.loadingPointId || !h.dumpingPointId || (h.excavatorId && !h.excavatorOperatorId));
 
         if (invalidHaulings.length > 0) {
-          alert(`Ada ${invalidHaulings.length} hauling baru yang belum lengkap data-nya (Truck, Excavator, Operator, Loading Point, Dumping Point wajib diisi)`);
+          alert(`Ada ${invalidHaulings.length} hauling baru yang belum lengkap data-nya (Truck, Operator, Loading Point, Dumping Point wajib diisi)`);
           return;
         }
 
-        const newTruckIds = newHaulings.map((h) => h.truckId);
-        const duplicateTrucks = newTruckIds.filter((id, idx) => newTruckIds.indexOf(id) !== idx);
+        const allTruckIds = manualHaulingList.map((h) => h.truckId).filter(Boolean);
+        const duplicateTrucks = allTruckIds.filter((id, idx) => allTruckIds.indexOf(id) !== idx);
         if (duplicateTrucks.length > 0) {
           const duplicateTruckCodes = [...new Set(duplicateTrucks)].map((id) => trucks.find((t) => t.id === id)?.code || id).join(', ');
           alert(`Truck ${duplicateTruckCodes} dipilih lebih dari sekali. Setiap truck hanya boleh digunakan untuk satu hauling activity dalam batch yang sama.`);
@@ -1174,7 +1277,8 @@ const ProductionList = () => {
 
               const haulingPayload = {
                 truckId: hauling.truckId,
-                excavatorId: hauling.excavatorId,
+                excavatorId: hauling.excavatorId || null,
+                excavatorOperatorId: hauling.excavatorId ? hauling.excavatorOperatorId || null : null,
                 operatorId: hauling.operatorId,
                 loadingPointId: hauling.loadingPointId,
                 dumpingPointId: hauling.dumpingPointId,
@@ -1195,6 +1299,20 @@ const ProductionList = () => {
 
               console.log(`[Production] Creating new hauling #${index + 1}:`, haulingPayload);
               const result = await haulingService.create(haulingPayload);
+              const created = result?.data || result;
+              if (created?.id) {
+                const wantsLoad = hauling.loadWeight !== '' && hauling.loadWeight !== null && hauling.loadWeight !== undefined;
+                const loadNum = wantsLoad ? parseFloat(hauling.loadWeight) : null;
+                const wantsStatus = Boolean(hauling.status);
+                const nextStatus = wantsStatus ? hauling.status : null;
+
+                if ((Number.isFinite(loadNum) && loadNum !== null) || (nextStatus && nextStatus !== 'LOADING')) {
+                  await haulingService.quickUpdate(created.id, {
+                    ...(Number.isFinite(loadNum) && loadNum !== null ? { loadWeight: loadNum } : {}),
+                    ...(nextStatus ? { status: nextStatus } : {}),
+                  });
+                }
+              }
               results.push(result);
             }
 
@@ -1212,6 +1330,16 @@ const ProductionList = () => {
             const errorMsg = haulingError.response?.data?.message || haulingError.message || 'Unknown error';
             alert(`Gagal membuat hauling activities: ${errorMsg}\n\nProduction record tidak akan disimpan.`);
             return;
+          }
+        }
+
+        for (const hauling of existingHaulings) {
+          try {
+            await haulingService.update(hauling.id, {
+              targetWeight: parseFloat(hauling.targetWeight) || 0,
+            });
+          } catch (error) {
+            console.error('Failed to update existing hauling targetWeight:', error);
           }
         }
 
@@ -1272,16 +1400,16 @@ const ProductionList = () => {
 
         payload.equipmentAllocation = {
           truck_ids: [...new Set(manualHaulingList.map((h) => h.truckId))],
-          excavator_ids: [...new Set(manualHaulingList.map((h) => h.excavatorId))],
+          excavator_ids: [...new Set(manualHaulingList.map((h) => h.excavatorId).filter(Boolean))],
           operator_ids: [...new Set(manualHaulingList.map((h) => h.operatorId).filter(Boolean))],
           truck_count: new Set(manualHaulingList.map((h) => h.truckId)).size,
-          excavator_count: new Set(manualHaulingList.map((h) => h.excavatorId)).size,
+          excavator_count: new Set(manualHaulingList.map((h) => h.excavatorId).filter(Boolean)).size,
           hauling_activity_ids: allHaulingIds,
-          created_from: haulingActivityInfo?.activityIds?.length > 0 ? 'ai_hauling_applied' : modalMode === 'edit' ? 'manual_edit' : 'manual',
+          created_from: haulingActivityInfo?.action === 'create' || haulingActivityInfo?.action === 'update' ? 'ai_hauling_applied' : modalMode === 'edit' ? 'manual_edit' : 'manual',
         };
 
         payload.trucksOperating = new Set(manualHaulingList.map((h) => h.truckId)).size;
-        payload.excavatorsOperating = new Set(manualHaulingList.map((h) => h.excavatorId)).size;
+        payload.excavatorsOperating = new Set(manualHaulingList.map((h) => h.excavatorId).filter(Boolean)).size;
 
         if (modalMode === 'create' && !haulingActivityInfo?.activityIds?.length) {
           payload.remarks = `Manual hauling: ${manualHaulingList.length} trips | IDs: ${allHaulingIds.slice(0, 3).join(', ')}${allHaulingIds.length > 3 ? '...' : ''}`;
@@ -1971,6 +2099,32 @@ const ProductionList = () => {
                   </button>
                 </div>
 
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="col-span-2">
+                    <label className="text-xs font-medium text-slate-400 mb-1 block">Use existing hauling (load = 0)</label>
+                    <select
+                      value={selectedAvailableHaulingId}
+                      onChange={(e) => setSelectedAvailableHaulingId(e.target.value)}
+                      className="w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200"
+                      disabled={loadingAvailableHaulings}
+                    >
+                      <option value="">{loadingAvailableHaulings ? 'Loading...' : 'Select hauling activity'}</option>
+                      {availableHaulingsForProduction
+                        .filter((h) => !manualHaulingList.some((x) => x.isExisting && x.id === h.id))
+                        .map((h) => (
+                          <option key={h.id} value={h.id}>
+                            {h.activityNumber || h.id} | {h.truck?.code || 'N/A'} | target {h.targetWeight || 0}t
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div className="flex items-end">
+                    <button type="button" onClick={handleAddExistingHaulingToManualList} className="w-full text-sm bg-sky-600 text-white px-3 py-2 rounded hover:bg-sky-700" disabled={!selectedAvailableHaulingId}>
+                      Add Existing
+                    </button>
+                  </div>
+                </div>
+
                 {manualHaulingList.length > 0 ? (
                   <div className="space-y-4 max-h-96 overflow-y-auto">
                     {manualHaulingList.map((hauling, idx) => (
@@ -2021,7 +2175,7 @@ const ProductionList = () => {
                               className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
                               disabled={hauling.isExisting}
                             >
-                              <option value="">Select Excavator</option>
+                              <option value="">No Excavator</option>
                               {excavators
                                 .filter((e) => selectedExcavatorIds.includes(e.id) || e.id === hauling.excavatorId)
                                 .map((exc) => (
@@ -2033,7 +2187,7 @@ const ProductionList = () => {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="grid grid-cols-3 gap-3 mb-3">
                           <div>
                             <label className="text-xs font-medium text-slate-400 mb-1 flex items-center">
                               <User size={12} className="mr-1" /> Operator
@@ -2045,13 +2199,57 @@ const ProductionList = () => {
                               disabled={hauling.isExisting}
                             >
                               <option value="">Select Operator</option>
-                              {operators
-                                .filter((op) => op.status === 'ACTIVE')
-                                .map((op) => (
+                              {(() => {
+                                const shiftMapping = {
+                                  SHIFT_1: 'SHIFT_1',
+                                  PAGI: 'SHIFT_1',
+                                  SHIFT_2: 'SHIFT_2',
+                                  SIANG: 'SHIFT_2',
+                                  SHIFT_3: 'SHIFT_3',
+                                  MALAM: 'SHIFT_3',
+                                };
+                                const currentShift = shiftMapping[formData.shift] || formData.shift || 'SHIFT_1';
+                                const base = operators.filter((op) => op.status === 'ACTIVE' && (op.licenseType === 'SIM_B1' || op.licenseType === 'SIM_B2' || op.licenseType === 'SIM_A') && (!op.shift || op.shift === currentShift));
+                                const selected = operators.find((op) => op.id === hauling.operatorId);
+                                const list = selected && !base.some((x) => x.id === selected.id) ? [selected, ...base] : base;
+                                return list.map((op) => (
                                   <option key={op.id} value={op.id}>
                                     {op.employeeNumber} - {op.user?.fullName || 'N/A'} ({op.shift})
                                   </option>
-                                ))}
+                                ));
+                              })()}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-slate-400 mb-1 flex items-center">
+                              <User size={12} className="mr-1" /> Excavator Operator
+                            </label>
+                            <select
+                              value={hauling.excavatorOperatorId || ''}
+                              onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'excavatorOperatorId', e.target.value)}
+                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
+                              disabled={!hauling.excavatorId || hauling.isExisting}
+                            >
+                              <option value="">Select Excavator Operator</option>
+                              {(() => {
+                                const shiftMapping = {
+                                  SHIFT_1: 'SHIFT_1',
+                                  PAGI: 'SHIFT_1',
+                                  SHIFT_2: 'SHIFT_2',
+                                  SIANG: 'SHIFT_2',
+                                  SHIFT_3: 'SHIFT_3',
+                                  MALAM: 'SHIFT_3',
+                                };
+                                const currentShift = shiftMapping[formData.shift] || formData.shift || 'SHIFT_1';
+                                const base = operators.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT' && (!op.shift || op.shift === currentShift));
+                                const selected = operators.find((op) => op.id === hauling.excavatorOperatorId);
+                                const list = selected && !base.some((x) => x.id === selected.id) ? [selected, ...base] : base;
+                                return list.map((op) => (
+                                  <option key={op.id} value={op.id}>
+                                    {op.employeeNumber} - {op.user?.fullName || 'N/A'} ({op.shift})
+                                  </option>
+                                ));
+                              })()}
                             </select>
                           </div>
                           <div>
@@ -2294,7 +2492,20 @@ const ProductionList = () => {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Target Production (ton) *</label>
-                  <input type="number" step="0.01" value={formData.targetProduction} onChange={(e) => setFormData({ ...formData, targetProduction: e.target.value })} className="input-field" required />
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.targetProduction}
+                    onChange={(e) => {
+                      const nextTarget = e.target.value;
+                      setFormData({ ...formData, targetProduction: nextTarget });
+                      if (isManualMode && manualHaulingList.length > 0) {
+                        setManualHaulingList((prev) => redistributeManualHaulingTargets(nextTarget, prev));
+                      }
+                    }}
+                    className="input-field"
+                    required
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Haul Distance (km) {siteAutoFillInfo && <span className="text-xs text-cyan-400 ml-1">auto-filled</span>}</label>

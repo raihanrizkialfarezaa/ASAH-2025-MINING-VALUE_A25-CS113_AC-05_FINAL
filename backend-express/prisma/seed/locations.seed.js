@@ -70,6 +70,9 @@ export const seedMiningSites = async () => {
 
 export const seedLoadingPoints = async (miningSites) => {
   const pitSite = miningSites.find((s) => s.code === 'PIT-01');
+  const stockpileSite = miningSites.find((s) => s.code === 'SP-01');
+  const crusherSite = miningSites.find((s) => s.code === 'CR-01');
+  const portSite = miningSites.find((s) => s.code === 'PORT-01');
   const romPadSite = miningSites.find((s) => s.code === 'ROM-01');
 
   const loadingPoints = [
@@ -121,6 +124,54 @@ export const seedLoadingPoints = async (miningSites) => {
         moisture: 20.0,
       },
     },
+    {
+      code: 'LP-04',
+      name: 'Reclaim Loading Point Stockpile',
+      miningSiteId: stockpileSite.id,
+      isActive: true,
+      maxQueueSize: 4,
+      latitude: 1.2351,
+      longitude: 116.7896,
+      coalSeam: 'Mixed',
+      coalQuality: {
+        calori: 5600,
+        ash: 13.0,
+        sulfur: 0.9,
+        moisture: 19.0,
+      },
+    },
+    {
+      code: 'LP-05',
+      name: 'Loading Point Crusher Feed',
+      miningSiteId: crusherSite.id,
+      isActive: true,
+      maxQueueSize: 3,
+      latitude: 1.2356,
+      longitude: 116.7901,
+      coalSeam: 'Mixed',
+      coalQuality: {
+        calori: 5700,
+        ash: 12.0,
+        sulfur: 0.8,
+        moisture: 18.0,
+      },
+    },
+    {
+      code: 'LP-06',
+      name: 'Loading Point Port Reclaim',
+      miningSiteId: portSite.id,
+      isActive: true,
+      maxQueueSize: 6,
+      latitude: 1.2401,
+      longitude: 116.8101,
+      coalSeam: 'Mixed',
+      coalQuality: {
+        calori: 5400,
+        ash: 14.5,
+        sulfur: 1.1,
+        moisture: 21.0,
+      },
+    },
   ];
 
   const created = [];
@@ -133,6 +184,7 @@ export const seedLoadingPoints = async (miningSites) => {
 };
 
 export const seedDumpingPoints = async (miningSites) => {
+  const pitSite = miningSites.find((s) => s.code === 'PIT-01');
   const stockpileSite = miningSites.find((s) => s.code === 'SP-01');
   const crusherSite = miningSites.find((s) => s.code === 'CR-01');
   const romPadSite = miningSites.find((s) => s.code === 'ROM-01');
@@ -194,6 +246,17 @@ export const seedDumpingPoints = async (miningSites) => {
       latitude: 1.24,
       longitude: 116.81,
     },
+    {
+      code: 'DP-06',
+      name: 'Pit Waste Dump',
+      miningSiteId: pitSite.id,
+      dumpingType: 'WASTE_DUMP',
+      isActive: true,
+      capacity: 80000,
+      currentStock: 12000,
+      latitude: 1.2349,
+      longitude: 116.7894,
+    },
   ];
 
   const created = [];
@@ -208,6 +271,8 @@ export const seedDumpingPoints = async (miningSites) => {
 export const seedRoadSegments = async (miningSites) => {
   const pitSite = miningSites.find((s) => s.code === 'PIT-01');
   const stockpileSite = miningSites.find((s) => s.code === 'SP-01');
+  const crusherSite = miningSites.find((s) => s.code === 'CR-01');
+  const portSite = miningSites.find((s) => s.code === 'PORT-01');
   const romPadSite = miningSites.find((s) => s.code === 'ROM-01');
 
   const roadSegments = [
@@ -262,6 +327,32 @@ export const seedRoadSegments = async (miningSites) => {
       gradient: -1.0,
       isActive: true,
       lastMaintenance: new Date('2025-01-10'),
+    },
+    {
+      code: 'RS-05',
+      name: 'Crusher Internal Route',
+      miningSiteId: crusherSite.id,
+      startPoint: 'LP-05',
+      endPoint: 'DP-03',
+      distance: 0.8,
+      roadCondition: 'GOOD',
+      maxSpeed: 20,
+      gradient: -0.5,
+      isActive: true,
+      lastMaintenance: new Date('2025-01-08'),
+    },
+    {
+      code: 'RS-06',
+      name: 'Port Internal Route',
+      miningSiteId: portSite.id,
+      startPoint: 'LP-06',
+      endPoint: 'DP-05',
+      distance: 1.2,
+      roadCondition: 'FAIR',
+      maxSpeed: 25,
+      gradient: -0.2,
+      isActive: true,
+      lastMaintenance: new Date('2025-01-03'),
     },
   ];
 

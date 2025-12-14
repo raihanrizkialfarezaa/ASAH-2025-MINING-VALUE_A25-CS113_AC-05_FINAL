@@ -2,21 +2,39 @@ import { body, param, query } from 'express-validator';
 
 export const createHaulingValidator = [
   body('truckId').trim().notEmpty().withMessage('Truck ID is required'),
-  body('excavatorId').trim().notEmpty().withMessage('Excavator ID is required'),
+  body('excavatorId').optional({ nullable: true, checkFalsy: true }).trim(),
+  body('excavatorOperatorId').optional({ nullable: true, checkFalsy: true }).trim(),
   body('operatorId').trim().notEmpty().withMessage('Operator ID is required'),
   body('loadingPointId').trim().notEmpty().withMessage('Loading point ID is required'),
   body('dumpingPointId').trim().notEmpty().withMessage('Dumping point ID is required'),
   body('roadSegmentId').optional().trim(),
   body('shift').isIn(['SHIFT_1', 'SHIFT_2', 'SHIFT_3']).withMessage('Invalid shift'),
-  body('targetWeight').isFloat({ min: 0 }).withMessage('Target weight must be a positive number'),
-  body('distance').isFloat({ min: 0 }).withMessage('Distance must be a positive number'),
+  body().custom((_, { req }) => {
+    const excavatorId = req.body?.excavatorId;
+    const excavatorOperatorId = req.body?.excavatorOperatorId;
+    if (excavatorId && (!excavatorOperatorId || excavatorOperatorId === '')) {
+      throw new Error('Excavator operator ID is required when excavator is set');
+    }
+    return true;
+  }),
+  body('loadWeight')
+    .optional()
+    .isFloat({ min: 0 })
+    .toFloat()
+    .withMessage('Load weight must be a positive number'),
+  body('targetWeight')
+    .isFloat({ min: 0 })
+    .toFloat()
+    .withMessage('Target weight must be a positive number'),
+  body('distance').isFloat({ min: 0 }).toFloat().withMessage('Distance must be a positive number'),
 ];
 
 export const updateHaulingValidator = [
   param('id').trim().notEmpty().withMessage('Hauling activity ID is required'),
   body('activityNumber').optional().trim(),
   body('truckId').optional().trim(),
-  body('excavatorId').optional().trim(),
+  body('excavatorId').optional({ nullable: true, checkFalsy: true }).trim(),
+  body('excavatorOperatorId').optional({ nullable: true, checkFalsy: true }).trim(),
   body('operatorId').optional().trim(),
   body('loadingPointId').optional().trim(),
   body('dumpingPointId').optional().trim(),
@@ -32,15 +50,22 @@ export const updateHaulingValidator = [
   body('loadWeight')
     .optional()
     .isFloat({ min: 0 })
+    .toFloat()
     .withMessage('Load weight must be a positive number'),
   body('targetWeight')
     .optional()
     .isFloat({ min: 0 })
+    .toFloat()
     .withMessage('Target weight must be a positive number'),
-  body('distance').optional().isFloat({ min: 0 }).withMessage('Distance must be a positive number'),
+  body('distance')
+    .optional()
+    .isFloat({ min: 0 })
+    .toFloat()
+    .withMessage('Distance must be a positive number'),
   body('fuelConsumed')
     .optional()
     .isFloat({ min: 0 })
+    .toFloat()
     .withMessage('Fuel consumed must be a positive number'),
   body('status')
     .optional()

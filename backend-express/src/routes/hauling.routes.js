@@ -17,6 +17,7 @@ const router = express.Router();
 router.use(authenticate);
 
 router.get('/', getHaulingsQueryValidator, validate, haulingController.getAll);
+router.get('/available-for-production', haulingController.getAvailableForProduction);
 router.get('/active', haulingController.getActive);
 router.get('/statistics', haulingController.getStatistics);
 router.get('/:id', haulingController.getById);

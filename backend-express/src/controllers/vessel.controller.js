@@ -32,4 +32,34 @@ export const vesselController = {
     const result = await vesselService.getAllSchedules(req.query);
     res.json(ApiResponse.paginated(result.schedules, result.pagination));
   }),
+
+  // ===== NEW: Get vessels available for loading =====
+  getAvailableForLoading: catchAsync(async (req, res) => {
+    const result = await vesselService.getAvailableForLoading(req.query);
+    res.json(ApiResponse.success(result, 'Available vessels retrieved successfully'));
+  }),
+
+  // ===== NEW: Validate vessel/schedule capacity =====
+  validateCapacity: catchAsync(async (req, res) => {
+    const { scheduleId, additionalLoad } = req.body;
+
+    if (!scheduleId) {
+      return res.status(400).json(ApiResponse.error('scheduleId is required'));
+    }
+
+    if (!additionalLoad || additionalLoad <= 0) {
+      return res.status(400).json(ApiResponse.error('additionalLoad must be a positive number'));
+    }
+
+    const result = await vesselService.validateVesselCapacity(
+      scheduleId,
+      parseFloat(additionalLoad)
+    );
+
+    if (result.valid) {
+      res.json(ApiResponse.success(result, 'Vessel has sufficient capacity'));
+    } else {
+      res.status(400).json(ApiResponse.error(result.error, result));
+    }
+  }),
 };

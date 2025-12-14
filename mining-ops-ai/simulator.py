@@ -51,6 +51,56 @@ def format_currency(value):
     elif value >= 1_000_000: return f"{value/1_000_000:.0f} Juta IDR"
     else: return f"{value:,.0f} IDR"
 
+def _to_float(value, default=0.0):
+    try:
+        if value is None:
+            return float(default)
+        if isinstance(value, str) and value.strip() == "":
+            return float(default)
+        n = float(value)
+        if not np.isfinite(n):
+            return float(default)
+        return n
+    except Exception:
+        return float(default)
+
+def _to_int(value, default=0):
+    try:
+        if value is None:
+            return int(default)
+        if isinstance(value, str) and value.strip() == "":
+            return int(default)
+        return int(float(value))
+    except Exception:
+        return int(default)
+
+def _to_id(value):
+    try:
+        if value is None or pd.isna(value):
+            return None
+    except Exception:
+        pass
+    s = str(value).strip()
+    return s if s else None
+
+def _json_safe(obj):
+    if obj is None:
+        return None
+    if isinstance(obj, (np.integer, np.int64, np.int32)):
+        return int(obj)
+    if isinstance(obj, (np.floating, np.float64, np.float32)):
+        v = float(obj)
+        return v if np.isfinite(v) else 0.0
+    if isinstance(obj, float):
+        return obj if np.isfinite(obj) else 0.0
+    if isinstance(obj, (pd.Timestamp,)):
+        return obj.isoformat()
+    if isinstance(obj, dict):
+        return {k: _json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple, set)):
+        return [_json_safe(v) for v in obj]
+    return obj
+
 from data_loader import load_data
 
 CONFIG = load_config()
@@ -543,9 +593,21 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, ca
         'total_return_time_hours': 0.0
     }
     
+    # ===== PERBAIKAN: Hanya ambil truck dengan status STANDBY atau IDLE =====
+    # Status yang diizinkan untuk assignment hauling baru
+    ALLOWED_TRUCK_STATUSES = ['STANDBY', 'IDLE']
+    
     if 'status' in data['trucks'].columns:
-        active_trucks = data['trucks'][~data['trucks']['status'].isin(['MAINTENANCE', 'BREAKDOWN'])]
-        trucks = active_trucks.index.tolist()
+        # Filter hanya truck dengan status STANDBY atau IDLE (tersedia untuk hauling baru)
+        available_trucks = data['trucks'][data['trucks']['status'].isin(ALLOWED_TRUCK_STATUSES)]
+        
+        if available_trucks.empty:
+            # Fallback: jika tidak ada STANDBY/IDLE, coba exclude MAINTENANCE/BREAKDOWN saja
+            print(f"   ⚠️ Warning: No trucks with STANDBY/IDLE status. Using fallback filter.")
+            available_trucks = data['trucks'][~data['trucks']['status'].isin(['MAINTENANCE', 'BREAKDOWN', 'OUT_OF_SERVICE'])]
+        
+        trucks = available_trucks.index.tolist()
+        print(f"   > Available trucks (STANDBY/IDLE): {len(trucks)} dari {len(data['trucks'])} total")
     else:
         trucks = data['trucks'].index.tolist()
 
@@ -574,9 +636,18 @@ def run_hybrid_simulation(skenario, financial_params, data, duration_hours=8, ca
         
     used_excavator_ids = []
     
+    # ===== PERBAIKAN: Hanya ambil excavator dengan status STANDBY, IDLE, atau ACTIVE =====
+    ALLOWED_EXCAVATOR_STATUSES = ['STANDBY', 'IDLE', 'ACTIVE']
+    
     if 'status' in data['excavators'].columns:
-        active_excavators = data['excavators'][~data['excavators']['status'].isin(['MAINTENANCE', 'BREAKDOWN'])]
-        excavators_list = active_excavators.index.tolist()
+        available_excavators = data['excavators'][data['excavators']['status'].isin(ALLOWED_EXCAVATOR_STATUSES)]
+        
+        if available_excavators.empty:
+            print(f"   ⚠️ Warning: No excavators with available status. Using fallback filter.")
+            available_excavators = data['excavators'][~data['excavators']['status'].isin(['MAINTENANCE', 'BREAKDOWN', 'OUT_OF_SERVICE'])]
+        
+        excavators_list = available_excavators.index.tolist()
+        print(f"   > Available excavators (STANDBY/IDLE/ACTIVE): {len(excavators_list)} dari {len(data['excavators'])} total")
     else:
         excavators_list = data['excavators'].index.tolist()
 
@@ -794,6 +865,11 @@ def format_konteks_for_llm(simulation_results, data):
 
         total_ops_needed = res.get('total_operators_needed', num_hauling_ops + num_loading_ops + num_dumping_ops)
         
+        hauling_speed_kmh = (road_dist / (hauling_avg_min / 60)) if hauling_avg_min > 0 else 0
+        return_speed_kmh = (road_dist / (return_avg_min / 60)) if return_avg_min > 0 else 0
+        avg_load_trip = (ton / cycles) if cycles > 0 else 0
+        bbm_eff_l_per_ton = (res.get('total_bbm_liter', 0) / ton) if ton > 0 else 0
+
         flow_breakdown = (
             f"Rincian Alur Operasi Per Siklus (Hulu - Hilir)\n"
             f"\n"
@@ -809,7 +885,7 @@ def format_konteks_for_llm(simulation_results, data):
             f"FASE 2: HAULING (Pengangkutan Terisi - Tambang ke Pelabuhan)\n"
             f"   Waktu per Trip: {hauling_avg_min:.1f} menit\n"
             f"   Jarak Tempuh: {road_dist:.2f} km\n"
-            f"   Kecepatan Rata-rata: {(road_dist / (hauling_avg_min / 60)):.1f} km/jam\n"
+            f"   Kecepatan Rata-rata: {hauling_speed_kmh:.1f} km/jam\n"
             f"   Kondisi Jalan: {res.get('roadCondition')}\n"
             f"   Kondisi Cuaca: {res.get('weatherCondition')}\n"
             f"   Equipment: {res.get('alokasi_truk')} unit dump truck\n"
@@ -829,15 +905,15 @@ def format_konteks_for_llm(simulation_results, data):
             f"FASE 5: RETURN (Perjalanan Kosong - Pelabuhan ke Tambang)\n"
             f"   Waktu per Trip: {return_avg_min:.1f} menit\n"
             f"   Jarak Tempuh: {road_dist:.2f} km\n"
-            f"   Kecepatan Rata-rata: {(road_dist / (return_avg_min / 60)):.1f} km/jam\n"
+            f"   Kecepatan Rata-rata: {return_speed_kmh:.1f} km/jam\n"
             f"\n"
             f"RINGKASAN PRODUKSI\n"
             f"   Total Siklus Selesai: {cycles} trips\n"
             f"   Total Jarak Tempuh: {res.get('total_distance_km', 0):.1f} km\n"
             f"   Total Produksi: {ton:,.0f} ton\n"
-            f"   Rata-rata Muatan per Trip: {ton / cycles:.1f} ton/trip\n"
+            f"   Rata-rata Muatan per Trip: {avg_load_trip:.1f} ton/trip\n"
             f"   Total BBM Terpakai: {res.get('total_bbm_liter', 0):,.0f} liter\n"
-            f"   Efisiensi BBM: {res.get('total_bbm_liter', 0) / ton:.2f} liter/ton\n"
+            f"   Efisiensi BBM: {bbm_eff_l_per_ton:.2f} liter/ton\n"
             f"   Total Operator Dibutuhkan: {total_ops_needed} orang\n"
             f"   - Operator Hauling: {num_hauling_ops} orang\n"
             f"   - Operator Loading: {num_loading_ops} orang\n"
@@ -1085,6 +1161,9 @@ def format_konteks_for_llm(simulation_results, data):
                 "EXPLANATIONS": explanations,
                 "ANALISIS_KAPAL": ship_str,
                 "SOP_KESELAMATAN": " | ".join(sop),
+                # Include hauling allocations if available (for dynamic hauling creation)
+                "HAULING_ALLOCATIONS": res.get('hauling_allocations', []),
+                "ALLOCATION_SUMMARY": res.get('allocation_summary', {}),
                 "RAW_DATA": {
                     "total_tonase": res.get('total_tonase', 0),
                     "jumlah_siklus_selesai": res.get('jumlah_siklus_selesai', 0),
@@ -1102,7 +1181,10 @@ def format_konteks_for_llm(simulation_results, data):
                     "target_schedule_id": res.get('target_schedule_id'),
                     "miningSiteId": mining_site_id,
                     "delay_risk_level": delay_risk,
-                    "strategy_objective": res.get('strategy_objective', 'Optimal Configuration')
+                    "strategy_objective": res.get('strategy_objective', 'Optimal Configuration'),
+                    # Include hauling allocation summary in raw data too
+                    "hauling_allocations": res.get('hauling_allocations', []),
+                    "allocation_summary": res.get('allocation_summary', {})
                 }
             }
         })
@@ -1138,7 +1220,7 @@ def get_strategic_recommendations(fixed, vars, params):
     target_road = fixed.get('target_road_id')
     target_excavator = fixed.get('target_excavator_id')
     target_schedule = fixed.get('target_schedule_id')
-    target_production = float(fixed.get('totalProductionTarget', 0))
+    target_production = _to_float(fixed.get('totalProductionTarget', 0), 0.0)
     
     all_roads = data['roads'].index.tolist()
     all_excavators = data['excavators'].index.tolist()
@@ -1180,6 +1262,53 @@ def get_strategic_recommendations(fixed, vars, params):
     if all_schedules[0] is None or len(data['schedules']) == 0:
         sample_schedules = [None]
         print(f"   ⚠️ No valid vessel schedules available")
+    
+    # ===== PERBAIKAN: Validasi kapasitas vessel =====
+    # Filter jadwal yang masih punya sisa kapasitas
+    def validate_schedule_capacity(schedule_id, data, target_production):
+        """Validasi apakah schedule masih punya kapasitas untuk produksi target"""
+        if schedule_id is None:
+            return True, None
+        
+        if data['schedules'].empty or schedule_id not in data['schedules'].index:
+            return False, "Schedule not found"
+        
+        schedule = data['schedules'].loc[schedule_id]
+        status = schedule.get('status', 'UNKNOWN')
+        
+        # Hanya jadwal SCHEDULED atau LOADING yang valid
+        if status not in ['SCHEDULED', 'LOADING']:
+            return False, f"Schedule status is {status}, should be SCHEDULED or LOADING"
+        
+        # Hitung sisa kapasitas
+        planned = schedule.get('plannedQuantity', 0) or 0
+        actual = schedule.get('actualQuantity', 0) or 0
+        remaining = planned - actual
+        
+        if remaining <= 0:
+            return False, f"No remaining capacity. Planned: {planned}, Actual: {actual}"
+        
+        # Jika ada target produksi, validasi apakah cukup
+        if target_production > 0 and remaining < target_production * 0.5:
+            # Warning tapi masih diterima jika produksi minimal 50% dari target bisa masuk
+            print(f"   ⚠️ Schedule {schedule_id}: Remaining capacity ({remaining:.0f} tons) may be insufficient for target ({target_production:.0f} tons)")
+        
+        return True, {'remaining': remaining, 'planned': planned, 'actual': actual}
+    
+    # Validasi sample schedules
+    valid_schedules = []
+    for sched_id in sample_schedules:
+        is_valid, info = validate_schedule_capacity(sched_id, data, target_production)
+        if is_valid:
+            valid_schedules.append(sched_id)
+        else:
+            print(f"   ⚠️ Skipping schedule {sched_id}: {info}")
+    
+    if valid_schedules:
+        sample_schedules = valid_schedules
+        print(f"   ✅ {len(sample_schedules)} schedules with available capacity")
+    else:
+        print(f"   ⚠️ No schedules with available capacity found, using all schedules")
     
     # Adjust truck configs if target production is set and low
     truck_configs = list(range(min_trucks, max_trucks + 1, max(1, (max_trucks - min_trucks) // 4)))
@@ -1465,10 +1594,22 @@ def analyze_hauling_for_production(fixed, data):
         return {"status": "NO_DATA", "hauling_activities": [], "aggregated": {}}
     
     # Aggregate metrics from filtered hauling activities
-    total_tonase = filtered['loadWeight'].sum() if 'loadWeight' in filtered.columns else 0
+    if 'loadWeight' in filtered.columns:
+        load_series = pd.to_numeric(filtered['loadWeight'], errors='coerce')
+        total_tonase = float(load_series.fillna(0).sum())
+    else:
+        total_tonase = 0.0
     total_trips = len(filtered)
-    total_distance = (filtered['distance'].sum() * 2) if 'distance' in filtered.columns else 0
-    total_fuel = filtered['fuelConsumed'].sum() if 'fuelConsumed' in filtered.columns else 0
+    if 'distance' in filtered.columns:
+        dist_series = pd.to_numeric(filtered['distance'], errors='coerce')
+        total_distance = float(dist_series.fillna(0).sum()) * 2
+    else:
+        total_distance = 0.0
+    if 'fuelConsumed' in filtered.columns:
+        fuel_series = pd.to_numeric(filtered['fuelConsumed'], errors='coerce')
+        total_fuel = float(fuel_series.fillna(0).sum())
+    else:
+        total_fuel = 0.0
     
     # Calculate average cycle time (in minutes)
     if 'totalCycleTime' in filtered.columns:
@@ -1484,15 +1625,31 @@ def analyze_hauling_for_production(fixed, data):
         avg_cycle_time = 0
     
     # Get unique equipment used
-    unique_trucks = filtered['truckId'].nunique() if 'truckId' in filtered.columns else 0
-    unique_excavators = filtered['excavatorId'].nunique() if 'excavatorId' in filtered.columns else 0
-    unique_operators = filtered['operatorId'].nunique() if 'operatorId' in filtered.columns else 0
+    unique_trucks = int(filtered['truckId'].nunique()) if 'truckId' in filtered.columns else 0
+    unique_excavators = int(filtered['excavatorId'].nunique()) if 'excavatorId' in filtered.columns else 0
+    unique_operators = int(filtered['operatorId'].nunique()) if 'operatorId' in filtered.columns else 0
     
     # Build equipment details
-    truck_ids = filtered['truckId'].unique().tolist() if 'truckId' in filtered.columns else []
-    excavator_ids = filtered['excavatorId'].unique().tolist() if 'excavatorId' in filtered.columns else []
-    operator_ids = filtered['operatorId'].unique().tolist() if 'operatorId' in filtered.columns else []
-    road_segment_ids = filtered['roadSegmentId'].dropna().unique().tolist() if 'roadSegmentId' in filtered.columns else []
+    truck_ids = (
+        [_to_id(v) for v in filtered['truckId'].unique().tolist() if _to_id(v)]
+        if 'truckId' in filtered.columns
+        else []
+    )
+    excavator_ids = (
+        [_to_id(v) for v in filtered['excavatorId'].unique().tolist() if _to_id(v)]
+        if 'excavatorId' in filtered.columns
+        else []
+    )
+    operator_ids = (
+        [_to_id(v) for v in filtered['operatorId'].unique().tolist() if _to_id(v)]
+        if 'operatorId' in filtered.columns
+        else []
+    )
+    road_segment_ids = (
+        [_to_id(v) for v in filtered['roadSegmentId'].dropna().unique().tolist() if _to_id(v)]
+        if 'roadSegmentId' in filtered.columns
+        else []
+    )
     
     # Get detailed equipment info
     truck_details = []
@@ -1542,50 +1699,50 @@ def analyze_hauling_for_production(fixed, data):
     hauling_list = []
     for _, row in filtered.head(50).iterrows():  # Limit to first 50
         activity = {
-            'id': row.get('id', ''),
-            'activityNumber': row.get('activityNumber', ''),
-            'truckId': row.get('truckId', ''),
-            'excavatorId': row.get('excavatorId', ''),
-            'operatorId': row.get('operatorId', ''),
-            'roadSegmentId': row.get('roadSegmentId'),
-            'loadWeight': float(row.get('loadWeight', 0)),
-            'distance': float(row.get('distance', 0)),
-            'fuelConsumed': float(row.get('fuelConsumed', 0)) if pd.notna(row.get('fuelConsumed')) else 0,
-            'totalCycleTime': float(row.get('totalCycleTime', 0)) if pd.notna(row.get('totalCycleTime')) else 0,
-            'shift': row.get('shift', ''),
-            'status': row.get('status', ''),
+            'id': _to_id(row.get('id')),
+            'activityNumber': str(row.get('activityNumber') or ''),
+            'truckId': _to_id(row.get('truckId')),
+            'excavatorId': _to_id(row.get('excavatorId')),
+            'operatorId': _to_id(row.get('operatorId')),
+            'roadSegmentId': _to_id(row.get('roadSegmentId')),
+            'loadWeight': _to_float(row.get('loadWeight', 0), 0.0),
+            'distance': _to_float(row.get('distance', 0), 0.0),
+            'fuelConsumed': _to_float(row.get('fuelConsumed', 0), 0.0) if pd.notna(row.get('fuelConsumed')) else 0.0,
+            'totalCycleTime': _to_float(row.get('totalCycleTime', 0), 0.0) if pd.notna(row.get('totalCycleTime')) else 0.0,
+            'shift': str(row.get('shift') or ''),
+            'status': str(row.get('status') or ''),
             'loadingStartTime': str(row.get('loadingStartTime', '')) if pd.notna(row.get('loadingStartTime')) else None
         }
         hauling_list.append(activity)
     
     # Calculate fuel efficiency
-    fuel_efficiency = total_fuel / total_tonase if total_tonase > 0 else 0
+    fuel_efficiency = (total_fuel / total_tonase) if total_tonase > 0 else 0.0
     
     # Calculate utilization rate (assuming 8-hour shift = 480 minutes)
     total_cycle_minutes = avg_cycle_time * total_trips
-    utilization_rate = (total_cycle_minutes / 480) * 100 if total_cycle_minutes > 0 else 0
+    utilization_rate = (total_cycle_minutes / 480) * 100 if total_cycle_minutes > 0 else 0.0
     
     aggregated = {
-        'total_tonase': float(total_tonase),
-        'total_trips': int(total_trips),
-        'total_distance_km': float(total_distance),
-        'total_fuel_liter': float(total_fuel),
-        'avg_cycle_time_minutes': float(avg_cycle_time),
-        'fuel_efficiency_liter_per_ton': float(fuel_efficiency),
-        'utilization_rate_percent': min(float(utilization_rate), 100.0),
-        'trucks_operating': unique_trucks,
-        'excavators_operating': unique_excavators,
-        'operators_assigned': unique_operators,
+        'total_tonase': _to_float(total_tonase, 0.0),
+        'total_trips': _to_int(total_trips, 0),
+        'total_distance_km': _to_float(total_distance, 0.0),
+        'total_fuel_liter': _to_float(total_fuel, 0.0),
+        'avg_cycle_time_minutes': _to_float(avg_cycle_time, 0.0),
+        'fuel_efficiency_liter_per_ton': _to_float(fuel_efficiency, 0.0),
+        'utilization_rate_percent': min(_to_float(utilization_rate, 0.0), 100.0),
+        'trucks_operating': _to_int(unique_trucks, 0),
+        'excavators_operating': _to_int(unique_excavators, 0),
+        'operators_assigned': _to_int(unique_operators, 0),
         'shift': user_shift,
         'weatherCondition': user_weather,
         'roadCondition': user_road
     }
     
     equipment_allocation = {
-        'truck_ids': truck_ids,
-        'excavator_ids': excavator_ids,
-        'operator_ids': operator_ids,
-        'road_segment_ids': road_segment_ids,
+        'truck_ids': [v for v in truck_ids if v],
+        'excavator_ids': [v for v in excavator_ids if v],
+        'operator_ids': [v for v in operator_ids if v],
+        'road_segment_ids': [v for v in road_segment_ids if v],
         'truck_details': truck_details,
         'excavator_details': excavator_details,
         'operator_details': operator_details,
@@ -1597,10 +1754,10 @@ def analyze_hauling_for_production(fixed, data):
     print(f"      Trucks Used: {unique_trucks}, Excavators: {unique_excavators}")
     print(f"      Avg Cycle Time: {avg_cycle_time:.1f} min")
     
-    return {
+    result = {
         "status": "SUCCESS",
         "hauling_activities": hauling_list,
-        "hauling_activity_ids": [h['id'] for h in hauling_list],
+        "hauling_activity_ids": [h['id'] for h in hauling_list if h.get('id')],
         "aggregated": aggregated,
         "equipment_allocation": equipment_allocation,
         "filter_criteria": {
@@ -1610,6 +1767,7 @@ def analyze_hauling_for_production(fixed, data):
             "date": target_date
         }
     }
+    return _json_safe(result)
 
 
 def get_hauling_based_recommendations(fixed, vars, params):
@@ -1655,6 +1813,198 @@ def get_hauling_based_recommendations(fixed, vars, params):
                 }
     
     print(f"   ✅ Generated {len(strategies)} strategies with hauling integration")
+    
+    return strategies
+
+
+def generate_dynamic_hauling_allocation(strategy, data, fixed):
+    """
+    Generate individual hauling activity allocations from a recommended strategy.
+    Each hauling has:
+    - 1 Truck (required)
+    - 1 Excavator (optional - can be null)
+    - 1 Truck Operator (required, filtered by SIM_B1/B2/A license)
+    - 1 Excavator Operator (optional, filtered by OPERATOR_ALAT_BERAT license)
+    
+    This creates flexible allocation where:
+    - If strategy recommends 10 trucks and 3 excavators, 
+      system creates 10 hauling items, distributing excavators across them
+    - Some hauling items may have no excavator if truck count > excavator count
+    
+    Args:
+        strategy: Dict with alokasi_truk, jumlah_excavator, equipment_allocation
+        data: Fresh database data with trucks, excavators, operators
+        fixed: Dict with shift, miningSiteId, etc.
+    
+    Returns:
+        List of hauling item configurations ready for creation
+    """
+    print(f"\n--- [Dynamic Hauling Allocation] ---")
+    
+    num_trucks = _to_int(strategy.get('alokasi_truk', 5), 5)
+    num_excavators = _to_int(strategy.get('jumlah_excavator', 1), 1)
+    user_shift = fixed.get('shift', 'SHIFT_1')
+    mining_site_id = fixed.get('miningSiteId')
+    
+    print(f"   > Strategy: {num_trucks} trucks, {num_excavators} excavators")
+    print(f"   > Shift: {user_shift}, Mining Site: {mining_site_id}")
+    
+    # Get available equipment from data
+    trucks_df = data.get('trucks', pd.DataFrame())
+    excavators_df = data.get('excavators', pd.DataFrame())
+    operators_df = data.get('operators', pd.DataFrame())
+    
+    # Filter available trucks (IDLE or STANDBY)
+    available_trucks = []
+    if not trucks_df.empty:
+        truck_filter = trucks_df[
+            (trucks_df['status'].isin(['IDLE', 'STANDBY', 'ACTIVE'])) & 
+            (trucks_df['isActive'] == True)
+        ]
+        available_trucks = truck_filter.head(num_trucks).index.tolist()
+    
+    # Filter available excavators (IDLE, STANDBY, or ACTIVE)
+    available_excavators = []
+    if not excavators_df.empty:
+        exc_filter = excavators_df[
+            (excavators_df['status'].isin(['IDLE', 'STANDBY', 'ACTIVE'])) & 
+            (excavators_df['isActive'] == True)
+        ]
+        available_excavators = exc_filter.head(num_excavators).index.tolist()
+    
+    # Filter operators by license type and shift
+    truck_operators = []
+    excavator_operators = []
+    
+    if not operators_df.empty:
+        # Truck operators: SIM_B1, SIM_B2, SIM_A licenses
+        truck_op_filter = operators_df[
+            (operators_df['status'] == 'ACTIVE') &
+            (operators_df['licenseType'].isin(['SIM_B1', 'SIM_B2', 'SIM_A']))
+        ]
+        # Filter by shift if available
+        if 'shift' in truck_op_filter.columns:
+            shift_match = truck_op_filter[truck_op_filter['shift'] == user_shift]
+            if not shift_match.empty:
+                truck_op_filter = shift_match
+        truck_operators = truck_op_filter.index.tolist()
+        
+        # Excavator operators: OPERATOR_ALAT_BERAT license
+        exc_op_filter = operators_df[
+            (operators_df['status'] == 'ACTIVE') &
+            (operators_df['licenseType'] == 'OPERATOR_ALAT_BERAT')
+        ]
+        if 'shift' in exc_op_filter.columns:
+            shift_match = exc_op_filter[exc_op_filter['shift'] == user_shift]
+            if not shift_match.empty:
+                exc_op_filter = shift_match
+        excavator_operators = exc_op_filter.index.tolist()
+    
+    print(f"   > Available: {len(available_trucks)} trucks, {len(available_excavators)} excavators")
+    print(f"   > Operators: {len(truck_operators)} truck ops, {len(excavator_operators)} exc ops")
+    
+    # Generate hauling allocations
+    hauling_allocations = []
+    
+    for i in range(min(num_trucks, len(available_trucks))):
+        truck_id = available_trucks[i]
+        
+        # Assign excavator using round-robin (if available)
+        excavator_id = None
+        if available_excavators:
+            excavator_id = available_excavators[i % len(available_excavators)]
+        
+        # Assign truck operator using round-robin
+        truck_operator_id = None
+        if truck_operators:
+            truck_operator_id = truck_operators[i % len(truck_operators)]
+        
+        # Assign excavator operator using round-robin (if excavator is assigned)
+        excavator_operator_id = None
+        if excavator_id and excavator_operators:
+            excavator_operator_id = excavator_operators[i % len(excavator_operators)]
+        
+        # Get truck details
+        truck_info = {}
+        if not trucks_df.empty and truck_id in trucks_df.index:
+            truck_row = trucks_df.loc[truck_id]
+            truck_info = {
+                'code': truck_row.get('code', ''),
+                'capacity': float(truck_row.get('capacity', 0)),
+                'model': truck_row.get('model', '')
+            }
+        
+        # Get excavator details
+        excavator_info = {}
+        if excavator_id and not excavators_df.empty and excavator_id in excavators_df.index:
+            exc_row = excavators_df.loc[excavator_id]
+            excavator_info = {
+                'code': exc_row.get('code', ''),
+                'model': exc_row.get('model', ''),
+                'bucketCapacity': float(exc_row.get('bucketCapacity', 0))
+            }
+        
+        hauling_item = {
+            'index': i + 1,
+            'truckId': truck_id,
+            'truckCode': truck_info.get('code', ''),
+            'truckCapacity': truck_info.get('capacity', 0),
+            'excavatorId': excavator_id,  # Can be None
+            'excavatorCode': excavator_info.get('code', '') if excavator_id else None,
+            'truckOperatorId': truck_operator_id,
+            'excavatorOperatorId': excavator_operator_id,  # Can be None
+            'status': 'LOADING',
+            'targetWeight': (_to_float(strategy.get('total_tonase', 0), 0.0) / num_trucks) if num_trucks > 0 else 30.0,
+            'distance': _to_float(strategy.get('distance_km', 3), 3.0),
+        }
+        
+        hauling_allocations.append(hauling_item)
+    
+    print(f"   ✅ Generated {len(hauling_allocations)} hauling item allocations")
+    
+    # Add to strategy for frontend consumption
+    strategy['hauling_allocations'] = hauling_allocations
+    strategy['allocation_summary'] = {
+        'total_haulings': len(hauling_allocations),
+        'trucks_assigned': len(available_trucks[:num_trucks]),
+        'excavators_assigned': len(available_excavators[:num_excavators]),
+        'truck_operators_assigned': len(set(h['truckOperatorId'] for h in hauling_allocations if h['truckOperatorId'])),
+        'excavator_operators_assigned': len(set(h['excavatorOperatorId'] for h in hauling_allocations if h['excavatorOperatorId'])),
+        'haulings_with_excavator': sum(1 for h in hauling_allocations if h['excavatorId']),
+        'haulings_without_excavator': sum(1 for h in hauling_allocations if not h['excavatorId']),
+    }
+    
+    strategy['hauling_allocations'] = _json_safe(strategy.get('hauling_allocations', []))
+    strategy['allocation_summary'] = _json_safe(strategy.get('allocation_summary', {}))
+    return hauling_allocations
+
+
+def get_recommendations_with_allocations(fixed, vars, params):
+    """
+    Enhanced recommendation function that returns strategies with pre-computed
+    hauling activity allocations. This allows the frontend to directly create
+    hauling activities from the recommendation without additional processing.
+    
+    Returns strategies with:
+    - Original ML-based recommendations
+    - Dynamic hauling allocations per strategy
+    - Equipment details (trucks, excavators, operators)
+    """
+    print(f"\n--- [Recommendations with Dynamic Allocations] ---")
+    
+    data = load_fresh_data()
+    
+    # Get strategic recommendations
+    strategies = get_hauling_based_recommendations(fixed, vars, params)
+    
+    # Enrich each strategy with dynamic hauling allocations
+    for strategy in strategies:
+        try:
+            generate_dynamic_hauling_allocation(strategy, data, fixed)
+        except Exception as e:
+            print(f"   ⚠️ Failed to generate allocations for strategy: {e}")
+            strategy['hauling_allocations'] = []
+            strategy['allocation_summary'] = {}
     
     return strategies
 

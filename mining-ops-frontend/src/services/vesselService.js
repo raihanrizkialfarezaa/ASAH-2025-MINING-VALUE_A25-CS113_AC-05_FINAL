@@ -100,6 +100,26 @@ class VesselService {
       throw error;
     }
   }
+
+  async getAvailableForLoading(params = {}) {
+    try {
+      const response = await api.get('/vessels/available-for-loading', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to get available vessels for loading:', error);
+      throw error;
+    }
+  }
+
+  async validateCapacity(data) {
+    try {
+      const response = await api.post('/vessels/validate-capacity', data);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to validate vessel capacity:', error);
+      throw error;
+    }
+  }
 }
 
 const vesselService = new VesselService();

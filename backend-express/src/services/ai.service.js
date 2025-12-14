@@ -1,9 +1,184 @@
 import axios from 'axios';
 import prisma from '../config/database.js';
 import logger from '../config/logger.js';
+import { TRUCK_STATUS, EXCAVATOR_STATUS } from '../config/constants.js';
+import { haulingService } from './hauling.service.js';
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '120000'); // 2 minutes
+
+/**
+ * Helper: Validate equipment availability (STANDBY only for new hauling)
+ */
+async function validateEquipmentAvailability(truckIds, excavatorIds) {
+  const errors = [];
+
+  // Check trucks - only STANDBY status allowed
+  if (truckIds && truckIds.length > 0) {
+    const trucks = await prisma.truck.findMany({
+      where: { id: { in: truckIds } },
+      select: { id: true, code: true, status: true, isActive: true },
+    });
+
+    const unavailableTrucks = trucks.filter(
+      (t) => !t.isActive || (t.status !== TRUCK_STATUS.STANDBY && t.status !== TRUCK_STATUS.IDLE)
+    );
+
+    if (unavailableTrucks.length > 0) {
+      errors.push(
+        `Truck(s) not available: ${unavailableTrucks
+          .map((t) => `${t.code} (status: ${t.status})`)
+          .join(', ')}. Only STANDBY/IDLE trucks can be assigned.`
+      );
+    }
+
+    const notFoundTrucks = truckIds.filter((id) => !trucks.find((t) => t.id === id));
+    if (notFoundTrucks.length > 0) {
+      errors.push(`Truck ID(s) not found: ${notFoundTrucks.join(', ')}`);
+    }
+  }
+
+  // Check excavators - only STANDBY/IDLE/ACTIVE status allowed
+  if (excavatorIds && excavatorIds.length > 0) {
+    const excavators = await prisma.excavator.findMany({
+      where: { id: { in: excavatorIds } },
+      select: { id: true, code: true, status: true, isActive: true },
+    });
+
+    const unavailableExcavators = excavators.filter(
+      (e) =>
+        !e.isActive ||
+        ![EXCAVATOR_STATUS.STANDBY, EXCAVATOR_STATUS.IDLE, EXCAVATOR_STATUS.ACTIVE].includes(
+          e.status
+        )
+    );
+
+    if (unavailableExcavators.length > 0) {
+      errors.push(
+        `Excavator(s) not available: ${unavailableExcavators
+          .map((e) => `${e.code} (status: ${e.status})`)
+          .join(', ')}. Only STANDBY/IDLE/ACTIVE excavators can be assigned.`
+      );
+    }
+
+    const notFoundExcavators = excavatorIds.filter((id) => !excavators.find((e) => e.id === id));
+    if (notFoundExcavators.length > 0) {
+      errors.push(`Excavator ID(s) not found: ${notFoundExcavators.join(', ')}`);
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Helper: Allocate operators based on competency matching
+ * DUMP_TRUCK competency for trucks, EXCAVATOR competency for excavators
+ */
+async function allocateOperatorsByCompetency(truckIds, excavatorIds, requestedOperatorIds = []) {
+  const allocatedOperators = [];
+  const usedOperatorIds = new Set();
+
+  // Get available operators
+  const availableOperators = await prisma.operator.findMany({
+    where: {
+      status: 'ACTIVE',
+      // Exclude operators already assigned to active hauling
+      NOT: {
+        id: {
+          in: (
+            await prisma.haulingActivity.findMany({
+              where: { status: { in: ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'] } },
+              select: { operatorId: true },
+            })
+          ).map((h) => h.operatorId),
+        },
+      },
+    },
+    select: { id: true, competency: true, rating: true },
+    orderBy: { rating: 'desc' },
+  });
+
+  // Parse competency and categorize operators
+  const truckOperators = [];
+  const excavatorOperators = [];
+  const generalOperators = [];
+
+  for (const op of availableOperators) {
+    let competencyData = {};
+    try {
+      competencyData =
+        typeof op.competency === 'string' ? JSON.parse(op.competency) : op.competency || {};
+    } catch {
+      competencyData = {};
+    }
+
+    const equipmentType = competencyData.equipment_type || competencyData.equipmentType || '';
+
+    if (
+      equipmentType.toUpperCase().includes('TRUCK') ||
+      equipmentType.toUpperCase().includes('DUMP')
+    ) {
+      truckOperators.push(op);
+    } else if (equipmentType.toUpperCase().includes('EXCAVATOR')) {
+      excavatorOperators.push(op);
+    } else {
+      generalOperators.push(op);
+    }
+  }
+
+  // Allocate operators for trucks (prefer DUMP_TRUCK competency)
+  for (let i = 0; i < truckIds.length; i++) {
+    // Check if requested operator is available
+    if (requestedOperatorIds[i] && !usedOperatorIds.has(requestedOperatorIds[i])) {
+      allocatedOperators.push(requestedOperatorIds[i]);
+      usedOperatorIds.add(requestedOperatorIds[i]);
+      continue;
+    }
+
+    // Find best operator: truck specialists > general > any
+    const operator =
+      truckOperators.find((op) => !usedOperatorIds.has(op.id)) ||
+      generalOperators.find((op) => !usedOperatorIds.has(op.id)) ||
+      availableOperators.find((op) => !usedOperatorIds.has(op.id));
+
+    if (operator) {
+      allocatedOperators.push(operator.id);
+      usedOperatorIds.add(operator.id);
+    }
+  }
+
+  return allocatedOperators;
+}
+
+/**
+ * Helper: Update equipment status after hauling creation
+ */
+async function updateEquipmentStatusForHauling(truckId, excavatorId, operatorId, tx) {
+  // Update truck status to LOADING
+  await tx.truck.update({
+    where: { id: truckId },
+    data: {
+      status: TRUCK_STATUS.LOADING,
+      currentOperatorId: operatorId,
+    },
+  });
+
+  // Update excavator status to ACTIVE
+  await tx.excavator.update({
+    where: { id: excavatorId },
+    data: { status: EXCAVATOR_STATUS.ACTIVE },
+  });
+
+  // Update operator-truck relationship
+  await tx.operator.update({
+    where: { id: operatorId },
+    data: {
+      trucks: {
+        connect: { id: truckId },
+      },
+    },
+  });
+}
 
 class AIService {
   /**
@@ -309,29 +484,31 @@ class AIService {
         const primaryOperatorId =
           operatorIds && operatorIds.length > 0 ? operatorIds[0] : existingActivity.operatorId;
 
-        const updated = await prisma.haulingActivity.update({
-          where: { id: existingHaulingId },
-          data: {
-            truckId: primaryTruckId,
-            excavatorId: primaryExcavatorId,
-            operatorId: primaryOperatorId,
-            loadingPointId: loadingPointId || existingActivity.loadingPointId,
-            dumpingPointId: dumpingPointId || existingActivity.dumpingPointId,
-            roadSegmentId: roadSegmentId || existingActivity.roadSegmentId,
-            shift: shift || existingActivity.shift,
-            loadWeight:
-              loadWeight !== undefined ? parseFloat(loadWeight) : existingActivity.loadWeight,
-            targetWeight:
-              targetWeight !== undefined ? parseFloat(targetWeight) : existingActivity.targetWeight,
-            distance: distance !== undefined ? parseFloat(distance) : existingActivity.distance,
-            remarks: `Updated by AI Recommendation`,
-          },
-          include: {
-            truck: { select: { id: true, code: true, name: true } },
-            excavator: { select: { id: true, code: true, name: true } },
-            operator: { include: { user: { select: { fullName: true } } } },
-          },
-        });
+        const updateData = {
+          truckId: primaryTruckId,
+          excavatorId: primaryExcavatorId,
+          operatorId: primaryOperatorId,
+          loadingPointId: loadingPointId || existingActivity.loadingPointId,
+          dumpingPointId: dumpingPointId || existingActivity.dumpingPointId,
+          roadSegmentId: roadSegmentId || existingActivity.roadSegmentId,
+          shift: shift || existingActivity.shift,
+          ...(loadWeight !== undefined ? { loadWeight: parseFloat(loadWeight) } : {}),
+          ...(targetWeight !== undefined ? { targetWeight: parseFloat(targetWeight) } : {}),
+          ...(distance !== undefined ? { distance: parseFloat(distance) } : {}),
+          remarks: 'Updated by AI Recommendation',
+        };
+
+        if (existingActivity.status === 'COMPLETED') {
+          delete updateData.truckId;
+          delete updateData.excavatorId;
+          delete updateData.operatorId;
+          delete updateData.loadingPointId;
+          delete updateData.dumpingPointId;
+          delete updateData.roadSegmentId;
+          delete updateData.shift;
+        }
+
+        const updated = await haulingService.update(existingHaulingId, updateData);
 
         return {
           action: 'update',
@@ -350,20 +527,38 @@ class AIService {
           throw new Error('At least one excavator ID is required');
         }
 
-        let effectiveOperatorIds = operatorIds;
-        if (!effectiveOperatorIds || effectiveOperatorIds.length === 0) {
-          const availableOperators = await prisma.operator.findMany({
+        // ===== VALIDASI STATUS EQUIPMENT: Hanya STANDBY/IDLE yang bisa dipilih =====
+        const equipmentErrors = await validateEquipmentAvailability(truckIds, excavatorIds);
+        if (equipmentErrors.length > 0) {
+          throw new Error(`Equipment validation failed: ${equipmentErrors.join('; ')}`);
+        }
+
+        // ===== ALOKASI OPERATOR BERDASARKAN COMPETENCY =====
+        let effectiveOperatorIds = await allocateOperatorsByCompetency(
+          truckIds,
+          excavatorIds,
+          operatorIds || []
+        );
+
+        if (effectiveOperatorIds.length < truckIds.length) {
+          // Fallback: use any available operators
+          const additionalOperators = await prisma.operator.findMany({
             where: {
               status: 'ACTIVE',
+              NOT: { id: { in: effectiveOperatorIds } },
             },
-            take: Math.max(truckIds.length, 10),
-            orderBy: { createdAt: 'asc' },
+            take: truckIds.length - effectiveOperatorIds.length,
+            orderBy: { rating: 'desc' },
             select: { id: true },
           });
-          if (availableOperators.length === 0) {
-            throw new Error('No available operators found in database');
-          }
-          effectiveOperatorIds = availableOperators.map((op) => op.id);
+          effectiveOperatorIds = [
+            ...effectiveOperatorIds,
+            ...additionalOperators.map((op) => op.id),
+          ];
+        }
+
+        if (effectiveOperatorIds.length === 0) {
+          throw new Error('No available operators found in database');
         }
 
         let effectiveLoadingPointId = loadingPointId;
@@ -446,82 +641,156 @@ class AIService {
         const createdActivities = [];
         let totalCalculatedFuel = 0;
 
-        for (let i = 0; i < truckIds.length; i++) {
-          const truckId = truckIds[i];
-          const excavatorId = excavatorIds[i % excavatorIds.length];
-          const operatorId = effectiveOperatorIds[i % effectiveOperatorIds.length];
+        const activeExcavatorOperatorRows = await prisma.haulingActivity.findMany({
+          where: {
+            status: { in: ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'] },
+            excavatorOperatorId: { not: null },
+          },
+          select: { excavatorOperatorId: true },
+        });
+        const assignedActiveExcavatorOperatorIds = new Set(
+          activeExcavatorOperatorRows
+            .map((h) => h.excavatorOperatorId)
+            .filter((v) => typeof v === 'string' && v.length > 0)
+        );
+        const excavatorOperators = await prisma.operator.findMany({
+          where: {
+            status: 'ACTIVE',
+            licenseType: 'OPERATOR_ALAT_BERAT',
+          },
+          select: { id: true, rating: true, shift: true },
+          orderBy: { rating: 'desc' },
+        });
+        const effectiveExcavatorOperators = excavatorOperators.filter((op) => {
+          if (assignedActiveExcavatorOperatorIds.has(op.id)) return false;
+          if (shift && op.shift && op.shift !== shift) return false;
+          return true;
+        });
+        const usedExcavatorOperatorIds = new Set();
+        let excavatorOperatorPickIndex = 0;
 
-          const activityNumber = `HA-${dateStr}-${(sequence + i).toString().padStart(3, '0')}`;
+        // ===== USE TRANSACTION TO CREATE HAULING AND UPDATE EQUIPMENT STATUS =====
+        const results = await prisma.$transaction(async (tx) => {
+          const activities = [];
 
-          // Get actual fuel consumption from equipment data
-          const truckData = truckMap.get(truckId);
-          const excavatorData = excavatorMap.get(excavatorId);
+          for (let i = 0; i < truckIds.length; i++) {
+            const truckId = truckIds[i];
+            const excavatorId = excavatorIds[i % excavatorIds.length];
+            const operatorId = effectiveOperatorIds[i % effectiveOperatorIds.length];
 
-          // Truck fuel consumption (L/km) - use actual data or default
-          const truckFuelConsumptionPerKm = truckData?.fuelConsumption || 1.0;
+            let excavatorOperatorId = null;
+            if (excavatorId && effectiveExcavatorOperators.length > 0) {
+              const next =
+                effectiveExcavatorOperators.find((op) => !usedExcavatorOperatorIds.has(op.id)) ||
+                effectiveExcavatorOperators[
+                  excavatorOperatorPickIndex % effectiveExcavatorOperators.length
+                ];
+              excavatorOperatorId = next?.id || null;
+              if (excavatorOperatorId) usedExcavatorOperatorIds.add(excavatorOperatorId);
+              excavatorOperatorPickIndex += 1;
+            }
 
-          // Excavator fuel consumption (L/hr) - use actual data or default
-          const excavatorFuelConsumptionPerHr = excavatorData?.fuelConsumption || 50;
+            const activityNumber = `HA-${dateStr}-${(sequence + i).toString().padStart(3, '0')}`;
 
-          // Calculate estimated loading time (hours) based on excavator production rate
-          const excavatorProductionRate = excavatorData?.productionRate || 5; // ton/min
-          const estimatedLoadingTimeHours = targetWeightPerHauling / excavatorProductionRate / 60;
+            // Get actual fuel consumption from equipment data
+            const truckData = truckMap.get(truckId);
+            const excavatorData = excavatorMap.get(excavatorId);
 
-          // Calculate fuel consumed
-          // Truck: distance * fuel rate (round trip = distance * 2)
-          const actualDistance = parseFloat(distance) || 3;
-          const truckFuel = actualDistance * 2 * truckFuelConsumptionPerKm;
+            // Truck fuel consumption (L/km) - use actual data or default
+            const truckFuelConsumptionPerKm = truckData?.fuelConsumption || 1.0;
 
-          // Excavator: loading time * fuel rate per hour
-          const excavatorFuel = estimatedLoadingTimeHours * excavatorFuelConsumptionPerHr;
+            // Excavator fuel consumption (L/hr) - use actual data or default
+            const excavatorFuelConsumptionPerHr = excavatorData?.fuelConsumption || 50;
 
-          // Total fuel consumed for this hauling activity
-          const fuelConsumed = parseFloat((truckFuel + excavatorFuel).toFixed(2));
-          totalCalculatedFuel += fuelConsumed;
+            // Calculate estimated loading time (hours) based on excavator production rate
+            const excavatorProductionRate = excavatorData?.productionRate || 5; // ton/min
+            const estimatedLoadingTimeHours = targetWeightPerHauling / excavatorProductionRate / 60;
 
-          const activityData = {
-            activityNumber,
-            truckId,
-            excavatorId,
-            operatorId,
-            supervisorId: effectiveSupervisorId,
-            loadingPointId: effectiveLoadingPointId,
-            dumpingPointId: effectiveDumpingPointId,
-            shift: shift || 'SHIFT_1',
-            loadingStartTime: new Date(),
-            loadWeight: 0,
-            targetWeight: parseFloat(targetWeightPerHauling.toFixed(2)),
-            distance: actualDistance,
-            fuelConsumed: fuelConsumed,
-            status: 'LOADING',
-            remarks: `Created by AI Recommendation | Truck Fuel: ${truckFuelConsumptionPerKm} L/km | Excavator Fuel: ${excavatorFuelConsumptionPerHr} L/hr`,
-          };
+            // Calculate fuel consumed
+            // Truck: distance * fuel rate (round trip = distance * 2)
+            const actualDistance = parseFloat(distance) || 3;
+            const truckFuel = actualDistance * 2 * truckFuelConsumptionPerKm;
 
-          if (roadSegmentId) {
-            activityData.roadSegmentId = roadSegmentId;
+            // Excavator: loading time * fuel rate per hour
+            const excavatorFuel = estimatedLoadingTimeHours * excavatorFuelConsumptionPerHr;
+
+            // Total fuel consumed for this hauling activity
+            const fuelConsumed = parseFloat((truckFuel + excavatorFuel).toFixed(2));
+            totalCalculatedFuel += fuelConsumed;
+
+            const activityData = {
+              activityNumber,
+              truckId,
+              excavatorId,
+              operatorId,
+              excavatorOperatorId,
+              supervisorId: effectiveSupervisorId,
+              loadingPointId: effectiveLoadingPointId,
+              dumpingPointId: effectiveDumpingPointId,
+              shift: shift || 'SHIFT_1',
+              loadingStartTime: new Date(),
+              loadWeight: 0,
+              targetWeight: parseFloat(targetWeightPerHauling.toFixed(2)),
+              distance: actualDistance,
+              fuelConsumed: fuelConsumed,
+              status: 'LOADING',
+              remarks: `Created by AI Recommendation | Truck Fuel: ${truckFuelConsumptionPerKm} L/km | Excavator Fuel: ${excavatorFuelConsumptionPerHr} L/hr`,
+            };
+
+            if (roadSegmentId) {
+              activityData.roadSegmentId = roadSegmentId;
+            }
+
+            // Create hauling activity
+            const activity = await tx.haulingActivity.create({
+              data: activityData,
+              include: {
+                truck: {
+                  select: {
+                    id: true,
+                    code: true,
+                    name: true,
+                    fuelConsumption: true,
+                    capacity: true,
+                  },
+                },
+                excavator: {
+                  select: {
+                    id: true,
+                    code: true,
+                    name: true,
+                    fuelConsumption: true,
+                    productionRate: true,
+                  },
+                },
+                operator: { include: { user: { select: { fullName: true } } } },
+                excavatorOperator: { include: { user: { select: { fullName: true } } } },
+              },
+            });
+
+            // ===== UPDATE EQUIPMENT STATUS WITHIN TRANSACTION =====
+            // Update truck status to LOADING
+            await tx.truck.update({
+              where: { id: truckId },
+              data: {
+                status: TRUCK_STATUS.LOADING,
+                currentOperatorId: operatorId,
+              },
+            });
+
+            // Update excavator status to ACTIVE (if not already)
+            await tx.excavator.update({
+              where: { id: excavatorId },
+              data: { status: EXCAVATOR_STATUS.ACTIVE },
+            });
+
+            activities.push(activity);
           }
 
-          const activity = await prisma.haulingActivity.create({
-            data: activityData,
-            include: {
-              truck: {
-                select: { id: true, code: true, name: true, fuelConsumption: true, capacity: true },
-              },
-              excavator: {
-                select: {
-                  id: true,
-                  code: true,
-                  name: true,
-                  fuelConsumption: true,
-                  productionRate: true,
-                },
-              },
-              operator: { include: { user: { select: { fullName: true } } } },
-            },
-          });
+          return activities;
+        });
 
-          createdActivities.push(activity);
-        }
+        createdActivities.push(...results);
 
         return {
           action: 'create',

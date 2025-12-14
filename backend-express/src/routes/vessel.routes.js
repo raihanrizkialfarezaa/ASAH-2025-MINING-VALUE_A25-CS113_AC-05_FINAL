@@ -16,6 +16,11 @@ router.use(authenticate);
 
 router.get('/', getVesselsQueryValidator, validate, vesselController.getAll);
 router.get('/schedules', vesselController.getAllSchedules);
+// ===== NEW: Get vessels available for loading with capacity validation =====
+router.get('/available-for-loading', vesselController.getAvailableForLoading);
+// ===== NEW: Validate vessel/schedule capacity for additional load =====
+router.post('/validate-capacity', vesselController.validateCapacity);
+
 router.get('/:id', getVesselByIdValidator, validate, vesselController.getById);
 router.post(
   '/',
