@@ -5,7 +5,7 @@ import roadSegmentService from '../../services/roadSegmentService';
 import { miningSiteService } from '../../services/locationService';
 import { weatherService } from '../../services';
 import SearchableDropdown from '../UI/SearchableDropdown';
-import { MapPin, Clock, Route, Truck, Shovel, Ship, Settings, DollarSign, ChevronDown, ChevronUp, Sparkles, Target, Fuel, AlertCircle, Zap } from 'lucide-react';
+import { MapPin, Clock, Route, Truck, Shovel, Ship, Settings, DollarSign, ChevronDown, ChevronUp, Sparkles, Target, Fuel, AlertCircle, Zap, Anchor, Calendar, CheckCircle2, Info } from 'lucide-react';
 
 const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
   const [formData, setFormData] = useState({
@@ -50,10 +50,31 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
     }
   }, [realtimeData, formData.miningSiteId]);
 
+  const prevMiningSiteIdRef = React.useRef(formData.miningSiteId);
+
   useEffect(() => {
+    const siteChanged = prevMiningSiteIdRef.current !== formData.miningSiteId;
+    prevMiningSiteIdRef.current = formData.miningSiteId;
+
     if (formData.miningSiteId) {
-      const siteRoads = roadSegments.filter((r) => r.miningSiteId === formData.miningSiteId);
+      const siteRoads = roadSegments.filter((r) => r.miningSiteId === formData.miningSiteId && r.isActive !== false);
       setFilteredRoadSegments(siteRoads);
+
+      if (siteChanged && siteRoads.length > 0) {
+        const bestRoad = siteRoads.reduce((best, road) => {
+          const conditionScore = { EXCELLENT: 4, GOOD: 3, FAIR: 2, POOR: 1, CRITICAL: 0 };
+          const bestScore = conditionScore[best?.roadCondition] || 0;
+          const roadScore = conditionScore[road.roadCondition] || 0;
+          return roadScore > bestScore ? road : best;
+        }, siteRoads[0]);
+
+        if (bestRoad) {
+          setFormData((prev) => ({
+            ...prev,
+            targetRoadId: bestRoad.id,
+          }));
+        }
+      }
 
       const siteWeather = weatherData.filter((w) => w.miningSiteId === formData.miningSiteId);
       if (siteWeather.length > 0) {
@@ -77,6 +98,12 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
       }
     } else {
       setFilteredRoadSegments(roadSegments);
+      if (siteChanged) {
+        setFormData((prev) => ({
+          ...prev,
+          targetRoadId: '',
+        }));
+      }
     }
   }, [formData.miningSiteId, roadSegments, weatherData]);
 
@@ -131,7 +158,8 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
         setExcavators(excavatorRes.data);
       }
       if (scheduleRes.success && scheduleRes.data) {
-        const validSchedules = scheduleRes.data.filter((s) => s.status === 'SCHEDULED' || s.status === 'LOADING' || s.status === 'ARRIVED');
+        const availableStatuses = ['SCHEDULED', 'ARRIVED', 'STANDBY'];
+        const validSchedules = scheduleRes.data.filter((s) => availableStatuses.includes(s.status));
         setSchedules(validSchedules);
       }
       if (roadRes.success && roadRes.data) {
@@ -356,11 +384,14 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
         </h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2 sm:mb-2.5">
-              <span className="hidden sm:inline">Preferred Road Segment</span>
-              <span className="sm:hidden">Road Segment</span>
-              {formData.miningSiteId && <span className="text-sky-400 ml-1 hidden sm:inline">(Filtered by Site)</span>}
-            </label>
+            <div className="flex items-center justify-between mb-2 sm:mb-2.5">
+              <label className="block text-xs sm:text-sm font-medium text-slate-300">
+                <span className="hidden sm:inline">Preferred Road Segment</span>
+                <span className="sm:hidden">Road Segment</span>
+                {formData.miningSiteId && <span className="text-sky-400 ml-1 hidden sm:inline">(Auto-filled)</span>}
+              </label>
+              <span className="text-xs text-slate-500">{filteredRoadSegments.length} roads</span>
+            </div>
             <SearchableDropdown
               options={[{ id: '', code: 'AUTO', name: 'Auto - AI will explore all roads', distance: null, roadCondition: 'AUTO' }, ...filteredRoadSegments]}
               value={formData.targetRoadId}
@@ -379,20 +410,39 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
                     <div className="font-medium text-xs sm:text-sm truncate">
                       {road.code} - {road.name}
                     </div>
-                    {road.distance && (
-                      <div className="text-xs text-slate-500 truncate">
-                        {road.distance?.toFixed(2)}km • {road.roadCondition}
+                    {road.distance !== null && road.distance !== undefined && (
+                      <div className="text-xs text-slate-500 truncate flex items-center gap-1.5">
+                        <span>{road.distance?.toFixed(2)}km</span>
                       </div>
                     )}
                   </div>
+                  {road.roadCondition && road.id && (
+                    <span
+                      className={`px-1.5 py-0.5 text-xs rounded font-medium flex-shrink-0 ${
+                        road.roadCondition === 'EXCELLENT'
+                          ? 'bg-emerald-500/20 text-emerald-400'
+                          : road.roadCondition === 'GOOD'
+                          ? 'bg-green-500/20 text-green-400'
+                          : road.roadCondition === 'FAIR'
+                          ? 'bg-amber-500/20 text-amber-400'
+                          : road.roadCondition === 'POOR'
+                          ? 'bg-orange-500/20 text-orange-400'
+                          : 'bg-red-500/20 text-red-400'
+                      }`}
+                    >
+                      {road.roadCondition}
+                    </span>
+                  )}
                 </div>
               )}
               renderSelected={(road) => (road.id ? `${road.code} - ${road.name} (${road.distance?.toFixed(2)}km)` : 'Auto - AI will explore all roads')}
             />
-            <p className="text-xs text-slate-500 mt-1.5 sm:mt-2">
-              {filteredRoadSegments.length} roads available
-              {formData.targetRoadId && ' • Road condition auto-filled'}
-            </p>
+            {formData.targetRoadId && formData.miningSiteId && (
+              <p className="text-xs text-sky-400 mt-1.5 sm:mt-2 flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">Auto-selected best condition road for this site</span>
+              </p>
+            )}
           </div>
 
           <div>
@@ -428,14 +478,21 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
 
       {/* Target Sailing Schedule */}
       <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg shadow-cyan-500/5">
-        <h3 className="text-xs sm:text-sm font-bold text-cyan-300 mb-3 sm:mb-4 flex items-center gap-2">
-          <div className="p-1 sm:p-1.5 bg-cyan-500/20 rounded-lg">
-            <Ship className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" strokeWidth={2} />
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h3 className="text-xs sm:text-sm font-bold text-cyan-300 flex items-center gap-2">
+            <div className="p-1 sm:p-1.5 bg-cyan-500/20 rounded-lg">
+              <Ship className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" strokeWidth={2} />
+            </div>
+            Target Sailing Schedule
+          </h3>
+          <div className="flex items-center gap-1.5 text-xs text-cyan-400/70">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{schedules.length} vessels ready</span>
+            <span className="sm:hidden">{schedules.length}</span>
           </div>
-          Target Sailing Schedule
-        </h3>
+        </div>
         <SearchableDropdown
-          options={[{ id: '', vessel: { name: 'No specific schedule' }, etsLoading: null, plannedQuantity: null, status: 'AI will use random vessel' }, ...schedules]}
+          options={[{ id: '', vessel: { name: 'No specific schedule' }, etsLoading: null, plannedQuantity: null, status: 'AUTO' }, ...schedules]}
           value={formData.targetScheduleId}
           onChange={(val) => handleChange({ target: { name: 'targetScheduleId', value: val } })}
           placeholder="No specific schedule - AI will use random vessel"
@@ -451,15 +508,23 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-xs sm:text-sm truncate">{schedule.vessel?.name || 'Unknown'}</div>
                 {schedule.etsLoading && (
-                  <div className="text-xs text-slate-500 truncate">
+                  <div className="text-xs text-slate-500 truncate flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
                     {new Date(schedule.etsLoading).toLocaleDateString('id-ID')} • {schedule.plannedQuantity?.toFixed(0)}T
                   </div>
                 )}
+                {!schedule.id && <div className="text-xs text-slate-500">AI will use random vessel</div>}
               </div>
               {schedule.status && schedule.id && (
                 <span
-                  className={`px-2 py-0.5 text-xs rounded-full flex-shrink-0 ${
-                    schedule.status === 'SCHEDULED' ? 'bg-blue-500/20 text-blue-400' : schedule.status === 'LOADING' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-500/20 text-slate-400'
+                  className={`px-2 py-0.5 text-xs rounded-full flex-shrink-0 font-medium ${
+                    schedule.status === 'SCHEDULED'
+                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                      : schedule.status === 'ARRIVED'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : schedule.status === 'STANDBY'
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                      : 'bg-slate-500/20 text-slate-400'
                   }`}
                 >
                   {schedule.status}
@@ -472,36 +537,51 @@ const ParameterForm = ({ onSubmit, realtimeData, loading }) => {
           }
         />
         {selectedScheduleInfo && (
-          <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
+          <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl">
             <p className="font-semibold text-cyan-300 flex items-center gap-2 text-sm">
-              <Ship className="w-4 h-4 flex-shrink-0" />
+              <Anchor className="w-4 h-4 flex-shrink-0" />
               <span className="truncate">Selected: {selectedScheduleInfo.vesselName}</span>
             </p>
             <div className="flex flex-wrap gap-2 sm:gap-4 mt-2 text-xs sm:text-sm text-cyan-400">
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 bg-cyan-500/10 px-2 py-1 rounded-lg">
                 <Target className="w-3.5 h-3.5 flex-shrink-0" />
                 Target: {selectedScheduleInfo.plannedQuantity?.toFixed(0)} Ton
               </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="flex items-center gap-1.5 bg-cyan-500/10 px-2 py-1 rounded-lg">
+                <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                 ETS: {new Date(selectedScheduleInfo.etsLoading).toLocaleDateString('id-ID')}
               </span>
-              <span className={`px-2 py-0.5 rounded-lg text-xs font-medium ${selectedScheduleInfo.status === 'SCHEDULED' ? 'bg-blue-500/20' : selectedScheduleInfo.status === 'LOADING' ? 'bg-cyan-500/20' : 'bg-slate-500/20'}`}>
+              <span
+                className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                  selectedScheduleInfo.status === 'SCHEDULED'
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : selectedScheduleInfo.status === 'ARRIVED'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : selectedScheduleInfo.status === 'STANDBY'
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'bg-slate-500/20 text-slate-400'
+                }`}
+              >
                 {selectedScheduleInfo.status}
               </span>
             </div>
           </div>
         )}
-        <p className="text-xs text-cyan-400/80 mt-2 sm:mt-3 flex items-center gap-1.5">
-          {formData.targetScheduleId ? (
-            <>
-              <Sparkles className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate">Recommendation strategy will use this specific vessel schedule</span>
-            </>
-          ) : (
-            'Leave blank for AI to select randomly from available schedules'
-          )}
-        </p>
+        <div className="mt-2 sm:mt-3 p-2.5 bg-slate-800/30 rounded-lg border border-slate-700/30">
+          <p className="text-xs text-cyan-400/80 flex items-center gap-1.5">
+            {formData.targetScheduleId ? (
+              <>
+                <Sparkles className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">AI will optimize for this vessel's schedule and capacity</span>
+              </>
+            ) : (
+              <>
+                <Info className="w-3 h-3 flex-shrink-0 text-slate-400" />
+                <span className="text-slate-400">Leave blank for AI to select from {schedules.length} available vessels (SCHEDULED/ARRIVED/STANDBY)</span>
+              </>
+            )}
+          </p>
+        </div>
       </div>
 
       {/* Decision Variables Section */}
