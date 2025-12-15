@@ -158,18 +158,38 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect, select
   };
 
   const proceedToProduction = () => {
+    const raw = recommendation.raw_data || {};
+    const haulingAllocations = recommendation.hauling_allocations || raw.hauling_allocations || [];
+    const allocationSummary = recommendation.allocation_summary || raw.allocation_summary || {};
+    
+    const truckIdsFromAllocations = [...new Set(haulingAllocations.map(h => h.truckId).filter(Boolean))];
+    const excavatorIdsFromAllocations = [...new Set(haulingAllocations.map(h => h.excavatorId).filter(Boolean))];
+    const operatorIdsFromAllocations = [...new Set(haulingAllocations.map(h => h.truckOperatorId).filter(Boolean))];
+    
+    const detailedEquipmentTrucks = recommendation.detailed_equipment?.filter(e => e.type === 'Truck') || [];
+    const detailedEquipmentExcavators = recommendation.detailed_equipment?.filter(e => e.type === 'Excavator') || [];
+    
+    const finalTruckIds = truckIdsFromAllocations.length > 0 ? truckIdsFromAllocations : detailedEquipmentTrucks.map(e => e.id);
+    const finalExcavatorIds = excavatorIdsFromAllocations.length > 0 ? excavatorIdsFromAllocations : detailedEquipmentExcavators.map(e => e.id);
+    
     const strategyData = {
       rank: rank,
       recommendation: recommendation,
       implementedAt: new Date().toISOString(),
-      useHaulingData: recommendation.hauling_data?.has_hauling_data || false,
+      useHaulingData: recommendation.hauling_data?.has_hauling_data || haulingAllocations.length > 0,
       haulingActivityIds: recommendation.hauling_data?.hauling_analysis?.hauling_activity_ids || [],
       haulingAggregated: recommendation.hauling_data?.hauling_analysis?.aggregated || null,
-      equipmentAllocation: recommendation.hauling_data?.hauling_analysis?.equipment_allocation || null,
-      miningSiteId: recommendation.miningSiteId || selectedParams?.miningSiteId || null,
-      weatherCondition: recommendation.weatherCondition || selectedParams?.weatherCondition || 'CERAH',
-      roadCondition: recommendation.roadCondition || selectedParams?.roadCondition || 'GOOD',
-      shift: recommendation.shift || selectedParams?.shift || 'SHIFT_1',
+      equipmentAllocation: {
+        truck_ids: finalTruckIds,
+        excavator_ids: finalExcavatorIds,
+        operator_ids: operatorIdsFromAllocations.length > 0 ? operatorIdsFromAllocations : (recommendation.hauling_data?.hauling_analysis?.equipment_allocation?.operator_ids || []),
+        hauling_allocations: haulingAllocations,
+        allocation_summary: allocationSummary,
+      },
+      miningSiteId: raw.miningSiteId || recommendation.miningSiteId || selectedParams?.miningSiteId || null,
+      weatherCondition: raw.weatherCondition || recommendation.weatherCondition || selectedParams?.weatherCondition || 'CERAH',
+      roadCondition: raw.roadCondition || recommendation.roadCondition || selectedParams?.roadCondition || 'GOOD',
+      shift: raw.shift || recommendation.shift || selectedParams?.shift || 'SHIFT_1',
     };
 
     sessionStorage.setItem('selectedStrategy', JSON.stringify(strategyData));
@@ -180,40 +200,43 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect, select
     setIsApplyingHauling(true);
 
     try {
+      const raw = recommendation.raw_data || {};
+      const haulingAllocations = recommendation.hauling_allocations || raw.hauling_allocations || [];
+      
+      const truckIdsFromAllocations = [...new Set(haulingAllocations.map(h => h.truckId).filter(Boolean))];
+      const excavatorIdsFromAllocations = [...new Set(haulingAllocations.map(h => h.excavatorId).filter(Boolean))];
+      const operatorIdsFromAllocations = [...new Set(haulingAllocations.map(h => h.truckOperatorId).filter(Boolean))];
+      
       const truckEquip = recommendation.detailed_equipment?.filter((e) => e.type === 'Truck') || [];
       const excavatorEquip = recommendation.detailed_equipment?.filter((e) => e.type === 'Excavator') || [];
 
-      const truckIds = truckEquip.map((e) => e.id);
-      const excavatorIds = excavatorEquip.map((e) => e.id);
+      const truckIds = truckIdsFromAllocations.length > 0 ? truckIdsFromAllocations : truckEquip.map((e) => e.id);
+      const excavatorIds = excavatorIdsFromAllocations.length > 0 ? excavatorIdsFromAllocations : excavatorEquip.map((e) => e.id);
 
-      const raw = recommendation.raw_data || {};
       const haulingData = recommendation.hauling_data?.hauling_analysis || {};
-
-      const operatorIds = haulingData.equipment_allocation?.operator_ids || [];
+      const operatorIds = operatorIdsFromAllocations.length > 0 ? operatorIdsFromAllocations : (haulingData.equipment_allocation?.operator_ids || []);
 
       const firstHaulingId = recommendation.hauling_data?.hauling_analysis?.hauling_activity_ids?.[0] || null;
-
-      // Get Production Target from recommendation
-      const productionTarget = parseFloat(raw.total_tonase) || parseFloat(recommendation.total_tonase) || 270; // Default 270 ton
+      const productionTarget = parseFloat(raw.total_tonase) || parseFloat(recommendation.total_tonase) || 270;
 
       const params = {
         action: action,
         existingHaulingId: action === 'update' ? firstHaulingId : null,
-        miningSiteId: recommendation.miningSiteId || selectedParams?.miningSiteId || null,
+        miningSiteId: raw.miningSiteId || recommendation.miningSiteId || selectedParams?.miningSiteId || null,
         recommendation: {
           rank,
           strategy_objective: raw.strategy_objective || 'AI Recommended Configuration',
         },
-        truckIds: truckIds.length > 0 ? truckIds : haulingData.equipment_allocation?.truck_ids || [],
-        excavatorIds: excavatorIds.length > 0 ? excavatorIds : haulingData.equipment_allocation?.excavator_ids || [],
+        truckIds: truckIds,
+        excavatorIds: excavatorIds,
         operatorIds: operatorIds,
         loadingPointId: haulingData.loading_point_id || null,
         dumpingPointId: haulingData.dumping_point_id || null,
         roadSegmentId: raw.target_road_id || null,
         shift: raw.shift || 'SHIFT_1',
-        loadWeight: null, // Kosongkan untuk admin mengisi
-        targetWeight: 30, // Fallback, akan dihitung di backend dari totalProductionTarget
-        totalProductionTarget: productionTarget, // Production Target untuk dibagi ke setiap hauling
+        loadWeight: null,
+        targetWeight: 30,
+        totalProductionTarget: productionTarget,
         distance: raw.distance_km || haulingData.aggregated?.avg_distance || 3,
       };
 
@@ -270,8 +293,8 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect, select
             excavators_operating: excavatorCount,
             utilization_rate_percent: utilizationRate,
             shift: params.shift,
-            weatherCondition: recommendation.weatherCondition || selectedParams?.weatherCondition || 'CERAH',
-            roadCondition: recommendation.roadCondition || selectedParams?.roadCondition || 'GOOD',
+            weatherCondition: raw.weatherCondition || recommendation.weatherCondition || selectedParams?.weatherCondition || 'CERAH',
+            roadCondition: raw.roadCondition || recommendation.roadCondition || selectedParams?.roadCondition || 'GOOD',
             calculation_params: {
               truck_fuel_rate_lkm: truckFuelRate,
               excavator_fuel_rate_lhr: excavatorFuelRate,
@@ -288,10 +311,10 @@ const RecommendationCard = ({ rank, recommendation, isSelected, onSelect, select
           },
           haulingApplied: true,
           haulingResult: result.data,
-          miningSiteId: recommendation.miningSiteId || selectedParams?.miningSiteId || null,
-          weatherCondition: recommendation.weatherCondition || selectedParams?.weatherCondition || 'CERAH',
-          roadCondition: recommendation.roadCondition || selectedParams?.roadCondition || 'GOOD',
-          shift: recommendation.shift || selectedParams?.shift || 'SHIFT_1',
+          miningSiteId: raw.miningSiteId || recommendation.miningSiteId || selectedParams?.miningSiteId || null,
+          weatherCondition: raw.weatherCondition || recommendation.weatherCondition || selectedParams?.weatherCondition || 'CERAH',
+          roadCondition: raw.roadCondition || recommendation.roadCondition || selectedParams?.roadCondition || 'GOOD',
+          shift: raw.shift || recommendation.shift || selectedParams?.shift || 'SHIFT_1',
         };
 
         sessionStorage.setItem('selectedStrategy', JSON.stringify(strategyData));

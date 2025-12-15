@@ -85,6 +85,7 @@ class FixedConditions(BaseModel):
     target_schedule_id: Optional[str] = Field(None, description="ID Jadwal Kapal (Opsional)")
     simulation_start_date: Optional[str] = Field(None, description="Tanggal mulai simulasi (ISO 8601)")
     totalProductionTarget: Optional[float] = Field(0, description="Target Produksi Batubara (Ton)")
+    miningSiteId: Optional[str] = Field(None, description="ID Mining Site yang dipilih user")
 
 # Model untuk Variabel Keputusan
 class DecisionVariables(BaseModel):

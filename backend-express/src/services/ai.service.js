@@ -7,7 +7,20 @@ import { haulingService } from './hauling.service.js';
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '120000'); // 2 minutes
 
-async function filterAvailableEquipment(truckIds, excavatorIds) {
+const AVAILABLE_TRUCK_STATUSES = [TRUCK_STATUS.STANDBY, TRUCK_STATUS.IDLE];
+
+const AVAILABLE_EXCAVATOR_STATUSES = [
+  EXCAVATOR_STATUS.STANDBY,
+  EXCAVATOR_STATUS.IDLE,
+  EXCAVATOR_STATUS.ACTIVE,
+];
+
+async function filterAvailableEquipment(
+  truckIds,
+  excavatorIds,
+  requiredTruckCount = 0,
+  requiredExcavatorCount = 0
+) {
   let validTruckIds = [];
   let validExcavatorIds = [];
   const warnings = [];
@@ -19,16 +32,16 @@ async function filterAvailableEquipment(truckIds, excavatorIds) {
     });
 
     const availableTrucks = trucks.filter(
-      (t) => t.isActive && (t.status === TRUCK_STATUS.STANDBY || t.status === TRUCK_STATUS.IDLE)
+      (t) => t.isActive && AVAILABLE_TRUCK_STATUSES.includes(t.status)
     );
     validTruckIds = availableTrucks.map((t) => t.id);
 
     const skippedTrucks = trucks.filter(
-      (t) => !t.isActive || (t.status !== TRUCK_STATUS.STANDBY && t.status !== TRUCK_STATUS.IDLE)
+      (t) => !t.isActive || !AVAILABLE_TRUCK_STATUSES.includes(t.status)
     );
     if (skippedTrucks.length > 0) {
       warnings.push(
-        `Skipped ${skippedTrucks.length} unavailable truck(s): ${skippedTrucks.map((t) => t.code).join(', ')}`
+        `Skipped ${skippedTrucks.length} busy truck(s): ${skippedTrucks.map((t) => `${t.code}(${t.status})`).join(', ')}`
       );
     }
 
@@ -45,30 +58,65 @@ async function filterAvailableEquipment(truckIds, excavatorIds) {
     });
 
     const availableExcavators = excavators.filter(
-      (e) =>
-        e.isActive &&
-        [EXCAVATOR_STATUS.STANDBY, EXCAVATOR_STATUS.IDLE, EXCAVATOR_STATUS.ACTIVE].includes(
-          e.status
-        )
+      (e) => e.isActive && AVAILABLE_EXCAVATOR_STATUSES.includes(e.status)
     );
     validExcavatorIds = availableExcavators.map((e) => e.id);
 
     const skippedExcavators = excavators.filter(
-      (e) =>
-        !e.isActive ||
-        ![EXCAVATOR_STATUS.STANDBY, EXCAVATOR_STATUS.IDLE, EXCAVATOR_STATUS.ACTIVE].includes(
-          e.status
-        )
+      (e) => !e.isActive || !AVAILABLE_EXCAVATOR_STATUSES.includes(e.status)
     );
     if (skippedExcavators.length > 0) {
       warnings.push(
-        `Skipped ${skippedExcavators.length} unavailable excavator(s): ${skippedExcavators.map((e) => e.code).join(', ')}`
+        `Skipped ${skippedExcavators.length} unavailable excavator(s): ${skippedExcavators.map((e) => `${e.code}(${e.status})`).join(', ')}`
       );
     }
 
     const notFoundCount = excavatorIds.length - excavators.length;
     if (notFoundCount > 0) {
       warnings.push(`${notFoundCount} excavator ID(s) not found in database`);
+    }
+  }
+
+  const needFallbackTrucks = validTruckIds.length < requiredTruckCount;
+  const needFallbackExcavators = validExcavatorIds.length < requiredExcavatorCount;
+
+  if (needFallbackTrucks && requiredTruckCount > 0) {
+    const additionalNeeded = requiredTruckCount - validTruckIds.length;
+    const fallbackTrucks = await prisma.truck.findMany({
+      where: {
+        isActive: true,
+        status: { in: AVAILABLE_TRUCK_STATUSES },
+        id: { notIn: validTruckIds },
+      },
+      select: { id: true, code: true, capacity: true },
+      orderBy: { capacity: 'desc' },
+      take: additionalNeeded,
+    });
+    if (fallbackTrucks.length > 0) {
+      validTruckIds = [...validTruckIds, ...fallbackTrucks.map((t) => t.id)];
+      warnings.push(
+        `Auto-assigned ${fallbackTrucks.length} fallback truck(s): ${fallbackTrucks.map((t) => t.code).join(', ')}`
+      );
+    }
+  }
+
+  if (needFallbackExcavators && requiredExcavatorCount > 0) {
+    const additionalNeeded = requiredExcavatorCount - validExcavatorIds.length;
+    const fallbackExcavators = await prisma.excavator.findMany({
+      where: {
+        isActive: true,
+        status: { in: AVAILABLE_EXCAVATOR_STATUSES },
+        id: { notIn: validExcavatorIds },
+      },
+      select: { id: true, code: true, productionRate: true },
+      orderBy: { productionRate: 'desc' },
+      take: additionalNeeded,
+    });
+    if (fallbackExcavators.length > 0) {
+      validExcavatorIds = [...validExcavatorIds, ...fallbackExcavators.map((e) => e.id)];
+      warnings.push(
+        `Auto-assigned ${fallbackExcavators.length} fallback excavator(s): ${fallbackExcavators.map((e) => e.code).join(', ')}`
+      );
     }
   }
 
@@ -79,75 +127,51 @@ async function filterAvailableEquipment(truckIds, excavatorIds) {
   return { validTruckIds, validExcavatorIds, warnings };
 }
 
-/**
- * Helper: Allocate operators based on competency matching
- * DUMP_TRUCK competency for trucks, EXCAVATOR competency for excavators
- */
-async function allocateOperatorsByCompetency(truckIds, excavatorIds, requestedOperatorIds = []) {
+async function allocateOperatorsByCompetency(
+  truckIds,
+  excavatorIds,
+  requestedOperatorIds = [],
+  shift = null
+) {
   const allocatedOperators = [];
   const usedOperatorIds = new Set();
 
-  // Get available operators
-  const availableOperators = await prisma.operator.findMany({
-    where: {
-      status: 'ACTIVE',
-      // Exclude operators already assigned to active hauling
-      NOT: {
-        id: {
-          in: (
-            await prisma.haulingActivity.findMany({
-              where: { status: { in: ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'] } },
-              select: { operatorId: true },
-            })
-          ).map((h) => h.operatorId),
-        },
-      },
-    },
-    select: { id: true, competency: true, rating: true },
-    orderBy: { rating: 'desc' },
+  const assignedOperatorRows = await prisma.haulingActivity.findMany({
+    where: { status: { in: ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'] } },
+    select: { operatorId: true },
   });
+  const assignedOperatorIds = assignedOperatorRows.map((h) => h.operatorId).filter(Boolean);
 
-  // Parse competency and categorize operators
-  const truckOperators = [];
-  const excavatorOperators = [];
-  const generalOperators = [];
-
-  for (const op of availableOperators) {
-    let competencyData = {};
-    try {
-      competencyData =
-        typeof op.competency === 'string' ? JSON.parse(op.competency) : op.competency || {};
-    } catch {
-      competencyData = {};
-    }
-
-    const equipmentType = competencyData.equipment_type || competencyData.equipmentType || '';
-
-    if (
-      equipmentType.toUpperCase().includes('TRUCK') ||
-      equipmentType.toUpperCase().includes('DUMP')
-    ) {
-      truckOperators.push(op);
-    } else if (equipmentType.toUpperCase().includes('EXCAVATOR')) {
-      excavatorOperators.push(op);
-    } else {
-      generalOperators.push(op);
-    }
+  const whereClause = {
+    status: 'ACTIVE',
+    licenseType: { in: ['SIM_B1', 'SIM_B2', 'SIM_A'] },
+    NOT: { id: { in: assignedOperatorIds } },
+  };
+  if (shift) {
+    whereClause.OR = [{ shift: shift }, { shift: null }];
   }
 
-  // Allocate operators for trucks (prefer DUMP_TRUCK competency)
+  const availableOperators = await prisma.operator.findMany({
+    where: whereClause,
+    select: { id: true, licenseType: true, rating: true, shift: true },
+    orderBy: [{ shift: 'asc' }, { rating: 'desc' }],
+  });
+
+  const shiftMatchOperators = shift
+    ? availableOperators.filter((op) => op.shift === shift)
+    : availableOperators;
+  const fallbackOperators = availableOperators.filter((op) => !op.shift || op.shift !== shift);
+
   for (let i = 0; i < truckIds.length; i++) {
-    // Check if requested operator is available
     if (requestedOperatorIds[i] && !usedOperatorIds.has(requestedOperatorIds[i])) {
       allocatedOperators.push(requestedOperatorIds[i]);
       usedOperatorIds.add(requestedOperatorIds[i]);
       continue;
     }
 
-    // Find best operator: truck specialists > general > any
     const operator =
-      truckOperators.find((op) => !usedOperatorIds.has(op.id)) ||
-      generalOperators.find((op) => !usedOperatorIds.has(op.id)) ||
+      shiftMatchOperators.find((op) => !usedOperatorIds.has(op.id)) ||
+      fallbackOperators.find((op) => !usedOperatorIds.has(op.id)) ||
       availableOperators.find((op) => !usedOperatorIds.has(op.id));
 
     if (operator) {
@@ -397,12 +421,10 @@ class AIService {
     try {
       logger.info('Requesting strategic recommendations WITH hauling integration from AI service');
 
-      // Validasi dan enrichment parameters
       const enrichedParams = await this.enrichParameters(params);
 
-      // Call enhanced AI service endpoint
       const response = await axios.post(
-        `${AI_SERVICE_URL}/get_strategies_with_hauling`,
+        `${AI_SERVICE_URL}/get_strategies_with_allocations`,
         enrichedParams,
         {
           timeout: AI_SERVICE_TIMEOUT,
@@ -412,7 +434,6 @@ class AIService {
         }
       );
 
-      // Save prediction log
       await this.savePredictionLog({
         type: 'STRATEGIC_RECOMMENDATION_WITH_HAULING',
         input: enrichedParams,
@@ -533,13 +554,15 @@ class AIService {
         if (!truckIds || truckIds.length === 0) {
           throw new Error('At least one truck ID is required');
         }
-        if (!excavatorIds || excavatorIds.length === 0) {
-          throw new Error('At least one excavator ID is required');
-        }
+
+        const requiredTruckCount = truckIds.length;
+        const requiredExcavatorCount = excavatorIds?.length || 1;
 
         const { validTruckIds, validExcavatorIds, warnings } = await filterAvailableEquipment(
           truckIds,
-          excavatorIds
+          excavatorIds || [],
+          requiredTruckCount,
+          requiredExcavatorCount
         );
 
         if (validTruckIds.length === 0) {
@@ -562,13 +585,15 @@ class AIService {
         let effectiveOperatorIds = await allocateOperatorsByCompetency(
           effectiveTruckIds,
           effectiveExcavatorIds,
-          operatorIds || []
+          operatorIds || [],
+          shift || 'SHIFT_1'
         );
 
         if (effectiveOperatorIds.length < effectiveTruckIds.length) {
           const additionalOperators = await prisma.operator.findMany({
             where: {
               status: 'ACTIVE',
+              licenseType: { in: ['SIM_B1', 'SIM_B2', 'SIM_A'] },
               NOT: { id: { in: effectiveOperatorIds } },
             },
             take: effectiveTruckIds.length - effectiveOperatorIds.length,
@@ -788,39 +813,97 @@ class AIService {
           where: {
             status: 'ACTIVE',
             licenseType: 'OPERATOR_ALAT_BERAT',
+            NOT: { id: { in: effectiveOperatorIds } },
           },
           select: { id: true, rating: true, shift: true },
           orderBy: { rating: 'desc' },
         });
-        const effectiveExcavatorOperators = excavatorOperators.filter((op) => {
+        
+        // First try to get operators matching the requested shift
+        let effectiveExcavatorOperators = excavatorOperators.filter((op) => {
           if (assignedActiveExcavatorOperatorIds.has(op.id)) return false;
           if (shift && op.shift && op.shift !== shift) return false;
           return true;
         });
-        const usedExcavatorOperatorIds = new Set();
-        let excavatorOperatorPickIndex = 0;
+        
+        // FALLBACK: If no operators available for requested shift, use ANY available operator
+        if (effectiveExcavatorOperators.length === 0) {
+          console.log(`[AI Service] No excavator operators for shift ${shift}, falling back to any available operator`);
+          effectiveExcavatorOperators = excavatorOperators.filter((op) => {
+            return !assignedActiveExcavatorOperatorIds.has(op.id);
+          });
+        }
+        
+        const excavatorOperatorAssignmentCount = new Map();
+        const usedOperatorIdsInBatch = new Set();
+
+        // DEBUG logging
+        console.log('[AI Service DEBUG] =================================');
+        console.log('[AI Service DEBUG] Total excavator operators from DB:', excavatorOperators.length);
+        console.log('[AI Service DEBUG] Assigned active excavator operator IDs:', assignedActiveExcavatorOperatorIds.size);
+        console.log('[AI Service DEBUG] Effective excavator operators after filter:', effectiveExcavatorOperators.length);
+        console.log('[AI Service DEBUG] Effective excavator IDs count:', effectiveExcavatorIds.length);
+        console.log('[AI Service DEBUG] Shift filter applied:', shift || 'NONE');
+        if (effectiveExcavatorOperators.length > 0) {
+          console.log('[AI Service DEBUG] First 5 effective exc operators:', effectiveExcavatorOperators.slice(0, 5).map(o => o.id));
+        }
+        console.log('[AI Service DEBUG] =================================');
+
+        if (effectiveOperatorIds.length < effectiveTruckIds.length) {
+          throw new Error(
+            `Tidak cukup operator truck tersedia. Butuh ${effectiveTruckIds.length}, tersedia ${effectiveOperatorIds.length}. ` +
+              'Harap kurangi jumlah truck atau tambah operator aktif.'
+          );
+        }
 
         const results = await prisma.$transaction(async (tx) => {
           const activities = [];
 
           for (let i = 0; i < effectiveTruckIds.length; i++) {
             const truckId = effectiveTruckIds[i];
-            const excavatorId = effectiveExcavatorIds[i % effectiveExcavatorIds.length];
-            const operatorId = effectiveOperatorIds[i % effectiveOperatorIds.length];
+
+            const excavatorId = effectiveExcavatorIds.length > 0 
+              ? effectiveExcavatorIds[i % effectiveExcavatorIds.length] 
+              : null;
+
+            let operatorId = null;
+            for (const opId of effectiveOperatorIds) {
+              if (!usedOperatorIdsInBatch.has(opId)) {
+                operatorId = opId;
+                usedOperatorIdsInBatch.add(opId);
+                break;
+              }
+            }
+
+            if (!operatorId) {
+              throw new Error(
+                `Tidak bisa menemukan operator unik untuk hauling ke-${i + 1}. ` +
+                  'Setiap hauling activity membutuhkan operator yang berbeda.'
+              );
+            }
 
             let excavatorOperatorId = null;
             if (excavatorId && effectiveExcavatorOperators.length > 0) {
-              const next =
-                effectiveExcavatorOperators.find((op) => !usedExcavatorOperatorIds.has(op.id)) ||
-                effectiveExcavatorOperators[
-                  excavatorOperatorPickIndex % effectiveExcavatorOperators.length
-                ];
-              excavatorOperatorId = next?.id || null;
-              if (excavatorOperatorId) usedExcavatorOperatorIds.add(excavatorOperatorId);
-              excavatorOperatorPickIndex += 1;
+              let minCount = Infinity;
+              let bestOpId = null;
+              for (const op of effectiveExcavatorOperators) {
+                if (usedOperatorIdsInBatch.has(op.id)) continue;
+                const count = excavatorOperatorAssignmentCount.get(op.id) || 0;
+                if (count < minCount) {
+                  minCount = count;
+                  bestOpId = op.id;
+                }
+              }
+              if (bestOpId) {
+                excavatorOperatorId = bestOpId;
+                excavatorOperatorAssignmentCount.set(bestOpId, (excavatorOperatorAssignmentCount.get(bestOpId) || 0) + 1);
+              }
             }
 
             const assignedExcavatorId = excavatorId && excavatorOperatorId ? excavatorId : null;
+            
+            // DEBUG logging for each hauling
+            console.log(`[AI Service DEBUG] Hauling ${i+1}: truckId=${truckId}, excavatorId=${excavatorId}, excavatorOperatorId=${excavatorOperatorId}, assignedExcavatorId=${assignedExcavatorId}`);
 
             const activityNumber = `HA-${dateStr}-${(sequence + i).toString().padStart(3, '0')}`;
 

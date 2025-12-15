@@ -373,13 +373,25 @@ const ProductionList = () => {
               const truckIds = equipmentAllocation.truck_ids || [];
               const excavatorIds = equipmentAllocation.excavator_ids || [];
 
+              console.log('[ProductionList] Equipment Allocation - Truck IDs:', truckIds);
+              console.log('[ProductionList] Equipment Allocation - Excavator IDs:', excavatorIds);
+
               const matchingTrucks = trucks.filter((t) => truckIds.includes(t.id));
               const matchingExcavators = excavators.filter((e) => excavatorIds.includes(e.id));
 
+              console.log('[ProductionList] Matching Trucks:', matchingTrucks.length);
+              console.log('[ProductionList] Matching Excavators:', matchingExcavators.length);
+
               isAiPopulated.current = true;
 
-              setSelectedTruckIds(matchingTrucks.length > 0 ? matchingTrucks.map((t) => t.id) : truckIds.slice(0, trucksOperating));
-              setSelectedExcavatorIds(matchingExcavators.length > 0 ? matchingExcavators.map((e) => e.id) : excavatorIds.slice(0, excavatorsOperating));
+              const finalTruckIds = matchingTrucks.length > 0 ? matchingTrucks.map((t) => t.id) : truckIds.filter((id) => id);
+              const finalExcavatorIds = matchingExcavators.length > 0 ? matchingExcavators.map((e) => e.id) : excavatorIds.filter((id) => id);
+
+              console.log('[ProductionList] Final Truck IDs:', finalTruckIds);
+              console.log('[ProductionList] Final Excavator IDs:', finalExcavatorIds);
+
+              setSelectedTruckIds(finalTruckIds.slice(0, trucksOperating || finalTruckIds.length));
+              setSelectedExcavatorIds(finalExcavatorIds.slice(0, excavatorsOperating || finalExcavatorIds.length));
             } else {
               isAiPopulated.current = true;
             }
@@ -458,16 +470,33 @@ const ProductionList = () => {
           const utilizationRate = totalTrips > 0 ? ((totalTrips * avgCycleTimeMinutes) / (8 * 60)) * 100 : 0;
 
           if (truckCount > 0 && excavatorCount > 0) {
-            const availableTrucksForAI = trucks.filter((t) => t.isActive !== false && (t.status === 'IDLE' || t.status === 'STANDBY')).slice(0, truckCount);
-            const availableExcavatorsForAI = excavators.filter((e) => e.isActive !== false && (e.status === 'ACTIVE' || e.status === 'IDLE' || e.status === 'STANDBY')).slice(0, excavatorCount);
+            let finalSelectedTruckIds = [];
+            let finalSelectedExcavatorIds = [];
 
-            const selectedTrucks = availableTrucksForAI.length > 0 ? availableTrucksForAI : trucks.filter((t) => t.isActive !== false).slice(0, truckCount);
-            const selectedExcavators = availableExcavatorsForAI.length > 0 ? availableExcavatorsForAI : excavators.filter((e) => e.isActive !== false).slice(0, excavatorCount);
+            const haulingAllocations = equipmentAllocation?.hauling_allocations || recommendation.hauling_allocations || raw.hauling_allocations || [];
+            
+            if (haulingAllocations.length > 0) {
+              finalSelectedTruckIds = [...new Set(haulingAllocations.map(h => h.truckId).filter(Boolean))];
+              finalSelectedExcavatorIds = [...new Set(haulingAllocations.map(h => h.excavatorId).filter(Boolean))];
+              console.log('[ProductionList] Using hauling_allocations - Trucks:', finalSelectedTruckIds.length, 'Excavators:', finalSelectedExcavatorIds.length);
+            }
+
+            if (finalSelectedTruckIds.length === 0) {
+              const availableTrucksForAI = trucks.filter((t) => t.isActive !== false && (t.status === 'STANDBY' || t.status === 'IDLE')).slice(0, truckCount);
+              finalSelectedTruckIds = availableTrucksForAI.map((t) => t.id);
+              console.log('[ProductionList] Using filtered trucks:', finalSelectedTruckIds.length);
+            }
+
+            if (finalSelectedExcavatorIds.length === 0) {
+              const availableExcavatorsForAI = excavators.filter((e) => e.isActive !== false && (e.status === 'STANDBY' || e.status === 'IDLE' || e.status === 'ACTIVE')).slice(0, excavatorCount);
+              finalSelectedExcavatorIds = availableExcavatorsForAI.map((e) => e.id);
+              console.log('[ProductionList] Using filtered excavators:', finalSelectedExcavatorIds.length);
+            }
 
             isAiPopulated.current = true;
 
-            setSelectedTruckIds(selectedTrucks.map((t) => t.id));
-            setSelectedExcavatorIds(selectedExcavators.map((e) => e.id));
+            setSelectedTruckIds(finalSelectedTruckIds);
+            setSelectedExcavatorIds(finalSelectedExcavatorIds);
 
             const roadDistance = parseFloat(raw.distance_km) || (totalTrips > 0 ? totalDistance / totalTrips / 2 : 0);
 
@@ -1085,7 +1114,6 @@ const ProductionList = () => {
   const handleUpdateManualHauling = async (tempId, field, value) => {
     const hauling = manualHaulingList.find((h) => h.tempId === tempId);
 
-    // Auto-complete status when loadWeight >= targetWeight
     let autoCompleteStatus = false;
     if (field === 'loadWeight' && value !== '') {
       const loadWeightNum = parseFloat(value);
@@ -1095,17 +1123,18 @@ const ProductionList = () => {
       }
     }
 
-    if (hauling?.isExisting && hauling.id && (field === 'loadWeight' || field === 'status')) {
+    if (hauling?.isExisting && hauling.id && (field === 'loadWeight' || field === 'status' || field === 'excavatorId')) {
       try {
         const updateData = {};
         if (field === 'loadWeight') {
           updateData.loadWeight = value !== '' ? parseFloat(value) : null;
-          // Auto-set status to COMPLETED if load >= target
           if (autoCompleteStatus) {
             updateData.status = 'COMPLETED';
           }
         } else if (field === 'status') {
           updateData.status = value;
+        } else if (field === 'excavatorId') {
+          updateData.excavatorId = value || null;
         }
         await haulingService.quickUpdate(hauling.id, updateData);
 
@@ -1748,9 +1777,9 @@ const ProductionList = () => {
     setSelectedExcavatorIds((prev) => (prev.includes(id) ? prev.filter((eid) => eid !== id) : [...prev, id]));
   };
 
-  const availableTrucks = trucks.filter((truck) => truck.isActive !== false && (truck.status === 'IDLE' || truck.status === 'STANDBY' || selectedTruckIds.includes(truck.id)));
+  const availableTrucks = trucks.filter((truck) => truck.isActive !== false && (truck.status === 'STANDBY' || selectedTruckIds.includes(truck.id)));
 
-  const availableExcavators = excavators.filter((exc) => exc.isActive !== false && (exc.status === 'ACTIVE' || exc.status === 'IDLE' || exc.status === 'STANDBY' || selectedExcavatorIds.includes(exc.id)));
+  const availableExcavators = excavators.filter((exc) => exc.isActive !== false && (exc.status === 'STANDBY' || selectedExcavatorIds.includes(exc.id)));
 
   const filteredTrucks = availableTrucks.filter((truck) => truck.code.toLowerCase().includes(truckSearch.toLowerCase()) || truck.model?.toLowerCase().includes(truckSearch.toLowerCase()));
 
@@ -2579,7 +2608,11 @@ const ProductionList = () => {
                             >
                               <option value="">Select Truck</option>
                               {trucks
-                                .filter((t) => selectedTruckIds.includes(t.id) || t.id === hauling.truckId)
+                                .filter((t) => {
+                                  // Show all trucks if no specific selection or if matches current hauling
+                                  if (selectedTruckIds.length === 0) return true;
+                                  return selectedTruckIds.includes(t.id) || t.id === hauling.truckId;
+                                })
                                 .map((truck) => (
                                   <option key={truck.id} value={truck.id}>
                                     {truck.code} - {truck.name || truck.model} ({truck.capacity}t)
@@ -2590,14 +2623,17 @@ const ProductionList = () => {
                           <div>
                             <label className="block text-xs font-medium text-slate-400 mb-1">Excavator</label>
                             <select
-                              value={hauling.excavatorId}
+                              value={hauling.excavatorId || ''}
                               onChange={(e) => handleUpdateManualHauling(hauling.tempId, 'excavatorId', e.target.value)}
-                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting ? 'opacity-60' : ''}`}
-                              disabled={hauling.isExisting}
+                              className={`w-full px-2 py-1.5 text-sm border border-slate-700/50 rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${hauling.isExisting && hauling.excavatorId ? 'opacity-60' : ''}`}
+                              disabled={hauling.isExisting && hauling.excavatorId}
                             >
                               <option value="">No Excavator</option>
                               {excavators
-                                .filter((e) => selectedExcavatorIds.includes(e.id) || e.id === hauling.excavatorId)
+                                .filter((e) => {
+                                  if (selectedExcavatorIds.length === 0) return true;
+                                  return selectedExcavatorIds.includes(e.id) || e.id === hauling.excavatorId;
+                                })
                                 .map((exc) => (
                                   <option key={exc.id} value={exc.id}>
                                     {exc.code} - {exc.model} ({exc.productionRate}t/m)
@@ -2700,11 +2736,16 @@ const ProductionList = () => {
                               className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${filteredRoadSegments.length > 0 ? 'border-sky-500/30' : 'border-slate-700/50'}`}
                             >
                               <option value="">Select Road</option>
-                              {(filteredRoadSegments.length > 0 ? filteredRoadSegments : roadSegments.filter((rs) => rs.isActive !== false)).map((rs) => (
-                                <option key={rs.id} value={rs.id}>
-                                  {rs.code} - {rs.name} ({rs.distance?.toFixed(2)}km) [{rs.roadCondition}]
-                                </option>
-                              ))}
+                              {(() => {
+                                const baseList = filteredRoadSegments.length > 0 ? filteredRoadSegments : roadSegments.filter((rs) => rs.isActive !== false);
+                                const currentRs = hauling.roadSegmentId && !baseList.find((rs) => rs.id === hauling.roadSegmentId) ? roadSegments.find((rs) => rs.id === hauling.roadSegmentId) : null;
+                                const combinedList = currentRs ? [currentRs, ...baseList] : baseList;
+                                return combinedList.map((rs) => (
+                                  <option key={rs.id} value={rs.id}>
+                                    {rs.code} - {rs.name} ({rs.distance?.toFixed(2)}km) [{rs.roadCondition}]{currentRs && rs.id === currentRs.id ? ' (other site)' : ''}
+                                  </option>
+                                ));
+                              })()}
                             </select>
                           </div>
                         </div>
@@ -2720,11 +2761,17 @@ const ProductionList = () => {
                               className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${filteredLoadingPoints.length > 0 ? 'border-cyan-500/30' : 'border-slate-700/50'}`}
                             >
                               <option value="">Select Loading Point</option>
-                              {(filteredLoadingPoints.length > 0 ? filteredLoadingPoints : loadingPoints.filter((lp) => lp.isActive !== false)).map((lp) => (
-                                <option key={lp.id} value={lp.id}>
-                                  {lp.code} - {lp.name}
-                                </option>
-                              ))}
+                              {(() => {
+                                const baseList = filteredLoadingPoints.length > 0 ? filteredLoadingPoints : loadingPoints.filter((lp) => lp.isActive !== false);
+                                const currentLp = hauling.loadingPointId && !baseList.find((lp) => lp.id === hauling.loadingPointId) ? loadingPoints.find((lp) => lp.id === hauling.loadingPointId) : null;
+                                const combinedList = currentLp ? [currentLp, ...baseList] : baseList;
+                                return combinedList.map((lp) => (
+                                  <option key={lp.id} value={lp.id}>
+                                    {lp.code} - {lp.name}
+                                    {currentLp && lp.id === currentLp.id ? ' (other site)' : ''}
+                                  </option>
+                                ));
+                              })()}
                             </select>
                           </div>
                           <div>
@@ -2737,11 +2784,17 @@ const ProductionList = () => {
                               className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-sky-500 bg-slate-900/50 text-slate-200 ${filteredDumpingPoints.length > 0 ? 'border-sky-500/30' : 'border-slate-700/50'}`}
                             >
                               <option value="">Select Dumping Point</option>
-                              {(filteredDumpingPoints.length > 0 ? filteredDumpingPoints : dumpingPoints.filter((dp) => dp.isActive !== false)).map((dp) => (
-                                <option key={dp.id} value={dp.id}>
-                                  {dp.code} - {dp.name}
-                                </option>
-                              ))}
+                              {(() => {
+                                const baseList = filteredDumpingPoints.length > 0 ? filteredDumpingPoints : dumpingPoints.filter((dp) => dp.isActive !== false);
+                                const currentDp = hauling.dumpingPointId && !baseList.find((dp) => dp.id === hauling.dumpingPointId) ? dumpingPoints.find((dp) => dp.id === hauling.dumpingPointId) : null;
+                                const combinedList = currentDp ? [currentDp, ...baseList] : baseList;
+                                return combinedList.map((dp) => (
+                                  <option key={dp.id} value={dp.id}>
+                                    {dp.code} - {dp.name}
+                                    {currentDp && dp.id === currentDp.id ? ' (other site)' : ''}
+                                  </option>
+                                ));
+                              })()}
                             </select>
                           </div>
                         </div>

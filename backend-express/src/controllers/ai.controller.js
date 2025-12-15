@@ -64,6 +64,7 @@ class AIController {
         maxExcavators,
         financialParams,
         totalProductionTarget,
+        miningSiteId,
       } = req.body;
 
       const aiParams = {
@@ -76,6 +77,7 @@ class AIController {
           target_schedule_id: targetScheduleId || null,
           simulation_start_date: new Date().toISOString(),
           totalProductionTarget: totalProductionTarget || 0,
+          miningSiteId: miningSiteId || null,
         },
         decision_variables: {
           min_trucks: minTrucks || 5,

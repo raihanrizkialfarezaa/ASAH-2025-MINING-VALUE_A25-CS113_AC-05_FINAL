@@ -320,6 +320,7 @@ export const haulingService = {
     const activityNumber = await this.generateActivityNumber();
 
     const activity = await prisma.$transaction(async (tx) => {
+      const now = new Date();
       const parsedLoadWeight =
         data.loadWeight === undefined || data.loadWeight === null || data.loadWeight === ''
           ? 0
@@ -333,17 +334,34 @@ export const haulingService = {
           ? 0
           : parseFloat(data.distance);
 
+      const finalLoadWeight = Number.isFinite(parsedLoadWeight) ? parsedLoadWeight : 0;
+      const finalTargetWeight = Number.isFinite(parsedTargetWeight) ? parsedTargetWeight : 0;
+
+      const loadEfficiency =
+        finalTargetWeight > 0
+          ? parseFloat(((finalLoadWeight / finalTargetWeight) * 100).toFixed(2))
+          : 0;
+      const shouldCompleteOnCreate = finalTargetWeight > 0 && finalLoadWeight >= finalTargetWeight;
+
       // Build data object with optional excavatorId
       const createData = {
         ...data,
         activityNumber,
         supervisorId,
-        loadingStartTime: new Date(),
-        status: HAULING_STATUS.LOADING,
-        loadWeight: Number.isFinite(parsedLoadWeight) ? parsedLoadWeight : 0,
-        targetWeight: Number.isFinite(parsedTargetWeight) ? parsedTargetWeight : 0,
+        loadingStartTime: now,
+        status: shouldCompleteOnCreate ? HAULING_STATUS.COMPLETED : HAULING_STATUS.LOADING,
+        loadWeight: finalLoadWeight,
+        targetWeight: finalTargetWeight,
         distance: Number.isFinite(parsedDistance) ? parsedDistance : 0,
+        loadEfficiency,
       };
+
+      if (shouldCompleteOnCreate) {
+        createData.returnTime = now;
+        createData.returnDuration = 0;
+        createData.totalCycleTime = 0;
+        createData.isDelayed = false;
+      }
 
       // Handle null excavatorId - set to null if empty string or not provided
       if (!data.excavatorId || data.excavatorId === '') {
@@ -377,20 +395,47 @@ export const haulingService = {
       });
 
       // Update truck status to LOADING and assign operator
-      await tx.truck.update({
-        where: { id: data.truckId },
-        data: {
-          status: TRUCK_STATUS.LOADING,
-          currentOperatorId: data.operatorId,
-        },
-      });
+      if (shouldCompleteOnCreate) {
+        await tx.truck.update({
+          where: { id: data.truckId },
+          data: {
+            status: TRUCK_STATUS.STANDBY,
+            totalHours: { increment: 0 },
+            totalDistance: { increment: Number.isFinite(parsedDistance) ? parsedDistance : 0 },
+            currentOperatorId: null,
+          },
+        });
+      } else {
+        await tx.truck.update({
+          where: { id: data.truckId },
+          data: {
+            status: TRUCK_STATUS.LOADING,
+            currentOperatorId: data.operatorId,
+          },
+        });
+      }
 
       // Update excavator status to ACTIVE (only if excavator is provided)
       if (data.excavatorId && excavator) {
-        await tx.excavator.update({
-          where: { id: data.excavatorId },
-          data: { status: EXCAVATOR_STATUS.ACTIVE },
-        });
+        if (shouldCompleteOnCreate) {
+          const activeHaulingsForExcavator = await tx.haulingActivity.count({
+            where: {
+              excavatorId: data.excavatorId,
+              status: { in: ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'] },
+            },
+          });
+          if (activeHaulingsForExcavator === 0) {
+            await tx.excavator.update({
+              where: { id: data.excavatorId },
+              data: { status: EXCAVATOR_STATUS.STANDBY },
+            });
+          }
+        } else {
+          await tx.excavator.update({
+            where: { id: data.excavatorId },
+            data: { status: EXCAVATOR_STATUS.ACTIVE },
+          });
+        }
       }
 
       // Update operator-truck relationship
@@ -638,13 +683,45 @@ export const haulingService = {
       if (Number.isFinite(v)) updateData.fuelConsumed = v;
     }
 
-    if (data.loadWeight && data.targetWeight) {
-      const loadEfficiency = (data.loadWeight / data.targetWeight) * 100;
+    const nextLoadWeight =
+      updateData.loadWeight !== undefined ? updateData.loadWeight : activity.loadWeight;
+    const nextTargetWeight =
+      updateData.targetWeight !== undefined ? updateData.targetWeight : activity.targetWeight;
+    const nextStatusCandidate = updateData.status || activity.status;
+
+    const normalizedNextLoadWeight =
+      nextLoadWeight === null || nextLoadWeight === undefined ? null : parseFloat(nextLoadWeight);
+    const normalizedNextTargetWeight =
+      nextTargetWeight === null || nextTargetWeight === undefined
+        ? null
+        : parseFloat(nextTargetWeight);
+
+    if (
+      Number.isFinite(normalizedNextLoadWeight) &&
+      Number.isFinite(normalizedNextTargetWeight) &&
+      normalizedNextTargetWeight > 0
+    ) {
+      const loadEfficiency = (normalizedNextLoadWeight / normalizedNextTargetWeight) * 100;
       updateData.loadEfficiency = parseFloat(loadEfficiency.toFixed(2));
     }
 
-    if (data.status === HAULING_STATUS.COMPLETED && activity.status !== HAULING_STATUS.COMPLETED) {
-      const returnTime = data.returnTime ? new Date(data.returnTime) : new Date();
+    if (
+      Number.isFinite(normalizedNextLoadWeight) &&
+      Number.isFinite(normalizedNextTargetWeight) &&
+      normalizedNextTargetWeight > 0 &&
+      normalizedNextLoadWeight >= normalizedNextTargetWeight &&
+      nextStatusCandidate !== HAULING_STATUS.COMPLETED &&
+      nextStatusCandidate !== HAULING_STATUS.CANCELLED &&
+      nextStatusCandidate !== HAULING_STATUS.INCIDENT
+    ) {
+      updateData.status = HAULING_STATUS.COMPLETED;
+    }
+
+    if (
+      updateData.status === HAULING_STATUS.COMPLETED &&
+      activity.status !== HAULING_STATUS.COMPLETED
+    ) {
+      const returnTime = updateData.returnTime ? new Date(updateData.returnTime) : new Date();
       updateData.returnTime = returnTime;
       if (activity.dumpingEndTime) {
         updateData.returnDuration = Math.round(
@@ -663,6 +740,9 @@ export const haulingService = {
       const nextTruckId = updateData.truckId || activity.truckId;
       const nextOperatorId = updateData.operatorId || activity.operatorId;
       const nextStatus = updateData.status || activity.status;
+
+      const completingNow =
+        nextStatus === HAULING_STATUS.COMPLETED && activity.status !== HAULING_STATUS.COMPLETED;
 
       const updated = await tx.haulingActivity.update({
         where: { id },
@@ -709,14 +789,14 @@ export const haulingService = {
         [HAULING_STATUS.HAULING]: TRUCK_STATUS.HAULING,
         [HAULING_STATUS.DUMPING]: TRUCK_STATUS.DUMPING,
         [HAULING_STATUS.RETURNING]: TRUCK_STATUS.HAULING,
-        [HAULING_STATUS.COMPLETED]: TRUCK_STATUS.IDLE,
-        [HAULING_STATUS.CANCELLED]: TRUCK_STATUS.IDLE,
+        [HAULING_STATUS.COMPLETED]: TRUCK_STATUS.STANDBY,
+        [HAULING_STATUS.CANCELLED]: TRUCK_STATUS.STANDBY,
       };
 
       const desiredTruckStatus = statusToTruckStatus[nextStatus];
       if (desiredTruckStatus) {
         const desiredOperatorId =
-          desiredTruckStatus === TRUCK_STATUS.IDLE ? null : nextOperatorId || null;
+          desiredTruckStatus === TRUCK_STATUS.STANDBY ? null : nextOperatorId || null;
         await tx.truck.update({
           where: { id: nextTruckId },
           data: {
@@ -724,6 +804,56 @@ export const haulingService = {
             currentOperatorId: desiredOperatorId,
           },
         });
+      }
+
+      if (completingNow) {
+        const finalReturnTime = updateData.returnTime
+          ? new Date(updateData.returnTime)
+          : new Date();
+        const nextDistance = Number.isFinite(parseFloat(updated.distance))
+          ? parseFloat(updated.distance)
+          : Number.isFinite(parseFloat(activity.distance))
+            ? parseFloat(activity.distance)
+            : 0;
+        const nextTotalCycleTime = Number.isFinite(parseFloat(updateData.totalCycleTime))
+          ? parseFloat(updateData.totalCycleTime)
+          : activity.loadingStartTime
+            ? Math.round((finalReturnTime - new Date(activity.loadingStartTime)) / 60000)
+            : 0;
+
+        await tx.truck.update({
+          where: { id: nextTruckId },
+          data: {
+            status: TRUCK_STATUS.STANDBY,
+            totalHours: { increment: Math.round(nextTotalCycleTime / 60) },
+            totalDistance: { increment: nextDistance },
+            currentOperatorId: null,
+          },
+        });
+
+        if (updated.excavatorId) {
+          const activeHaulingsForExcavator = await tx.haulingActivity.count({
+            where: {
+              excavatorId: updated.excavatorId,
+              status: { in: ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'] },
+              id: { not: id },
+            },
+          });
+
+          if (activeHaulingsForExcavator === 0) {
+            await tx.excavator.update({
+              where: { id: updated.excavatorId },
+              data: { status: EXCAVATOR_STATUS.STANDBY },
+            });
+          }
+
+          await tx.excavator.update({
+            where: { id: updated.excavatorId },
+            data: {
+              totalHours: { increment: Math.round((updated.loadingDuration || 0) / 60) },
+            },
+          });
+        }
       }
 
       if (nextTruckId && nextOperatorId) {
@@ -1198,7 +1328,6 @@ export const haulingService = {
       throw ApiError.notFound('Hauling activity not found');
     }
 
-    // Only allow loadWeight and status updates
     const updateData = {};
     if (data.loadWeight !== undefined) {
       updateData.loadWeight = data.loadWeight !== null ? parseFloat(data.loadWeight) : null;
@@ -1208,29 +1337,130 @@ export const haulingService = {
         throw ApiError.badRequest('Invalid status value');
       }
       updateData.status = data.status;
-
-      // If status changed to COMPLETED, set completion time
-      if (data.status === HAULING_STATUS.COMPLETED && !activity.dumpingEndTime) {
-        updateData.dumpingEndTime = new Date();
-      }
+    }
+    if (data.excavatorId !== undefined) {
+      updateData.excavatorId = data.excavatorId || null;
     }
 
-    const updated = await prisma.haulingActivity.update({
-      where: { id },
-      data: updateData,
-      include: {
-        truck: {
-          select: { id: true, code: true, name: true, fuelConsumption: true, capacity: true },
-        },
-        excavator: {
-          select: { id: true, code: true, name: true, fuelConsumption: true, productionRate: true },
-        },
-        operator: {
-          include: {
-            user: { select: { id: true, fullName: true } },
+    const nextLoadWeight =
+      updateData.loadWeight !== undefined ? updateData.loadWeight : activity.loadWeight;
+    const nextTargetWeight = activity.targetWeight;
+    const nextStatusCandidate = updateData.status || activity.status;
+
+    const normalizedNextLoadWeight =
+      nextLoadWeight === null || nextLoadWeight === undefined ? null : parseFloat(nextLoadWeight);
+    const normalizedNextTargetWeight =
+      nextTargetWeight === null || nextTargetWeight === undefined
+        ? null
+        : parseFloat(nextTargetWeight);
+
+    if (
+      Number.isFinite(normalizedNextLoadWeight) &&
+      Number.isFinite(normalizedNextTargetWeight) &&
+      normalizedNextTargetWeight > 0 &&
+      normalizedNextLoadWeight >= normalizedNextTargetWeight &&
+      nextStatusCandidate !== HAULING_STATUS.COMPLETED &&
+      nextStatusCandidate !== HAULING_STATUS.CANCELLED &&
+      nextStatusCandidate !== HAULING_STATUS.INCIDENT
+    ) {
+      updateData.status = HAULING_STATUS.COMPLETED;
+    }
+
+    if (
+      updateData.status === HAULING_STATUS.COMPLETED &&
+      activity.status !== HAULING_STATUS.COMPLETED
+    ) {
+      const returnTime = new Date();
+      updateData.returnTime = returnTime;
+      if (activity.dumpingEndTime) {
+        updateData.returnDuration = Math.round(
+          (returnTime - new Date(activity.dumpingEndTime)) / 60000
+        );
+      }
+      if (activity.loadingStartTime) {
+        updateData.totalCycleTime = Math.round(
+          (returnTime - new Date(activity.loadingStartTime)) / 60000
+        );
+      }
+      updateData.isDelayed = false;
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const updatedActivity = await tx.haulingActivity.update({
+        where: { id },
+        data: updateData,
+        include: {
+          truck: {
+            select: { id: true, code: true, name: true, fuelConsumption: true, capacity: true },
+          },
+          excavator: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              fuelConsumption: true,
+              productionRate: true,
+            },
+          },
+          operator: {
+            include: {
+              user: { select: { id: true, fullName: true } },
+            },
           },
         },
-      },
+      });
+
+      if (
+        updateData.status === HAULING_STATUS.COMPLETED &&
+        activity.status !== HAULING_STATUS.COMPLETED
+      ) {
+        const nextDistance = Number.isFinite(parseFloat(activity.distance))
+          ? parseFloat(activity.distance)
+          : 0;
+        const nextTotalCycleTime = Number.isFinite(parseFloat(updateData.totalCycleTime))
+          ? parseFloat(updateData.totalCycleTime)
+          : activity.loadingStartTime
+            ? Math.round(
+                (new Date(updateData.returnTime) - new Date(activity.loadingStartTime)) / 60000
+              )
+            : 0;
+
+        await tx.truck.update({
+          where: { id: activity.truckId },
+          data: {
+            status: TRUCK_STATUS.STANDBY,
+            totalHours: { increment: Math.round(nextTotalCycleTime / 60) },
+            totalDistance: { increment: nextDistance },
+            currentOperatorId: null,
+          },
+        });
+
+        if (activity.excavatorId) {
+          const activeHaulingsForExcavator = await tx.haulingActivity.count({
+            where: {
+              excavatorId: activity.excavatorId,
+              status: { in: ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'] },
+              id: { not: id },
+            },
+          });
+
+          if (activeHaulingsForExcavator === 0) {
+            await tx.excavator.update({
+              where: { id: activity.excavatorId },
+              data: { status: EXCAVATOR_STATUS.STANDBY },
+            });
+          }
+
+          await tx.excavator.update({
+            where: { id: activity.excavatorId },
+            data: {
+              totalHours: { increment: Math.round((activity.loadingDuration || 0) / 60) },
+            },
+          });
+        }
+      }
+
+      return updatedActivity;
     });
 
     updated.isAchieved =

@@ -95,14 +95,14 @@ export const haulingController = {
   }),
 
   /**
-   * Quick update hauling activity - only loadWeight and status
+   * Quick update hauling activity - loadWeight, status, excavatorId
    * For Production Edit modal shortcuts
    */
   quickUpdate: catchAsync(async (req, res) => {
     const { id } = req.params;
-    const { loadWeight, status } = req.body;
+    const { loadWeight, status, excavatorId } = req.body;
 
-    const activity = await haulingService.quickUpdate(id, { loadWeight, status });
+    const activity = await haulingService.quickUpdate(id, { loadWeight, status, excavatorId });
     res.json(ApiResponse.success(activity, 'Hauling activity updated successfully'));
   }),
 

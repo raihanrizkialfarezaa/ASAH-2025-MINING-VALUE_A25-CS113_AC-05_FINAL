@@ -60,6 +60,15 @@ const HaulingList = () => {
   const [filteredRoadSegments, setFilteredRoadSegments] = useState([]);
   const [siteAutoFillInfo, setSiteAutoFillInfo] = useState(null);
   const [haulingList, setHaulingList] = useState([]);
+  const [standbyTrucks, setStandbyTrucks] = useState([]);
+  const [standbyExcavators, setStandbyExcavators] = useState([]);
+  const [truckSearchQuery, setTruckSearchQuery] = useState('');
+  const [excavatorSearchQuery, setExcavatorSearchQuery] = useState('');
+  const [truckOperatorSearchQuery, setTruckOperatorSearchQuery] = useState('');
+  const [excavatorOperatorSearchQuery, setExcavatorOperatorSearchQuery] = useState('');
+  const [miningSiteSearchQuery, setMiningSiteSearchQuery] = useState('');
+  const [dropdownPage, setDropdownPage] = useState({ site: 1, truck: 1, excavator: 1, truckOp: 1, excOp: 1 });
+  const DROPDOWN_PAGE_SIZE = 20;
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [shiftFilter, setShiftFilter] = useState('');
@@ -235,7 +244,11 @@ const HaulingList = () => {
       setRoadSegments(Array.isArray(roadsRes.data) ? roadsRes.data : []);
       setMiningSites(Array.isArray(sitesRes.data) ? sitesRes.data : []);
 
-      // Filter operators by competency (TRUCK vs EXCAVATOR based on license type)
+      const standbyTrucksList = trucksData.filter((t) => t.status === 'STANDBY' && t.isActive !== false);
+      const standbyExcavatorsList = excavatorsData.filter((e) => e.status === 'STANDBY' && e.isActive !== false);
+      setStandbyTrucks(standbyTrucksList);
+      setStandbyExcavators(standbyExcavatorsList);
+
       const truckOperators = operatorsData.filter((op) => op.status === 'ACTIVE' && (op.licenseType === 'SIM_B1' || op.licenseType === 'SIM_B2' || op.licenseType === 'SIM_A'));
       const excavatorOperators = operatorsData.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT');
 
@@ -328,6 +341,31 @@ const HaulingList = () => {
     return [...base, selected];
   };
 
+  const filterOperatorsByShift = (selectedShift) => {
+    const truckOps = operators.filter((op) => {
+      if (op.status !== 'ACTIVE') return false;
+      if (op.licenseType !== 'SIM_B1' && op.licenseType !== 'SIM_B2' && op.licenseType !== 'SIM_A') return false;
+      if (selectedShift && op.shift && op.shift !== selectedShift) return false;
+      return true;
+    });
+    const excavatorOps = operators.filter((op) => {
+      if (op.status !== 'ACTIVE') return false;
+      if (op.licenseType !== 'OPERATOR_ALAT_BERAT') return false;
+      if (selectedShift && op.shift && op.shift !== selectedShift) return false;
+      return true;
+    });
+    setFilteredTruckOperators(truckOps.length > 0 ? truckOps : operators.filter((op) => op.status === 'ACTIVE' && (!selectedShift || !op.shift || op.shift === selectedShift)));
+    setFilteredExcavatorOperators(excavatorOps.length > 0 ? excavatorOps : operators.filter((op) => op.status === 'ACTIVE' && op.licenseType === 'OPERATOR_ALAT_BERAT'));
+  };
+
+  const handleShiftChange = (newShift) => {
+    setFormData((prev) => ({ ...prev, shift: newShift }));
+    filterOperatorsByShift(newShift);
+    setTruckOperatorSearchQuery('');
+    setExcavatorOperatorSearchQuery('');
+    setDropdownPage((prev) => ({ ...prev, truckOp: 1, excOp: 1 }));
+  };
+
   const handleSort = (field) => {
     if (sortField === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -396,40 +434,32 @@ const HaulingList = () => {
       return;
     }
 
-    const assignedActiveTruckIds = new Set(
+    const assignedActiveTruckIdsLocal = new Set(
       allActivities
         .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
         .map((a) => a.truckId)
         .filter(Boolean)
     );
 
-    const availableTrucks = trucks.filter((t) => (t.status === 'IDLE' || t.status === 'STANDBY') && !assignedActiveTruckIds.has(t.id));
-    const availableExcavators = excavators.filter((e) => e.status === 'IDLE' || e.status === 'STANDBY' || e.status === 'ACTIVE');
+    const availableTrucks = standbyTrucks.filter((t) => !assignedActiveTruckIdsLocal.has(t.id));
+    const availableExcavators = standbyExcavators;
 
-    // Find trucks/excavators not yet used in hauling list
     const usedTruckIds = haulingList.map((h) => h.truckId).filter(Boolean);
     const usedExcavatorIds = haulingList.map((h) => h.excavatorId).filter(Boolean);
 
     const nextTruck = availableTrucks.find((t) => !usedTruckIds.includes(t.id)) || availableTrucks[haulingList.length % Math.max(availableTrucks.length, 1)];
     const nextExcavator = availableExcavators.find((e) => !usedExcavatorIds.includes(e.id)) || availableExcavators[haulingList.length % Math.max(availableExcavators.length, 1)];
 
-    // Operator rotation based on shift
-    const shiftMapping = { SHIFT_1: 'SHIFT_1', PAGI: 'SHIFT_1', SHIFT_2: 'SHIFT_2', SIANG: 'SHIFT_2', SHIFT_3: 'SHIFT_3', MALAM: 'SHIFT_3' };
-    const currentShift = shiftMapping[formData.shift] || 'SHIFT_1';
-
-    // Filter operators by shift and competency
-    const shiftTruckOperators = filteredTruckOperators.filter((op) => op.shift === currentShift);
-    const shiftExcavatorOperators = filteredExcavatorOperators.filter((op) => op.shift === currentShift);
+    const currentShift = formData.shift || 'SHIFT_1';
+    const shiftTruckOperators = filteredTruckOperators.filter((op) => !op.shift || op.shift === currentShift);
+    const shiftExcavatorOperators = filteredExcavatorOperators.filter((op) => !op.shift || op.shift === currentShift);
 
     const activeTruckOperators = shiftTruckOperators.length > 0 ? shiftTruckOperators : filteredTruckOperators;
     const activeExcavatorOperators = shiftExcavatorOperators.length > 0 ? shiftExcavatorOperators : filteredExcavatorOperators;
 
-    const assignedActiveOperatorIds = new Set(
-      allActivities
-        .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
-        .map((a) => a.operatorId)
-        .filter(Boolean)
-    );
+    const activeHaulingLocal = allActivities.filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status));
+    const assignedActiveOperatorIdsLocal = new Set(activeHaulingLocal.map((a) => a.operatorId).filter(Boolean));
+    const assignedActiveExcavatorOperatorIdsLocal = new Set(activeHaulingLocal.map((a) => a.excavatorOperatorId).filter(Boolean));
 
     const usedTruckOperatorIds = haulingList.map((h) => h.truckOperatorId).filter(Boolean);
     const usedExcavatorOperatorIds = haulingList
@@ -437,11 +467,11 @@ const HaulingList = () => {
       .map((h) => h.excavatorOperatorId)
       .filter(Boolean);
 
-    const availableTruckOperators = activeTruckOperators.filter((op) => !assignedActiveOperatorIds.has(op.id) && !usedTruckOperatorIds.includes(op.id));
+    const availableTruckOperators = activeTruckOperators.filter((op) => !assignedActiveOperatorIdsLocal.has(op.id) && !usedTruckOperatorIds.includes(op.id));
     const fallbackTruckOperators = activeTruckOperators.filter((op) => !usedTruckOperatorIds.includes(op.id));
-    const defaultTruckOperator = availableTruckOperators[0] || fallbackTruckOperators[0] || operators[0];
+    const defaultTruckOperator = availableTruckOperators[0] || fallbackTruckOperators[0] || activeTruckOperators[0];
 
-    const availableExcavatorOperators = activeExcavatorOperators.filter((op) => !assignedActiveOperatorIds.has(op.id) && !usedExcavatorOperatorIds.includes(op.id));
+    const availableExcavatorOperators = activeExcavatorOperators.filter((op) => !assignedActiveExcavatorOperatorIdsLocal.has(op.id) && !usedExcavatorOperatorIds.includes(op.id));
     const fallbackExcavatorOperator = activeExcavatorOperators.find((op) => !usedExcavatorOperatorIds.includes(op.id));
     const defaultExcavatorOperator = availableExcavatorOperators[0] || fallbackExcavatorOperator;
 
@@ -456,7 +486,7 @@ const HaulingList = () => {
       tempId: Date.now(),
       isExisting: false,
       truckId: nextTruck?.id || '',
-      excavatorId: nextExcavator?.id || '', // Excavator is optional
+      excavatorId: nextExcavator?.id || '',
       truckOperatorId: defaultTruckOperator?.id || '',
       excavatorOperatorId: nextExcavator?.id ? defaultExcavatorOperator?.id || '' : '',
       loadingPointId: defaultLoadingPoint?.id || '',
@@ -594,6 +624,12 @@ const HaulingList = () => {
     setFilteredDumpingPoints([]);
     setFilteredRoadSegments([]);
     setSiteAutoFillInfo(null);
+    setMiningSiteSearchQuery('');
+    setTruckSearchQuery('');
+    setExcavatorSearchQuery('');
+    setTruckOperatorSearchQuery('');
+    setExcavatorOperatorSearchQuery('');
+    setDropdownPage({ site: 1, truck: 1, excavator: 1, truckOp: 1, excOp: 1 });
     setShowModal(true);
   };
 
@@ -648,6 +684,10 @@ const HaulingList = () => {
       '';
 
     if (inferredSiteId) {
+      await ensure(inferredSiteId, miningSites, miningSiteService, setMiningSites);
+    }
+
+    if (inferredSiteId) {
       applyMiningSiteFiltersOnly(inferredSiteId);
     } else {
       setFilteredRoadSegments([]);
@@ -655,6 +695,13 @@ const HaulingList = () => {
       setFilteredDumpingPoints([]);
       setSiteAutoFillInfo(null);
     }
+
+    setMiningSiteSearchQuery('');
+    setTruckSearchQuery('');
+    setExcavatorSearchQuery('');
+    setTruckOperatorSearchQuery('');
+    setExcavatorOperatorSearchQuery('');
+    setDropdownPage({ site: 1, truck: 1, excavator: 1, truckOp: 1, excOp: 1 });
 
     setFormData({
       activityNumber: activity.activityNumber || '',
@@ -697,6 +744,19 @@ const HaulingList = () => {
       }
     }
     const inferredExcavatorOperator = inferredExcavatorOperatorId && inferredExcavatorOperatorId !== resolvedExcavatorOperator?.id ? operators.find((op) => op.id === inferredExcavatorOperatorId) || null : resolvedExcavatorOperator;
+
+    if (resolvedTruck && resolvedTruck.id) {
+      setStandbyTrucks((prev) => {
+        if (prev.some((t) => t.id === resolvedTruck.id)) return prev;
+        return [...prev, resolvedTruck];
+      });
+    }
+    if (resolvedExcavator && resolvedExcavator.id) {
+      setStandbyExcavators((prev) => {
+        if (prev.some((e) => e.id === resolvedExcavator.id)) return prev;
+        return [...prev, resolvedExcavator];
+      });
+    }
 
     setHaulingList([
       {
@@ -833,15 +893,12 @@ const HaulingList = () => {
               .map((a) => a.truckId)
               .filter(Boolean)
           );
-          const assignedActiveOperatorIds = new Set(
-            allActivities
-              .filter((a) => a.id !== selectedActivity.id)
-              .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
-              .map((a) => a.operatorId)
-              .filter(Boolean)
-          );
+          const activeHaulingForEdit = allActivities.filter((a) => a.id !== selectedActivity.id).filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status));
+          const assignedActiveOperatorIds = new Set(activeHaulingForEdit.map((a) => a.operatorId).filter(Boolean));
+          const assignedActiveExcavatorOperatorIds = new Set(activeHaulingForEdit.map((a) => a.excavatorOperatorId).filter(Boolean));
           const batchTruckIds = new Set([existingItem.truckId].filter(Boolean));
           const batchOperatorIds = new Set([existingItem.truckOperatorId].filter(Boolean));
+          const batchExcavatorOperatorIds = new Set([existingItem.excavatorOperatorId].filter(Boolean));
 
           const primaryExcavatorId = normalized.find((h) => Boolean(h.excavatorId))?.excavatorId;
 
@@ -890,6 +947,19 @@ const HaulingList = () => {
             if (!item.dumpingPointId) {
               errors.push(`Hauling ${i + 1}: Dumping Point is required`);
               continue;
+            }
+            const effectiveExcavatorIdInEdit = item.excavatorId || primaryExcavatorId || null;
+            if (effectiveExcavatorIdInEdit && item.excavatorOperatorId) {
+              if (assignedActiveExcavatorOperatorIds.has(item.excavatorOperatorId)) {
+                const existing = allActivities.find((a) => a.excavatorOperatorId === item.excavatorOperatorId && ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status));
+                errors.push(`Hauling ${i + 1}: Excavator operator is already assigned${existing?.activityNumber ? ` (${existing.activityNumber})` : ''}`);
+                continue;
+              }
+              if (batchExcavatorOperatorIds.has(item.excavatorOperatorId)) {
+                errors.push(`Hauling ${i + 1}: Excavator operator is duplicated in this batch`);
+                continue;
+              }
+              batchExcavatorOperatorIds.add(item.excavatorOperatorId);
             }
 
             let actNum = i + 1;
@@ -940,7 +1010,8 @@ const HaulingList = () => {
         }
 
         setShowModal(false);
-        fetchActivities();
+        await fetchActivities();
+        await loadResources();
         return;
       }
 
@@ -965,20 +1036,13 @@ const HaulingList = () => {
 
         const primaryExcavatorId = normalizedHaulingList.find((h) => Boolean(h.excavatorId))?.excavatorId;
 
-        const assignedActiveTruckIds = new Set(
-          allActivities
-            .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
-            .map((a) => a.truckId)
-            .filter(Boolean)
-        );
-        const assignedActiveOperatorIds = new Set(
-          allActivities
-            .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
-            .map((a) => a.operatorId)
-            .filter(Boolean)
-        );
+        const activeHaulingForValidation = allActivities.filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status));
+        const assignedActiveTruckIds = new Set(activeHaulingForValidation.map((a) => a.truckId).filter(Boolean));
+        const assignedActiveOperatorIds = new Set(activeHaulingForValidation.map((a) => a.operatorId).filter(Boolean));
+        const assignedActiveExcavatorOperatorIds = new Set(activeHaulingForValidation.map((a) => a.excavatorOperatorId).filter(Boolean));
         const batchTruckIds = new Set();
         const batchOperatorIds = new Set();
+        const batchExcavatorOperatorIds = new Set();
 
         const baseCode = generateAutoActivityNumber();
         const prefix = baseCode.split('-').slice(0, 2).join('-');
@@ -991,7 +1055,6 @@ const HaulingList = () => {
         for (let i = 0; i < normalizedHaulingList.length; i++) {
           const hauling = normalizedHaulingList[i];
 
-          // Validate required fields
           if (!hauling.truckId) {
             errors.push(`Hauling ${i + 1}: Truck is required`);
             continue;
@@ -1032,6 +1095,18 @@ const HaulingList = () => {
           if (effectiveExcavatorId && !hauling.excavatorOperatorId) {
             errors.push(`Hauling ${i + 1}: Excavator Operator is required`);
             continue;
+          }
+          if (effectiveExcavatorId && hauling.excavatorOperatorId) {
+            if (assignedActiveExcavatorOperatorIds.has(hauling.excavatorOperatorId)) {
+              const existing = allActivities.find((a) => a.excavatorOperatorId === hauling.excavatorOperatorId && ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status));
+              errors.push(`Hauling ${i + 1}: Excavator operator is already assigned${existing?.activityNumber ? ` (${existing.activityNumber})` : ''}`);
+              continue;
+            }
+            if (batchExcavatorOperatorIds.has(hauling.excavatorOperatorId)) {
+              errors.push(`Hauling ${i + 1}: Excavator operator is duplicated in this batch`);
+              continue;
+            }
+            batchExcavatorOperatorIds.add(hauling.excavatorOperatorId);
           }
 
           // Generate unique activity number
@@ -1088,7 +1163,8 @@ const HaulingList = () => {
         }
 
         setShowModal(false);
-        fetchActivities();
+        await fetchActivities();
+        await loadResources();
         return;
       }
 
@@ -1170,7 +1246,8 @@ const HaulingList = () => {
         }
 
         setShowModal(false);
-        fetchActivities();
+        await fetchActivities();
+        await loadResources();
         return;
       }
 
@@ -1206,7 +1283,8 @@ const HaulingList = () => {
       }
 
       setShowModal(false);
-      fetchActivities();
+      await fetchActivities();
+      await loadResources();
     } catch (error) {
       console.error('Failed to save hauling activity:', error);
       if (error.response?.data?.message) {
@@ -1221,7 +1299,8 @@ const HaulingList = () => {
     if (window.confirm('Are you sure you want to cancel this hauling activity?')) {
       try {
         await haulingService.cancel(id, 'Cancelled by user');
-        fetchActivities();
+        await fetchActivities();
+        await loadResources();
       } catch (error) {
         console.error('Failed to cancel hauling activity:', error);
         if (error.response?.data?.message) {
@@ -1238,26 +1317,30 @@ const HaulingList = () => {
   const activeFiltersCount = [searchQuery, statusFilter, shiftFilter, filters.truckId, filters.excavatorId, filters.minWeight, filters.maxWeight, filters.minDistance, filters.maxDistance, filters.isDelayed].filter(Boolean).length;
 
   const excludeActiveActivityId = modalMode === 'edit' ? selectedActivity?.id : null;
-  const assignedActiveOperatorIds = new Set(
-    allActivities
-      .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
-      .filter((a) => (excludeActiveActivityId ? a.id !== excludeActiveActivityId : true))
-      .map((a) => a.operatorId)
-      .filter(Boolean)
-  );
-  const assignedActiveTruckIds = new Set(
-    allActivities
-      .filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status))
-      .filter((a) => (excludeActiveActivityId ? a.id !== excludeActiveActivityId : true))
-      .map((a) => a.truckId)
-      .filter(Boolean)
-  );
+  const activeHaulingActivities = allActivities.filter((a) => ['LOADING', 'HAULING', 'DUMPING', 'IN_QUEUE'].includes(a.status)).filter((a) => (excludeActiveActivityId ? a.id !== excludeActiveActivityId : true));
+  const assignedActiveOperatorIds = new Set(activeHaulingActivities.map((a) => a.operatorId).filter(Boolean));
+  const assignedActiveExcavatorOperatorIds = new Set(activeHaulingActivities.map((a) => a.excavatorOperatorId).filter(Boolean));
+  const assignedActiveTruckIds = new Set(activeHaulingActivities.map((a) => a.truckId).filter(Boolean));
   const selectedTruckIds = haulingList.map((h) => h.truckId).filter(Boolean);
   const selectedTruckOperatorIds = haulingList.map((h) => h.truckOperatorId).filter(Boolean);
   const selectedExcavatorOperatorIds = haulingList
     .filter((h) => Boolean(h.excavatorId))
     .map((h) => h.excavatorOperatorId)
     .filter(Boolean);
+
+  const filteredMiningSites = (() => {
+    const base = Array.isArray(miningSites) ? miningSites : [];
+    const selectedId = formData.miningSiteId;
+    const filtered = base.filter((site) => {
+      if (!miningSiteSearchQuery) return true;
+      const q = miningSiteSearchQuery.toLowerCase();
+      return site.code?.toLowerCase().includes(q) || site.name?.toLowerCase().includes(q) || `${site.code || ''} ${site.name || ''}`.toLowerCase().includes(q);
+    });
+    return mergeWithSelected(filtered, base, selectedId);
+  })();
+
+  const paginatedMiningSites = filteredMiningSites.slice(0, dropdownPage.site * DROPDOWN_PAGE_SIZE);
+  const canLoadMoreMiningSites = filteredMiningSites.length > dropdownPage.site * DROPDOWN_PAGE_SIZE;
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -1989,6 +2072,16 @@ const HaulingList = () => {
                   <Mountain size={16} className="inline mr-2 text-emerald-400" />
                   Mining Site *
                 </label>
+                <input
+                  type="text"
+                  placeholder="Search mining site..."
+                  value={miningSiteSearchQuery}
+                  onChange={(e) => {
+                    setMiningSiteSearchQuery(e.target.value);
+                    setDropdownPage((p) => ({ ...p, site: 1 }));
+                  }}
+                  className="w-full bg-slate-900/60 border border-slate-700 text-slate-300 rounded px-2 py-2 text-sm mb-2"
+                />
                 <select
                   value={formData.miningSiteId}
                   onChange={(e) => handleMiningSiteChange(e.target.value)}
@@ -1996,12 +2089,17 @@ const HaulingList = () => {
                   required
                 >
                   <option value="">Select Mining Site</option>
-                  {miningSites.map((site) => (
+                  {paginatedMiningSites.map((site) => (
                     <option key={site.id} value={site.id}>
                       {site.code || site.name} - {site.name}
                     </option>
                   ))}
                 </select>
+                {canLoadMoreMiningSites && (
+                  <button type="button" onClick={() => setDropdownPage((p) => ({ ...p, site: p.site + 1 }))} className="text-xs text-sky-400 mt-1">
+                    Load more...
+                  </button>
+                )}
                 {siteAutoFillInfo && (
                   <p className="text-xs text-emerald-400 mt-1">
                     ✓ Auto-filled: {siteAutoFillInfo.lpCount} loading points, {siteAutoFillInfo.dpCount} dumping points, {siteAutoFillInfo.roadCount} road segments
@@ -2015,7 +2113,7 @@ const HaulingList = () => {
                 </label>
                 <select
                   value={formData.shift}
-                  onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
+                  onChange={(e) => handleShiftChange(e.target.value)}
                   className="w-full bg-slate-800/80 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 focus:border-sky-500 outline-none transition-colors"
                   required
                 >
@@ -2096,11 +2194,20 @@ const HaulingList = () => {
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {/* Truck Selection */}
                         <div>
                           <label className="text-xs font-medium text-slate-400 mb-1 block">
-                            <Truck size={12} className="inline mr-1" /> Truck *
+                            <Truck size={12} className="inline mr-1" /> Truck * <span className="text-emerald-400">(STANDBY only)</span>
                           </label>
+                          <input
+                            type="text"
+                            placeholder="Search truck..."
+                            value={truckSearchQuery}
+                            onChange={(e) => {
+                              setTruckSearchQuery(e.target.value);
+                              setDropdownPage((p) => ({ ...p, truck: 1 }));
+                            }}
+                            className="w-full bg-slate-900/60 border border-slate-700 text-slate-300 rounded px-2 py-1 text-xs mb-1"
+                          />
                           <select
                             value={hauling.truckId}
                             onChange={(e) => handleUpdateHauling(hauling.tempId, 'truckId', e.target.value)}
@@ -2108,51 +2215,104 @@ const HaulingList = () => {
                             required
                           >
                             <option value="">Select Truck</option>
-                            {trucks
-                              .filter((t) => {
+                            {(() => {
+                              const optionPool = mergeWithSelected(standbyTrucks, trucks, hauling.truckId);
+                              const filtered = optionPool.filter((t) => {
                                 const isSelected = t.id === hauling.truckId;
-                                const statusOk = t.status === 'IDLE' || t.status === 'STANDBY' || isSelected;
                                 const activeOk = !assignedActiveTruckIds.has(t.id) || isSelected;
                                 const dupOk = !selectedTruckIds.includes(t.id) || isSelected;
-                                return statusOk && activeOk && dupOk;
-                              })
-                              .map((truck) => (
+                                if (truckSearchQuery) {
+                                  const q = truckSearchQuery.toLowerCase();
+                                  const matchSearch = t.code?.toLowerCase().includes(q) || t.name?.toLowerCase().includes(q);
+                                  return (activeOk && dupOk && matchSearch) || isSelected;
+                                }
+                                return activeOk && dupOk;
+                              });
+                              const sorted = [...filtered].sort((a, b) => {
+                                if (a.id === hauling.truckId) return -1;
+                                if (b.id === hauling.truckId) return 1;
+                                return 0;
+                              });
+                              const paginated = sorted.slice(0, dropdownPage.truck * DROPDOWN_PAGE_SIZE);
+                              return paginated.map((truck) => (
                                 <option key={truck.id} value={truck.id}>
                                   {truck.code} ({truck.capacity}t)
                                 </option>
-                              ))}
+                              ));
+                            })()}
                           </select>
+                          {standbyTrucks.length > dropdownPage.truck * DROPDOWN_PAGE_SIZE && (
+                            <button type="button" onClick={() => setDropdownPage((p) => ({ ...p, truck: p.truck + 1 }))} className="text-xs text-sky-400 mt-1">
+                              Load more...
+                            </button>
+                          )}
                         </div>
 
-                        {/* Excavator Selection (Optional) */}
                         <div>
                           <label className="text-xs font-medium text-slate-400 mb-1 block">
-                            <Construction size={12} className="inline mr-1" /> Excavator
+                            <Construction size={12} className="inline mr-1" /> Excavator <span className="text-emerald-400">(STANDBY only)</span>
                           </label>
+                          <input
+                            type="text"
+                            placeholder="Search excavator..."
+                            value={excavatorSearchQuery}
+                            onChange={(e) => {
+                              setExcavatorSearchQuery(e.target.value);
+                              setDropdownPage((p) => ({ ...p, excavator: 1 }));
+                            }}
+                            className="w-full bg-slate-900/60 border border-slate-700 text-slate-300 rounded px-2 py-1 text-xs mb-1"
+                          />
                           <select
                             value={hauling.excavatorId}
                             onChange={(e) => handleUpdateHauling(hauling.tempId, 'excavatorId', e.target.value)}
                             className="w-full bg-slate-900/80 border border-slate-600 text-slate-200 rounded-lg px-2 py-1.5 text-sm"
                           >
                             <option value="">No Excavator</option>
-                            {excavators
-                              .filter((e) => {
+                            {(() => {
+                              const optionPool = mergeWithSelected(standbyExcavators, excavators, hauling.excavatorId);
+                              const filtered = optionPool.filter((e) => {
                                 const isSelected = e.id === hauling.excavatorId;
-                                return e.status === 'IDLE' || e.status === 'STANDBY' || e.status === 'ACTIVE' || isSelected;
-                              })
-                              .map((exc) => (
+                                if (excavatorSearchQuery) {
+                                  const q = excavatorSearchQuery.toLowerCase();
+                                  const matchSearch = e.code?.toLowerCase().includes(q) || e.name?.toLowerCase().includes(q) || e.model?.toLowerCase().includes(q);
+                                  return matchSearch || isSelected;
+                                }
+                                return true;
+                              });
+                              const sorted = [...filtered].sort((a, b) => {
+                                if (a.id === hauling.excavatorId) return -1;
+                                if (b.id === hauling.excavatorId) return 1;
+                                return 0;
+                              });
+                              const paginated = sorted.slice(0, dropdownPage.excavator * DROPDOWN_PAGE_SIZE);
+                              return paginated.map((exc) => (
                                 <option key={exc.id} value={exc.id}>
                                   {exc.code} - {exc.model}
                                 </option>
-                              ))}
+                              ));
+                            })()}
                           </select>
+                          {standbyExcavators.length > dropdownPage.excavator * DROPDOWN_PAGE_SIZE && (
+                            <button type="button" onClick={() => setDropdownPage((p) => ({ ...p, excavator: p.excavator + 1 }))} className="text-xs text-sky-400 mt-1">
+                              Load more...
+                            </button>
+                          )}
                         </div>
 
-                        {/* Truck Operator */}
                         <div>
                           <label className="text-xs font-medium text-slate-400 mb-1 block">
-                            <User size={12} className="inline mr-1" /> Truck Operator *
+                            <User size={12} className="inline mr-1" /> Truck Operator * <span className="text-amber-400">(Shift: {formData.shift})</span>
                           </label>
+                          <input
+                            type="text"
+                            placeholder="Search operator..."
+                            value={truckOperatorSearchQuery}
+                            onChange={(e) => {
+                              setTruckOperatorSearchQuery(e.target.value);
+                              setDropdownPage((p) => ({ ...p, truckOp: 1 }));
+                            }}
+                            className="w-full bg-slate-900/60 border border-slate-700 text-slate-300 rounded px-2 py-1 text-xs mb-1"
+                          />
                           <select
                             value={hauling.truckOperatorId}
                             onChange={(e) => handleUpdateHauling(hauling.tempId, 'truckOperatorId', e.target.value)}
@@ -2160,26 +2320,50 @@ const HaulingList = () => {
                             required
                           >
                             <option value="">Select Operator</option>
-                            {mergeWithSelected(filteredTruckOperators, operators, hauling.truckOperatorId)
-                              .filter((op) => {
+                            {(() => {
+                              const currentShift = formData.shift || 'SHIFT_1';
+                              const filtered = mergeWithSelected(filteredTruckOperators, operators, hauling.truckOperatorId).filter((op) => {
                                 const isSelected = op.id === hauling.truckOperatorId;
+                                const shiftOk = !op.shift || op.shift === currentShift || isSelected;
                                 const activeOk = !assignedActiveOperatorIds.has(op.id) || isSelected;
                                 const dupOk = !selectedTruckOperatorIds.includes(op.id) || isSelected;
-                                return activeOk && dupOk;
-                              })
-                              .map((op) => (
+                                if (truckOperatorSearchQuery) {
+                                  const q = truckOperatorSearchQuery.toLowerCase();
+                                  const matchSearch = op.employeeNumber?.toLowerCase().includes(q) || op.user?.fullName?.toLowerCase().includes(q);
+                                  return shiftOk && activeOk && dupOk && (matchSearch || isSelected);
+                                }
+                                return shiftOk && activeOk && dupOk;
+                              });
+                              const paginated = filtered.slice(0, dropdownPage.truckOp * DROPDOWN_PAGE_SIZE);
+                              return paginated.map((op) => (
                                 <option key={op.id} value={op.id}>
-                                  {op.employeeNumber} - {op.user?.fullName}
+                                  {op.employeeNumber} - {op.user?.fullName} ({op.shift || 'Any'})
                                 </option>
-                              ))}
+                              ));
+                            })()}
                           </select>
+                          {filteredTruckOperators.length > dropdownPage.truckOp * DROPDOWN_PAGE_SIZE && (
+                            <button type="button" onClick={() => setDropdownPage((p) => ({ ...p, truckOp: p.truckOp + 1 }))} className="text-xs text-sky-400 mt-1">
+                              Load more...
+                            </button>
+                          )}
                         </div>
 
-                        {/* Excavator Operator (Optional) */}
                         <div>
                           <label className="text-xs font-medium text-slate-400 mb-1 block">
-                            <User size={12} className="inline mr-1" /> Excavator Operator
+                            <User size={12} className="inline mr-1" /> Excavator Operator <span className="text-amber-400">(Shift: {formData.shift})</span>
                           </label>
+                          <input
+                            type="text"
+                            placeholder="Search operator..."
+                            value={excavatorOperatorSearchQuery}
+                            onChange={(e) => {
+                              setExcavatorOperatorSearchQuery(e.target.value);
+                              setDropdownPage((p) => ({ ...p, excOp: 1 }));
+                            }}
+                            className="w-full bg-slate-900/60 border border-slate-700 text-slate-300 rounded px-2 py-1 text-xs mb-1"
+                            disabled={!hauling.excavatorId}
+                          />
                           <select
                             value={hauling.excavatorOperatorId || ''}
                             onChange={(e) => handleUpdateHauling(hauling.tempId, 'excavatorOperatorId', e.target.value)}
@@ -2187,19 +2371,33 @@ const HaulingList = () => {
                             className="w-full bg-slate-900/80 border border-slate-600 text-slate-200 rounded-lg px-2 py-1.5 text-sm disabled:bg-slate-900/40 disabled:text-slate-500 disabled:cursor-not-allowed"
                           >
                             <option value="">No Operator</option>
-                            {mergeWithSelected(filteredExcavatorOperators, operators, hauling.excavatorOperatorId)
-                              .filter((op) => {
+                            {(() => {
+                              const currentShift = formData.shift || 'SHIFT_1';
+                              const filtered = mergeWithSelected(filteredExcavatorOperators, operators, hauling.excavatorOperatorId).filter((op) => {
                                 const isSelected = op.id === hauling.excavatorOperatorId;
-                                const activeOk = !assignedActiveOperatorIds.has(op.id) || isSelected;
+                                const shiftOk = !op.shift || op.shift === currentShift || isSelected;
+                                const activeOk = !assignedActiveExcavatorOperatorIds.has(op.id) || isSelected;
                                 const dupOk = !selectedExcavatorOperatorIds.includes(op.id) || isSelected;
-                                return activeOk && dupOk;
-                              })
-                              .map((op) => (
+                                if (excavatorOperatorSearchQuery) {
+                                  const q = excavatorOperatorSearchQuery.toLowerCase();
+                                  const matchSearch = op.employeeNumber?.toLowerCase().includes(q) || op.user?.fullName?.toLowerCase().includes(q);
+                                  return shiftOk && activeOk && dupOk && (matchSearch || isSelected);
+                                }
+                                return shiftOk && activeOk && dupOk;
+                              });
+                              const paginated = filtered.slice(0, dropdownPage.excOp * DROPDOWN_PAGE_SIZE);
+                              return paginated.map((op) => (
                                 <option key={op.id} value={op.id}>
-                                  {op.employeeNumber} - {op.user?.fullName}
+                                  {op.employeeNumber} - {op.user?.fullName} ({op.shift || 'Any'})
                                 </option>
-                              ))}
+                              ));
+                            })()}
                           </select>
+                          {filteredExcavatorOperators.length > dropdownPage.excOp * DROPDOWN_PAGE_SIZE && !hauling.excavatorId && (
+                            <button type="button" onClick={() => setDropdownPage((p) => ({ ...p, excOp: p.excOp + 1 }))} className="text-xs text-sky-400 mt-1">
+                              Load more...
+                            </button>
+                          )}
                         </div>
 
                         {/* Loading Point */}
