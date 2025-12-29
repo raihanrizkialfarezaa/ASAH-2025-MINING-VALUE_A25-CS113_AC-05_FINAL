@@ -121,7 +121,7 @@ Di situlah kontribusi project kami. Bukan menciptakan algoritma baru yang ground
 
 ## 2.3 Luaran Berdampak yang Diusulkan
 
-Output dari project ini adalah Mining Operations AI Decision Support System yang terdiri dari backend API dengan 17 modul endpoint, frontend dashboard dengan 12 halaman fungsional, dan AI service dengan 4 model ML plus chatbot. Semua sudah terkontainerisasi dengan Docker dan siap deploy ke environment production.
+Output dari project ini adalah Mining Operations AI Decision Support System yang terdiri dari backend API dengan 17 modul endpoint, frontend dashboard dengan 14 halaman fungsional, dan AI service dengan 6 model ML (3 aktif digunakan) plus chatbot. Semua sudah terkontainerisasi dengan Docker dan siap deploy ke environment production.
 
 ---
 
@@ -147,7 +147,7 @@ AI service kami bangun dengan FastAPI karena performance-nya yang excellent untu
 
 ### Implementasi Database Schema
 
-Database schema yang kami desain cukup kompleks dengan lebih dari 25 tabel yang saling berelasi. File `schema.prisma` yang kami tulis mencapai lebih dari 1000 baris karena mencakup semua entitas operasional.
+Database schema yang kami desain cukup kompleks dengan 29 tabel yang saling berelasi. File `schema.prisma` yang kami tulis mencapai lebih dari 1000 baris karena mencakup semua entitas operasional.
 
 Model `User` menyimpan data akun dengan field username, email, password yang di-hash, fullName, dan role. Role-nya ada lima jenis: ADMIN yang punya full access, SUPERVISOR yang manage operasi, OPERATOR yang eksekusi di lapangan, DISPATCHER yang atur alokasi, dan MAINTENANCE_STAFF untuk tim perawatan. Setiap user bisa punya relasi ke operator profile kalau dia juga berperan sebagai operator alat.
 
@@ -175,7 +175,7 @@ Rate limiting kami pasang untuk prevent abuse API. General endpoints limit 100 r
 
 ### Implementasi Frontend Dashboard
 
-Frontend React kami bagi menjadi pages dan components. Folder `pages` berisi 12 halaman utama, masing-masing punya folder sendiri kecuali Dashboard dan Login yang langsung di root.
+Frontend React kami bagi menjadi pages dan components. Folder `pages` berisi 14 halaman utama yang terdiri dari Dashboard.jsx dan Login.jsx di root, plus 12 halaman lain di subfolder (AI dengan 2 halaman, excavators, hauling, locations, maintenance, operators, production, trucks, users, vessels, dan weather).
 
 Dashboard.jsx adalah halaman terbesar dengan hampir 1000 baris kode. Halaman ini menampilkan overview lengkap operasi dengan beberapa section. Di bagian atas ada summary cards yang menampilkan jumlah truck aktif, excavator aktif, hauling in progress, dan produksi hari ini. Semua data ini di-fetch dari API dan auto-refresh setiap 30 detik pakai setInterval di useEffect.
 
@@ -193,11 +193,13 @@ AI service kami bangun dengan FastAPI dan struktur codebase yang straightforward
 
 Untuk training model, prosesnya ada di `train_models.py`. Data training diambil dari file `final_training_data_real.csv` yang sudah kami prepare dengan join dari berbagai tabel. Feature yang digunakan mencakup capacity truck, bucketCapacity excavator, rating operator, experience years operator, distance, gradient jalan, umur truck dalam hari, dan hari sejak maintenance terakhir. Categorical features-nya ada weatherCondition, roadCondition, shift, brand truck, dan model excavator.
 
-Model pertama adalah fuel prediction yang memprediksi konsumsi BBM dalam liter untuk satu trip. Kami pakai Random Forest Regressor dengan 100 trees. Hasil evaluasi di test set mendapatkan R² score 0.87 yang artinya model bisa explain 87% variance dalam fuel consumption. Mean Absolute Error sekitar 2.34 liter yang acceptable untuk use case operational.
+Model pertama adalah fuel prediction yang memprediksi konsumsi BBM dalam liter untuk satu trip. Kami pakai Random Forest Regressor dengan 100 trees. Hasil evaluasi di test set mendapatkan R² score 0.74 dengan Mean Absolute Error 1.38 liter. R² sebesar 0.74 artinya model mampu menjelaskan 74% variance dalam konsumsi BBM, sisanya dipengaruhi faktor lain yang tidak tercapture dalam fitur. Untuk keperluan estimasi operasional, ini sudah cukup memadai karena error rata-rata hanya 1.38 liter per trip.
 
-Model kedua adalah load weight prediction yang estimasi berat muatan aktual. Ini penting karena berat aktual sering berbeda dari kapasitas rated truck, tergantung kondisi material dan loading technique. Model ini juga pakai Random Forest Regressor dan achieve R² score 0.85.
+Model kedua adalah load weight prediction yang estimasi berat muatan aktual. Ini penting karena berat aktual sering berbeda dari kapasitas rated truck, tergantung kondisi material dan loading technique. Model ini juga pakai Random Forest Regressor dengan R² score 0.88 dan MAE 1.63 ton. Dengan R² 0.88, model ini paling akurat di antara ketiga model, cocok untuk estimasi produksi harian.
 
-Model ketiga adalah delay probability classifier yang prediksi apakah trip akan mengalami keterlambatan atau tidak. Pakai Random Forest Classifier dengan accuracy 89% dan AUC 0.91. Model ini berguna untuk early warning, supervisor bisa lihat prediksi delay risk sebelum trip dimulai dan ambil langkah preventif.
+Model ketiga adalah delay probability classifier yang prediksi apakah trip akan mengalami keterlambatan atau tidak. Pakai Random Forest Classifier dengan accuracy 90% dan AUC 0.50. Accuracy 90% terlihat tinggi, namun AUC yang rendah (0.50) menunjukkan bahwa model belum bisa membedakan dengan baik antara trip yang delay dan tidak delay. Ini terjadi karena data delay sangat imbalanced (90% trip tidak delay). Meski demikian, model tetap berguna sebagai baseline dan akan terus di-improve seiring bertambahnya data delay.
+
+Selain tiga model aktif di atas, di folder models juga terdapat tiga model legacy dari iterasi sebelumnya: model_fuel_real.joblib, model_tonase.joblib, dan model_risiko.joblib. Model-model ini menggunakan format fitur yang berbeda dan tidak kompatibel dengan data training terbaru, sehingga tidak digunakan di production. Total ada 6 file model, dengan 3 yang aktif digunakan.
 
 Semua trained model disimpan sebagai file .joblib di folder `models`. Saat API service start, model-model ini di-load ke memory untuk fast inference.
 
@@ -253,7 +255,7 @@ Fleet Status section menampilkan breakdown status truck dan excavator dalam form
 
 ### Hasil Implementasi AI Service
 
-AI service FastAPI berhasil meng-host 4 model ML dan menyediakan endpoint untuk inference. Response time untuk single prediction sekitar 50-100ms yang acceptable untuk real-time use.
+AI service FastAPI berhasil meng-host 4 model ML dan menyediakan endpoint untuk inference.
 
 Chatbot berhasil menjawab berbagai jenis pertanyaan operasional dengan akurat. Untuk pertanyaan tentang data seperti "Berapa total produksi kemarin?", sistem generate SQL query, execute, dan summarize hasilnya. Untuk pertanyaan tentang status seperti "Excavator mana yang sedang breakdown?", sistem query equipment table dan format hasilnya dalam bahasa Indonesia yang natural.
 
@@ -271,7 +273,7 @@ Uji coba ketiga adalah ML model accuracy testing. Kami split data 80-20 untuk tr
 
 Uji coba keempat adalah chatbot testing dengan berbagai pertanyaan. Kami coba pertanyaan straightforward seperti "Berapa jumlah truck aktif?" dan pertanyaan yang lebih complex seperti "Bandingkan produksi shift 1 dan shift 2 kemarin". Chatbot berhasil menjawab dengan akurat untuk sebagian besar kasus, meski kadang masih struggle untuk pertanyaan yang ambiguous.
 
-Uji coba kelima adalah load testing untuk backend API. Kami pakai tool Apache Benchmark untuk simulate concurrent requests. Hasilnya, backend bisa handle 100 concurrent requests dengan response time di bawah 500ms untuk endpoint yang simple, dan di bawah 2 detik untuk endpoint yang involving complex query atau aggregation.
+Uji coba kelima adalah load testing untuk backend API menggunakan tool untuk simulate concurrent requests dan memastikan backend bisa handle beban yang reasonable untuk operasional.
 
 Uji coba keenam adalah deployment testing dengan Docker. Kami run docker-compose up dan verify semua service start correctly dan bisa communicate. Database migration jalan otomatis, seed data ter-insert, dan semua endpoint accessible dari browser.
 
@@ -281,7 +283,7 @@ Uji coba keenam adalah deployment testing dengan Docker. Kami run docker-compose
 
 Sistem yang berhasil dibangun sudah memenuhi semua functional requirements yang di-define di awal project. Arsitektur microservices terbukti memberikan fleksibilitas yang bagus untuk development dan deployment. Setiap service bisa di-update secara independen, yang sangat helpful ketika kami perlu iterate quickly pada ML models tanpa redeploy frontend.
 
-ML models menunjukkan performance yang acceptable untuk production use. R² score di atas 0.85 untuk regression tasks menandakan model mampu explain mayoritas variance dalam target variable. Tentu masih ada room for improvement, misalnya dengan mencoba Gradient Boosting atau Neural Networks, atau dengan menambah feature engineering. Tapi untuk MVP, current performance sudah sufficient.
+ML models menunjukkan performance yang bervariasi. Model load weight prediction dengan R² 0.88 adalah yang paling reliable, cocok untuk estimasi produksi. Model fuel prediction dengan R² 0.74 cukup acceptable untuk estimasi biaya operasional. Model delay classifier mencapai accuracy 90% tapi AUC-nya rendah (0.50) karena data yang imbalanced. Apakah hasil ini aman digunakan? Untuk model fuel dan load weight, jawabannya ya karena error masih dalam range yang bisa ditoleransi untuk decision support (bukan sistem kritis). Untuk delay classifier, kami rekomendasikan penggunaannya sebagai indikator tambahan saja, bukan satu-satunya dasar keputusan, sambil terus mengumpulkan data untuk improve model di masa depan.
 
 Chatbot implementation dengan RAG approach terbukti effective untuk menjawab pertanyaan tentang data operasional. Keuntungan approach ini dibanding pure LLM adalah accuracy yang terjamin karena data diambil langsung dari database, bukan generated by model. Kelemahannya adalah coverage pertanyaan yang terbatas pada apa yang bisa di-query dari database.
 
@@ -295,7 +297,7 @@ Penggunaan Random Forest sebagai algoritma ML juga sesuai dengan karakteristik p
 
 Kelebihan utama sistem yang kami bangun adalah integrasi yang seamless antara semua komponen. User bisa mulai dari login, lihat dashboard, drill down ke detail, minta rekomendasi AI, sampai chat dengan bot, semuanya dalam satu platform tanpa perlu switch aplikasi.
 
-Real-time capability juga jadi selling point. Dashboard auto-refresh dan API response time yang cepat memungkinkan supervisor untuk monitor operasi as it happens, bukan after the fact.
+Real-time capability juga jadi selling point. Dashboard auto-refresh memungkinkan supervisor untuk monitor operasi as it happens, bukan after the fact.
 
 Keterbatasan yang kami sadari adalah belum adanya mobile app. Supervisor di lapangan seringnya pakai HP, bukan laptop. Web app memang responsive, tapi native mobile experience akan lebih baik untuk use case mereka.
 
@@ -434,7 +436,7 @@ ASAH 2025 MINING VALUE_A25-CS113_AC-05/
 │   └── package.json
 ├── mining-ops-frontend/
 │   ├── src/
-│   │   ├── pages/           (12 halaman)
+│   │   ├── pages/           (14 halaman)
 │   │   ├── components/      (UI components)
 │   │   ├── services/        (API handlers)
 │   │   └── utils/           (helpers)
@@ -444,7 +446,7 @@ ASAH 2025 MINING VALUE_A25-CS113_AC-05/
 │   ├── chatbot.py           (3000+ baris)
 │   ├── simulator.py         (2000+ baris)
 │   ├── train_models.py      (ML training)
-│   ├── models/              (trained models)
+│   ├── models/              (6 trained models, 3 aktif)
 │   └── data/                (31 CSV files)
 └── docker-compose.yml
 ```
