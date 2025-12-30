@@ -168,7 +168,31 @@ Kenapa ini penting? Karena satu keputusan yang salah di operasi tambang bisa ber
 
   
 
-##  1.2 Tujuan Studi Independen
+##  1.2 Rumusan Masalah
+
+  
+
+Dari hasil observasi awal dan diskusi intensif dengan mentor dari PT Mining Value Indonesia, saya berhasil mengidentifikasi beberapa permasalahan krusial yang menjadi fokus dalam studi independen ini.
+
+  
+
+Permasalahan pertama, bagaimana membangun sistem pemantauan operasi hauling yang mampu menyajikan data secara waktu nyata? Supervisor lapangan selama ini masih mengandalkan komunikasi radio HT dan spreadsheet Excel untuk koordinasi. Akibatnya, informasi sering terlambat sampai dan keputusan diambil berdasarkan data yang sudah tidak aktual.
+
+  
+
+Permasalahan kedua, bagaimana mengembangkan model prediktif yang bisa memberikan estimasi konsumsi BBM, berat muatan, dan risiko keterlambatan dengan akurasi yang dapat diandalkan? Dispatcher saat ini mengalokasikan truk berdasarkan intuisi dan pengalaman, bukan berdasarkan analisis data historis dan kondisi terkini.
+
+  
+
+Permasalahan ketiga, bagaimana menyediakan alat simulasi yang memungkinkan supervisor menguji berbagai konfigurasi armada tanpa mengganggu operasi aktual? Kalau mau coba strategi baru, ya langsung dicoba di lapangan dengan risiko kerugian kalau ternyata gagal.
+
+  
+
+Permasalahan keempat, bagaimana membangun antarmuka percakapan berbasis AI yang memungkinkan siapa saja mengakses informasi operasional dengan bahasa natural? Untuk mendapatkan data tertentu saat ini, operator harus membuka berbagai sistem yang berbeda atau bertanya ke bagian administrasi.
+
+  
+
+##  1.3 Tujuan Studi Independen
 
   
 
@@ -184,7 +208,7 @@ Dari sisi pembelajaran pribadi, saya ingin menguasai bagaimana membangun aplikas
 
   
 
-##  1.3 Manfaat Proyek
+##  1.4 Manfaat Proyek
 
   
 
