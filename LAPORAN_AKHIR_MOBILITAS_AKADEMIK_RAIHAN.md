@@ -412,7 +412,24 @@ Untuk chatbot, implementasinya cukup canggih. Ada fungsi `execute_and_summarize`
 
   
 
-Kami mendukung dua penyedia LLM: Ollama untuk penerapan lokal dan Google Gemini API untuk cloud. Konfigurasinya di berkas `llm_config.py` yang baca dari environment variable mau pakai yang mana.
+Untuk penyedia LLM, kami memilih menggunakan Ollama yang dijalankan secara lokal. Konfigurasinya ada di berkas `llm_config.py` yang membaca pengaturan dari variabel lingkungan. Keputusan untuk pakai Ollama secara penuh bukan tanpa pertimbangan matang.
+
+  
+
+Pertama, soal privasi dan keamanan data. Data operasional tambang itu sensitif, mencakup informasi produksi, lokasi penambangan, dan strategi operasional. Kalau pakai LLM berbasis cloud, data harus dikirim ke server eksternal untuk diproses. Dengan Ollama lokal, semua data tetap berada di infrastruktur sendiri, tidak ada yang keluar ke pihak ketiga.
+
+  
+
+Kedua, soal biaya jangka panjang. LLM berbasis cloud itu hitung-hitungannya per token, semakin banyak percakapan semakin mahal tagihan bulanannya. Untuk sistem yang diharapkan aktif terus-menerus melayani banyak pengguna, biaya cloud bisa membengkak tidak terkontrol. Dengan Ollama lokal, biayanya hanya investasi awal untuk perangkat keras yang memadai, setelah itu bebas pakai sepuasnya.
+
+  
+
+Ketiga, soal latensi dan ketersediaan. Lokasi tambang seringkali di daerah terpencil dengan koneksi internet yang tidak stabil. Kalau bergantung pada cloud, chatbot bisa tidak responsif atau bahkan tidak bisa diakses sama sekali ketika koneksi bermasalah. Dengan Ollama yang jalan di server lokal, selama jaringan internal masih hidup, chatbot tetap bisa melayani.
+
+  
+
+Keempat, soal kontrol penuh terhadap model. Dengan Ollama, kami bisa pilih model mana yang paling cocok untuk kebutuhan (kami pakai model yang cukup ringkas tapi tetap mampu untuk tugas percakapan), bisa melakukan penyesuaian prompt tanpa batasan dari penyedia, dan bisa memperbarui model kapan saja tanpa khawatir perubahan dari pihak ketiga yang merusak perilaku sistem.
+
   
 
 ### Implementasi Kontainerisasi
@@ -468,7 +485,7 @@ Modul Hauling adalah transaksi inti dengan 8 titik akhir. `POST /hauling` untuk 
 Modul Dasbor menyediakan agregasi data untuk frontend. `GET /dashboard/overview` mengembalikan ringkasan lengkap: jumlah alat aktif, hauling yang sedang berlangsung, produksi hari ini, status cuaca, dan peringatan. Semua data dikueri dari basis data dan diagregasi di controller, hasilnya ditembolok (cache) selama 30 detik untuk mengurangi beban basis data.
   
 
-Modul proksi ML jadi penghubung antara frontend dan layanan AI. Endpoint seperti `POST /ml/predict/delay-risk` meneruskan permintaan ke layanan FastAPI dan mengembalikan hasilnya. Ini memungkinkan frontend hanya perlu berkomunikasi dengan satu backend, menyederhanakan otentikasi dan penanganan kesalahan.
+Modul proksi ML jadi penghubung antara frontend dan layanan AI. Endpoint seperti `POST /ml/predict/delay-risk` meneruskan permintaan ke layanan FastAPI dan mengembalikan hasilnya. Ini memungkinkan frontend hanya perlu berkomunikasi dengan satu backend, menyederhanakan otentikasi dan penanganan kesalahan. Selain prediksi risiko keterlambatan, ada juga `POST /ml/predict/fuel` untuk estimasi konsumsi BBM dan `POST /ml/predict/tonnage` untuk estimasi berat muatan. Ketiga endpoint ini punya format respons yang konsisten supaya frontend gampang mengolah hasilnya. Keuntungan lain dari pendekatan proksi ini adalah backend bisa menangani kasus ketika layanan AI tidak responsif, misalnya mengembalikan nilai default atau pesan kesalahan yang lebih ramah pengguna daripada sekadar error mentah dari FastAPI.
 
   
 
@@ -589,20 +606,17 @@ Dukungan multi-penyewa juga belum didukung. Saat ini sistem satu penyewa, satu i
 Kegiatan studi independen yang kami laksanakan selama 4 minggu difokuskan pada pengembangan sistem pendukung keputusan berbasis AI untuk operasi pertambangan batubara. Kolaborasi dengan PT Mining Value Indonesia memberikan konteks industri yang riil, bukan sekadar project akademis.
 
   
-
 Permasalahan nyata yang kami tangani adalah ketidakefisienan dalam pengambilan keputusan operasional di tambang. Solusi yang kami kembangkan adalah platform berbasis web dengan kemampuan pemantauan waktu nyata, prediksi berbasis ML, dan rekomendasi strategi berbasis simulasi.
   
 
-Minggu pertama kami fokus pada pengumpulan kebutuhan dan desain sistem. Komunikasi intensif dengan mentor untuk memahami domain tambang, titik masalah yang dihadapi operator, dan harapan terhadap sistem. Luaran minggu ini adalah Spesifikasi Kebutuhan Perangkat Lunak dan desain skema basis data.
-  
+Guna memastikan seluruh target pengembangan tercapai dalam waktu empat minggu, kami menyusun rencana kerja yang sistematis. Prosesnya dibagi menjadi empat tahapan mingguan, di mana setiap minggunya memiliki fokus capaian tersendiri demi terwujudnya sistem yang utuh dan siap pakai. Berikut adalah rincian timeline pengerjaannya:
 
-Minggu kedua kami mulai implementasi backend dan basis data. Penyiapan struktur proyek, implementasi otentikasi, dan operasi CRUD inti untuk semua entitas. Pengujian setiap endpoint dengan Postman. Luaran minggu ini adalah backend API yang fungsional dengan 80% endpoint sudah berjalan.
-  
-
-Minggu ketiga fokus di frontend dan layanan AI. Implementasi semua halaman dasbor, integrasi dengan backend API, dan pelatihan model ML. Juga mulai pengembangan chatbot dengan pendekatan RAG. Luaran minggu ini adalah frontend yang terhubung dengan backend dan layanan AI yang bisa melayani prediksi.
-  
-
-Minggu keempat adalah finalisasi dan pengujian. Pengujian integrasi alur penuh, perbaikan bug, penulisan dokumentasi, dan persiapan untuk serah terima. Luaran minggu ini adalah sistem yang lengkap dan terdokumentasi, siap untuk demonstrasi ke mitra.
+| BULAN | MINGGU | POSISI | TOPIK | DURASI (jam) | TARGET | METODE |
+| :---: | :---: | :---: | :--- | :---: | :--- | :--- |
+| **AGUSTUS** | 1 | Fullstack Developer | Analisis Kebutuhan & Desain Sistem | 40 | • Dokumen Spesifikasi Kebutuhan (SKPL) <br> • Desain Skema Basis Data (ERD) <br> • Pemahaman mendalam domain masalah | • Diskusi intensif dengan mentor industri <br> • Analisis dokumen & studi literatur <br> • Perancangan arsitektur sistem |
+| **AGUSTUS** | 2 | Fullstack Developer | Pengembangan Backend & Database | 40 | • Struktur proyek & konfigurasi awal <br> • Modul Otentikasi & CRUD Inti <br> • Backend API fungsional (80% endpoint siap) | • *Live Coding* implementasi Backend <br> • Pengujian endpoint via Postman <br> • Setup & seeding database |
+| **AGUSTUS** | 3 | Fullstack Developer | Integrasi Frontend & Layanan AI | 40 | • Dashboard Frontend (14 Halaman) terimplementasi <br> • Integrasi penuh Frontend-Backend <br> • Model ML terlatih & Chatbot RAG operasional | • Integrasi antarmuka & API <br> • Pelatihan & evaluasi Model ML <br> • Implementasi logika Chatbot cerdas |
+| **AGUSTUS** | 4 | Fullstack Developer | Finalisasi, Pengujian & Dokumentasi | 40 | • Sistem terintegrasi bebas bug kritis <br> • Dokumentasi teknis & *Deployment Guide* <br> • Aplikasi siap serah terima ke mitra | • Pengujian sistem menyeluruh (*System Testing*) <br> • *Debugging* & Optimasi performa <br> • Penulisan dokumentasi teknis |
   
 
 ### Dampak Kegiatan
